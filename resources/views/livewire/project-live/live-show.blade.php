@@ -82,7 +82,7 @@
                         @else
                             <div wire:click="toggleClick({{ $detail['id'] }})"
                                 class="relative rounded-lg bg-black border-2 border-white/10 flex flex-col items-center justify-center gap-1 cursor-pointer">
-                                <div class="w-7 h-7 rounded-full border border-white/30 flex items-center justify-center text-white/70 text-base leading-none">
+                                <div class="text-white/70 text-xl leading-none">
                                     +
                                 </div>
                                 <span class="text-[9px] text-white/50 font-medium">Request</span>

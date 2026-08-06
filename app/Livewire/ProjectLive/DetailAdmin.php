@@ -57,6 +57,31 @@ class DetailAdmin extends Component
         $this->reset(['editingDetailId', 'img', 'name', 'follower', 'hotkey', 'status']);
     }
 
+    public function hideAll(): void
+    {
+        $this->authorize('manage', ProjectLive::class);
+
+        $this->projectLive->details()->update(['status' => DetailStatus::Hide->value]);
+    }
+
+    public function toggleStatus(int $detailId): void
+    {
+        $this->authorize('manage', ProjectLive::class);
+
+        $detail = $this->projectLive->details()->findOrFail($detailId);
+
+        $detail->update([
+            'status' => $detail->status === DetailStatus::Hide
+                ? DetailStatus::Show->value
+                : DetailStatus::Hide->value,
+        ]);
+    }
+
+    public function toggleModalStatus(): void
+    {
+        $this->status = $this->status === 'show' ? 'hide' : 'show';
+    }
+
     public function save(): void
     {
         $this->authorize('manage', ProjectLive::class);

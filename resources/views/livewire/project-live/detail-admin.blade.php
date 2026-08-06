@@ -11,21 +11,34 @@
 
     <div class="py-8">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-                Atur 8 kursi tamu untuk project ini. Klik salah satu kotak untuk mengubah foto, nama, follower, hotkey, dan status tampil/sembunyi.
-            </p>
+            <div class="flex items-start justify-between gap-3">
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    Atur 8 kursi tamu untuk project ini. Klik salah satu kotak untuk mengubah foto, nama, follower, hotkey, dan status tampil/sembunyi.
+                </p>
+
+                <button wire:click="hideAll" wire:confirm="Sembunyikan semua kursi?" type="button"
+                    class="flex-shrink-0 inline-flex items-center px-3 py-1.5 bg-gray-800 dark:bg-gray-700 text-white text-xs font-semibold rounded-md hover:bg-gray-700 dark:hover:bg-gray-600">
+                    Hide All
+                </button>
+            </div>
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 @foreach ($details as $detail)
-                    <button type="button" wire:click="openEdit({{ $detail->id }})"
-                        class="relative aspect-square rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center gap-1 hover:ring-2 hover:ring-indigo-500 transition text-left">
+                    <div wire:click="openEdit({{ $detail->id }})" role="button" tabindex="0"
+                        class="relative aspect-square rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center gap-1 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer">
                         <span class="absolute top-1.5 left-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/60 text-white">
                             #{{ $detail->position }}
                         </span>
 
-                        <span class="absolute top-1.5 right-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded {{ $detail->status->value === 'show' ? 'bg-green-600 text-white' : 'bg-gray-500 text-white' }}">
-                            {{ $detail->status->value === 'show' ? 'Show' : 'Hide' }}
-                        </span>
+                        <!-- Toggle status: klik langsung ubah tanpa buka modal -->
+                        <button type="button" wire:click.stop="toggleStatus({{ $detail->id }})"
+                            title="{{ $detail->status->value === 'show' ? 'Klik untuk Hide' : 'Klik untuk Show' }}"
+                            class="absolute top-1.5 right-1.5 flex items-center gap-1 rounded-full px-1 py-0.5 transition {{ $detail->status->value === 'show' ? 'bg-green-600' : 'bg-gray-400 dark:bg-gray-600' }}">
+                            <span class="relative inline-flex h-3.5 w-6 items-center rounded-full bg-black/20">
+                                <span class="inline-block h-2.5 w-2.5 transform rounded-full bg-white transition {{ $detail->status->value === 'show' ? 'translate-x-3' : 'translate-x-0.5' }}"></span>
+                            </span>
+                            <span class="text-[9px] font-semibold text-white pr-0.5">{{ $detail->status->value === 'show' ? 'Show' : 'Hide' }}</span>
+                        </button>
 
                         @if ($detail->img)
                             <img src="{{ $detail->imgUrl() }}" class="w-14 h-14 rounded-full object-cover" alt="{{ $detail->name }}">
@@ -39,12 +52,16 @@
                             {{ $detail->name ?: 'Belum diisi' }}
                         </span>
 
+                        <span class="text-[10px] text-gray-500 dark:text-gray-400">
+                            {{ $detail->follower ?: '0' }} follower
+                        </span>
+
                         @if ($detail->hotkey)
                             <span class="absolute bottom-1.5 right-1.5 text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-600 text-white">
                                 {{ $detail->hotkey }}
                             </span>
                         @endif
-                    </button>
+                    </div>
                 @endforeach
             </div>
         </div>
@@ -96,12 +113,14 @@
                     </div>
 
                     <div>
-                        <x-input-label for="status" value="Status" />
-                        <select wire:model="status" id="status"
-                            class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="hide">Hide</option>
-                            <option value="show">Show</option>
-                        </select>
+                        <x-input-label value="Status" />
+                        <button type="button" wire:click="toggleModalStatus"
+                            class="mt-1 inline-flex items-center gap-2 rounded-full pl-1 pr-3 py-1 transition {{ $status === 'show' ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                            <span class="relative inline-flex h-6 w-11 items-center rounded-full bg-black/20">
+                                <span class="inline-block h-4 w-4 transform rounded-full bg-white transition {{ $status === 'show' ? 'translate-x-6' : 'translate-x-1' }}"></span>
+                            </span>
+                            <span class="text-sm font-medium text-white">{{ $status === 'show' ? 'Show' : 'Hide' }}</span>
+                        </button>
                         <x-input-error :messages="$errors->get('status')" class="mt-2" />
                     </div>
 

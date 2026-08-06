@@ -81,14 +81,21 @@
                 </h3>
 
                 <form wire:submit="save" class="space-y-4">
-                    <div>
+                    <div x-data="{ preview: null }">
                         <x-input-label for="img" value="Foto" />
                         <input type="file" wire:model="img" id="img" accept="image/*"
+                            x-on:change="
+                                const file = $event.target.files[0];
+                                if (! file) { preview = null; return; }
+                                const reader = new FileReader();
+                                reader.onload = (e) => preview = e.target.result;
+                                reader.readAsDataURL(file);
+                            "
                             class="block mt-1 w-full text-sm text-gray-600 dark:text-gray-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/40 file:text-indigo-700 dark:file:text-indigo-300">
                         <div wire:loading wire:target="img" class="text-xs text-gray-400 mt-1">Mengunggah...</div>
-                        @if ($img)
-                            <img src="{{ $img->temporaryUrl() }}" class="w-16 h-16 rounded-full object-cover mt-2">
-                        @endif
+                        <template x-if="preview">
+                            <img :src="preview" class="w-16 h-16 rounded-full object-cover mt-2">
+                        </template>
                         <x-input-error :messages="$errors->get('img')" class="mt-2" />
                     </div>
 

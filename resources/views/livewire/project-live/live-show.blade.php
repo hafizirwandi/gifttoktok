@@ -24,7 +24,7 @@
             <p class="text-gray-500 text-sm">Hubungi superadmin untuk mengaktifkan status project ini.</p>
         </div>
     @else
-        <div class="max-w-[430px] mx-auto">
+        <div class="max-w-[430px] mx-auto mt-8">
             <div class="flex h-[50vh]">
                 <!-- Panel kiri: area konten utama -->
                 <div class="flex-1 relative bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">

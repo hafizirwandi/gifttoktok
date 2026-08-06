@@ -29,11 +29,14 @@
                                 <p class="font-medium text-gray-900 dark:text-gray-100">{{ $project->name }}</p>
                                 <p class="text-xs text-gray-500 dark:text-gray-400">{{ $project->nama_akun ?: '-' }}</p>
                             </div>
-                            @if ($project->status->value === 'live')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 flex-shrink-0">Live</span>
-                            @else
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300 flex-shrink-0">Off</span>
-                            @endif
+                            <button type="button" wire:click="toggleLiveStatus({{ $project->id }})"
+                                title="{{ $project->status->value === 'live' ? 'Klik untuk Off' : 'Klik untuk Live' }}"
+                                class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full pl-1 pr-2 py-0.5 transition {{ $project->status->value === 'live' ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                <span class="relative inline-flex h-4 w-7 items-center rounded-full bg-black/20">
+                                    <span class="inline-block h-3 w-3 transform rounded-full bg-white transition {{ $project->status->value === 'live' ? 'translate-x-3.5' : 'translate-x-0.5' }}"></span>
+                                </span>
+                                <span class="text-xs font-semibold text-white">{{ $project->status->value === 'live' ? 'Live' : 'Off' }}</span>
+                            </button>
                         </div>
                         <p class="text-xs text-gray-500 dark:text-gray-400">Akun live: {{ $project->user?->name ?? '-' }}</p>
                         @if ($project->desc)
@@ -80,11 +83,14 @@
                                 <tr>
                                     <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">{{ $project->name }}</td>
                                     <td class="px-4 py-3 whitespace-nowrap">
-                                        @if ($project->status->value === 'live')
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">Live</span>
-                                        @else
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">Off</span>
-                                        @endif
+                                        <button type="button" wire:click="toggleLiveStatus({{ $project->id }})"
+                                            title="{{ $project->status->value === 'live' ? 'Klik untuk Off' : 'Klik untuk Live' }}"
+                                            class="inline-flex items-center gap-1.5 rounded-full pl-1 pr-2 py-0.5 transition {{ $project->status->value === 'live' ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                            <span class="relative inline-flex h-4 w-7 items-center rounded-full bg-black/20">
+                                                <span class="inline-block h-3 w-3 transform rounded-full bg-white transition {{ $project->status->value === 'live' ? 'translate-x-3.5' : 'translate-x-0.5' }}"></span>
+                                            </span>
+                                            <span class="text-xs font-semibold text-white">{{ $project->status->value === 'live' ? 'Live' : 'Off' }}</span>
+                                        </button>
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">{{ $project->nama_akun ?: '-' }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 whitespace-nowrap">{{ $project->user?->name ?? '-' }}</td>
@@ -147,12 +153,14 @@
                     </div>
 
                     <div>
-                        <x-input-label for="status" value="Status" />
-                        <select wire:model="status" id="status"
-                            class="block mt-1 w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="off">Off</option>
-                            <option value="live">Live</option>
-                        </select>
+                        <x-input-label value="Status" />
+                        <button type="button" wire:click="toggleModalStatus"
+                            class="mt-1 inline-flex items-center gap-2 rounded-full pl-1 pr-3 py-1 transition {{ $status === 'live' ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                            <span class="relative inline-flex h-6 w-11 items-center rounded-full bg-black/20">
+                                <span class="inline-block h-4 w-4 transform rounded-full bg-white transition {{ $status === 'live' ? 'translate-x-6' : 'translate-x-1' }}"></span>
+                            </span>
+                            <span class="text-sm font-medium text-white">{{ $status === 'live' ? 'Live' : 'Off' }}</span>
+                        </button>
                         <x-input-error :messages="$errors->get('status')" class="mt-2" />
                     </div>
 

@@ -97,6 +97,22 @@ class Index extends Component
         $projectLive->delete();
     }
 
+    public function toggleLiveStatus(ProjectLive $projectLive): void
+    {
+        $this->authorize('manage', ProjectLive::class);
+
+        $projectLive->update([
+            'status' => $projectLive->status === ProjectLiveStatus::Live
+                ? ProjectLiveStatus::Off->value
+                : ProjectLiveStatus::Live->value,
+        ]);
+    }
+
+    public function toggleModalStatus(): void
+    {
+        $this->status = $this->status === 'live' ? 'off' : 'live';
+    }
+
     public function render()
     {
         return view('livewire.project-live.index', [

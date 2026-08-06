@@ -3,6 +3,7 @@
 namespace App\Livewire\ProjectLive;
 
 use App\Enums\DetailStatus;
+use App\Enums\ProjectLiveStatus;
 use App\Models\ProjectLive;
 use App\Models\ProjectLiveDetail;
 use App\Services\DominantColorExtractor;
@@ -62,6 +63,19 @@ class DetailAdmin extends Component
         $this->authorize('manage', ProjectLive::class);
 
         $this->projectLive->details()->update(['status' => DetailStatus::Hide->value]);
+    }
+
+    public function toggleProjectLiveStatus(): void
+    {
+        $this->authorize('manage', ProjectLive::class);
+
+        $this->projectLive->update([
+            'status' => $this->projectLive->status === ProjectLiveStatus::Live
+                ? ProjectLiveStatus::Off->value
+                : ProjectLiveStatus::Live->value,
+        ]);
+
+        $this->projectLive->refresh();
     }
 
     public function toggleStatus(int $detailId): void

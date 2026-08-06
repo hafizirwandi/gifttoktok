@@ -55,9 +55,9 @@
                                 </div>
 
                                 <!-- Badge follower: bintang biru + angka -->
-                                <div class="absolute top-1 left-1 flex items-center gap-0.5 bg-black/60 rounded-full pl-0.5 pr-1.5 py-0.5">
-                                    <span class="w-3.5 h-3.5 rounded-full bg-sky-400 border-2 border-white flex items-center justify-center flex-shrink-0">
-                                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-2.5 h-2.5 text-white">
+                                <div class="absolute top-1 left-1 flex items-center gap-0.5 bg-black/60 rounded-full pl-0.5 pr-1 py-0.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-sky-400 border border-white flex items-center justify-center flex-shrink-0">
+                                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-1.5 h-1.5 text-white">
                                             <path fill-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z" clip-rule="evenodd" />
                                         </svg>
                                     </span>
@@ -65,14 +65,14 @@
                                 </div>
 
                                 <!-- Badge nama + plus -->
-                                <div class="absolute bottom-1 left-1 flex items-center gap-1 bg-black/60 rounded-full py-0.5 pl-1.5 pr-0.5">
-                                    <span class="text-[9px] font-medium text-white truncate max-w-[9ch]">{{ $detail['name'] ?: 'Guest' }}</span>
-                                    <span class="w-3.5 h-3.5 rounded-full bg-white/20 flex items-center justify-center text-white text-[10px] leading-none flex-shrink-0">+</span>
+                                <div class="absolute bottom-1 left-1 flex items-center gap-0.5 bg-black/60 rounded-full py-0.5 pl-1 pr-0.5">
+                                    <span class="text-[8px] font-medium text-white truncate max-w-[8ch]">{{ $detail['name'] ?: 'Guest' }}</span>
+                                    <span class="w-2.5 h-2.5 rounded-full bg-white/20 flex items-center justify-center text-white text-[8px] leading-none flex-shrink-0">+</span>
                                 </div>
 
                                 <!-- Mic mute: pojok kanan bawah, transparan tanpa badge -->
                                 <div class="absolute bottom-1 right-1 flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="w-4 h-4 text-white/80 drop-shadow">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="w-3 h-3 text-white/80 drop-shadow">
                                         <path d="M12 15a3 3 0 003-3V6a3 3 0 10-6 0v6a3 3 0 003 3z" stroke="currentColor" stroke-width="1.5"/>
                                         <path d="M5 10v2a7 7 0 0014 0v-2M12 19v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                                         <path d="M4 4l16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>

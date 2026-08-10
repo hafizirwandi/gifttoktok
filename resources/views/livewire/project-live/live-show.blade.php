@@ -65,14 +65,14 @@
                                 </div>
 
                                 <!-- Badge nama + plus -->
-                                <div class="absolute bottom-1 left-1 flex items-center gap-0.5 bg-black/60 rounded-full py-0.5 pl-1 pr-0.5">
+                                <div class="absolute bottom-1 left-1 h-5 flex items-center gap-0.5 bg-black/60 rounded-full py-0.5 pl-1 pr-0.5">
                                     <span class="text-[8px] font-medium text-white truncate max-w-[8ch]">{{ $detail['name'] ?: 'Guest' }}</span>
                                     <span class="w-2.5 h-2.5 rounded-full bg-white/20 flex items-center justify-center text-white text-[8px] leading-none flex-shrink-0">+</span>
                                 </div>
 
                                 <!-- Mic mute: pojok kanan bawah, transparan tanpa badge -->
-                                <div class="absolute bottom-1 right-1 flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="w-3 h-3 text-white/80 drop-shadow">
+                                <div class="absolute bottom-1 right-1 h-5 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="w-2.5 h-2.5 text-white/80 drop-shadow">
                                         <path d="M12 15a3 3 0 003-3V6a3 3 0 10-6 0v6a3 3 0 003 3z" stroke="currentColor" stroke-width="1.5"/>
                                         <path d="M5 10v2a7 7 0 0014 0v-2M12 19v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                                         <path d="M4 4l16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>

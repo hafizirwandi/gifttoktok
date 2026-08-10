@@ -36,7 +36,7 @@ class DetailAdmin extends Component
 
     public function mount(ProjectLive $projectLive): void
     {
-        $this->authorize('manage', ProjectLive::class);
+        $this->authorize('viewLive', $projectLive);
 
         $this->projectLive = $projectLive;
     }
@@ -60,13 +60,14 @@ class DetailAdmin extends Component
 
     public function hideAll(): void
     {
-        $this->authorize('manage', ProjectLive::class);
+        $this->authorize('viewLive', $this->projectLive);
 
         $this->projectLive->details()->update(['status' => DetailStatus::Hide->value]);
     }
 
     public function toggleProjectLiveStatus(): void
     {
+        // Hanya superadmin yang boleh menyalakan/mematikan status live project ini.
         $this->authorize('manage', ProjectLive::class);
 
         $this->projectLive->update([
@@ -80,7 +81,7 @@ class DetailAdmin extends Component
 
     public function toggleStatus(int $detailId): void
     {
-        $this->authorize('manage', ProjectLive::class);
+        $this->authorize('viewLive', $this->projectLive);
 
         $detail = $this->projectLive->details()->findOrFail($detailId);
 
@@ -98,7 +99,7 @@ class DetailAdmin extends Component
 
     public function save(): void
     {
-        $this->authorize('manage', ProjectLive::class);
+        $this->authorize('viewLive', $this->projectLive);
 
         $detail = $this->projectLive->details()->findOrFail($this->editingDetailId);
 

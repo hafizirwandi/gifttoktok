@@ -8,7 +8,7 @@ use App\Models\User;
 class ProjectLivePolicy
 {
     /**
-     * Superadmin only — dipakai untuk index CRUD & halaman admin detail (edit per kotak).
+     * Superadmin only — dipakai untuk index CRUD project, manage user, dan toggle status live/off project.
      */
     public function manage(User $user, ?ProjectLive $projectLive = null): bool
     {
@@ -16,7 +16,8 @@ class ProjectLivePolicy
     }
 
     /**
-     * Superadmin (project apa pun) atau akun live yang di-assign ke project ini.
+     * Superadmin (project apa pun) atau akun live yang di-assign ke project ini —
+     * dipakai untuk halaman admin detail (edit kursi) dan halaman tampilan Live.
      */
     public function viewLive(User $user, ProjectLive $projectLive): bool
     {

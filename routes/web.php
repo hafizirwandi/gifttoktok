@@ -17,20 +17,21 @@ Route::middleware('auth')->group(function () {
         }
 
         if ($user->liveProject) {
-            return redirect()->route('project-live.live', $user->liveProject);
+            return redirect()->route('project-live.admin', $user->liveProject);
         }
 
-        abort(403, 'Belum ada project live yang di-assign untuk akun ini.');
+        return view('no-project-assigned');
     })->name('dashboard');
 
     Route::view('profile', 'profile')->name('profile');
 
     Route::middleware('role:superadmin')->group(function () {
         Route::get('/project-live', ProjectLiveIndex::class)->name('project-live.index');
-        Route::get('/project-live/{projectLive}/admin', DetailAdmin::class)->name('project-live.admin');
         Route::get('/users', UserIndex::class)->name('users.index');
     });
 
+    // Superadmin (project apa pun) atau akun live (project miliknya sendiri) — dicek via Policy di mount().
+    Route::get('/project-live/{projectLive}/admin', DetailAdmin::class)->name('project-live.admin');
     Route::get('/project-live/{projectLive}/live', LiveShow::class)->name('project-live.live');
 });
 

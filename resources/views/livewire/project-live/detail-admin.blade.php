@@ -4,22 +4,34 @@
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                 Admin — {{ $projectLive->name }}
             </h2>
-            <a href="{{ route('project-live.index') }}" wire:navigate
-                class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">&larr; Kembali ke daftar project</a>
+            <div class="flex items-center gap-4">
+                @can('manage', \App\Models\ProjectLive::class)
+                    <a href="{{ route('project-live.index') }}" wire:navigate
+                        class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">&larr; Kembali ke daftar project</a>
+                @endcan
+                <a href="{{ route('project-live.live', $projectLive) }}" wire:navigate
+                    class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Buka Live &rarr;</a>
+            </div>
         </div>
     </x-slot>
 
     <div class="py-8">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             <div class="flex items-center justify-between gap-3">
-                <button type="button" wire:click="toggleProjectLiveStatus"
-                    title="{{ $projectLive->status->value === 'live' ? 'Klik untuk Off' : 'Klik untuk Live' }}"
-                    class="inline-flex items-center gap-1.5 rounded-full pl-1 pr-3 py-1 transition {{ $projectLive->status->value === 'live' ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
-                    <span class="relative inline-flex h-5 w-9 items-center rounded-full bg-black/20">
-                        <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition {{ $projectLive->status->value === 'live' ? 'translate-x-[18px]' : 'translate-x-1' }}"></span>
+                @can('manage', \App\Models\ProjectLive::class)
+                    <button type="button" wire:click="toggleProjectLiveStatus"
+                        title="{{ $projectLive->status->value === 'live' ? 'Klik untuk Off' : 'Klik untuk Live' }}"
+                        class="inline-flex items-center gap-1.5 rounded-full pl-1 pr-3 py-1 transition {{ $projectLive->status->value === 'live' ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                        <span class="relative inline-flex h-5 w-9 items-center rounded-full bg-black/20">
+                            <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition {{ $projectLive->status->value === 'live' ? 'translate-x-[18px]' : 'translate-x-1' }}"></span>
+                        </span>
+                        <span class="text-sm font-semibold text-white">{{ $projectLive->status->value === 'live' ? 'Live' : 'Off' }}</span>
+                    </button>
+                @else
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold {{ $projectLive->status->value === 'live' ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' }}">
+                        {{ $projectLive->status->value === 'live' ? 'Live' : 'Off' }}
                     </span>
-                    <span class="text-sm font-semibold text-white">{{ $projectLive->status->value === 'live' ? 'Live' : 'Off' }}</span>
-                </button>
+                @endcan
 
                 <button wire:click="hideAll" wire:confirm="Sembunyikan semua kursi?" type="button"
                     class="flex-shrink-0 inline-flex items-center px-3 py-1.5 bg-gray-800 dark:bg-gray-700 text-white text-xs font-semibold rounded-md hover:bg-gray-700 dark:hover:bg-gray-600">

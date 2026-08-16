@@ -14,16 +14,24 @@ class GiftLeaderboardService
     private const SEAT_COUNT = 8;
 
     /**
-     * Hitung ulang top 8 gifter dan sinkronkan ke 8 kursi (project_live_details).
-     * "Sticky": kursi yang gifter-nya masih di top-8 tidak pindah posisi, hanya
-     * di-refresh datanya — supaya kotak tidak lompat-lompat tiap ada gift kecil masuk.
+     * Delay setelah 8 kursi baru penuh sebelum otomatis dikosongkan & mulai putaran
+     * baru — supaya nama-nama yang berhasil dapat kursi sempat kebaca dulu di layar,
+     * tidak langsung raib begitu kursi ke-8 terisi.
+     */
+    private const CLEAR_DELAY_SECONDS = 30;
+
+    /**
+     * Hitung ulang top 8 gifter (berdasarkan round_value putaran berjalan) dan
+     * sinkronkan ke 8 kursi (project_live_details). "Sticky": kursi yang gifter-nya
+     * masih di top-8 tidak pindah posisi, hanya di-refresh datanya — supaya kotak
+     * tidak lompat-lompat tiap ada gift kecil masuk.
      */
     public function recalculate(ProjectLive $projectLive): void
     {
         DB::transaction(function () use ($projectLive) {
             $topGifters = ProjectLiveGifter::query()
                 ->where('project_live_id', $projectLive->id)
-                ->orderByDesc('total_value')
+                ->orderByDesc('round_value')
                 ->orderBy('id')
                 ->limit(self::SEAT_COUNT)
                 ->get()
@@ -57,10 +65,64 @@ class GiftLeaderboardService
                 }
             }
         });
+
+        $this->syncBoardFilledAt($projectLive);
     }
 
     /**
-     * Reset leaderboard: hapus seluruh ledger gifter project ini, kosongkan
+     * True kalau 8 kursi sedang penuh (semua status show).
+     */
+    public function isFull(ProjectLive $projectLive): bool
+    {
+        return $projectLive->details()->where('status', DetailStatus::Show->value)->count() >= self::SEAT_COUNT;
+    }
+
+    /**
+     * Dipanggil berkala (lewat wire:poll di halaman Live). Kalau kursi sudah penuh
+     * selama >= CLEAR_DELAY_SECONDS, baru benar-benar dikosongkan & mulai putaran
+     * baru. Tidak melakukan apa-apa kalau belum penuh atau delay belum lewat.
+     */
+    public function maybeStartNewRoundIfExpired(ProjectLive $projectLive): void
+    {
+        if (! $projectLive->board_filled_at) {
+            return;
+        }
+
+        if ($projectLive->board_filled_at->addSeconds(self::CLEAR_DELAY_SECONDS)->isFuture()) {
+            return;
+        }
+
+        $this->startNewRound($projectLive);
+    }
+
+    /**
+     * Kosongkan semua kursi auto & reset round_value semua gifter project ini (mulai
+     * putaran baru dari 0) supaya gifter lain juga dapat giliran. total_value
+     * (lifetime) TIDAK PERNAH ikut direset atau dihapus di sini.
+     */
+    public function startNewRound(ProjectLive $projectLive): void
+    {
+        DB::transaction(function () use ($projectLive) {
+            $projectLive->details()
+                ->where('source', DetailSource::Auto->value)
+                ->update([
+                    'status' => DetailStatus::Hide->value,
+                    'name' => null,
+                    'img' => null,
+                    'gift_total_value' => 0,
+                    'project_live_gifter_id' => null,
+                    'dominant_color' => '#111111',
+                ]);
+
+            $projectLive->gifters()->update(['round_value' => 0]);
+
+            $projectLive->update(['board_filled_at' => null]);
+        });
+    }
+
+    /**
+     * Reset leaderboard: hapus seluruh ledger gifter project ini (total_value ikut
+     * hilang, ini reset penuh yang disengaja lewat tombol admin), kosongkan
      * kursi yang source-nya auto (kursi manual tidak disentuh).
      */
     public function reset(ProjectLive $projectLive): void
@@ -79,7 +141,20 @@ class GiftLeaderboardService
                 ]);
 
             $projectLive->gifters()->delete();
+
+            $projectLive->update(['board_filled_at' => null]);
         });
+    }
+
+    private function syncBoardFilledAt(ProjectLive $projectLive): void
+    {
+        $isFull = $this->isFull($projectLive);
+
+        if ($isFull && ! $projectLive->board_filled_at) {
+            $projectLive->update(['board_filled_at' => now()]);
+        } elseif (! $isFull && $projectLive->board_filled_at) {
+            $projectLive->update(['board_filled_at' => null]);
+        }
     }
 
     private function fillSeat(ProjectLiveDetail $seat, ProjectLiveGifter $gifter): void
@@ -89,7 +164,7 @@ class GiftLeaderboardService
             'status' => DetailStatus::Show->value,
             'name' => $gifter->nickname,
             'img' => $gifter->avatar_path,
-            'gift_total_value' => $gifter->total_value,
+            'gift_total_value' => $gifter->round_value,
             'dominant_color' => $gifter->dominant_color,
             'project_live_gifter_id' => $gifter->id,
         ]);

@@ -5,6 +5,7 @@ namespace App\Livewire\ProjectLive;
 use App\Enums\DetailStatus;
 use App\Models\ProjectLive;
 use App\Models\ProjectLiveDetail;
+use App\Services\GiftLeaderboardService;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -84,6 +85,12 @@ class LiveShow extends Component
         $this->projectLive->refresh();
 
         if ($this->projectLive->auto_gift_mode) {
+            // Kalau kursi sudah penuh cukup lama, baru sekarang benar-benar
+            // dikosongkan & mulai putaran baru (delay-nya diatur di service, bukan
+            // di sini) — supaya nama-nama yang penuh sempat kebaca dulu di layar.
+            app(GiftLeaderboardService::class)->maybeStartNewRoundIfExpired($this->projectLive);
+            $this->projectLive->refresh();
+
             // Auto Gift Mode: DB sepenuhnya otoritatif (leaderboard sudah tervalidasi
             // server-side), tidak ada gating "tunggu trigger operator" sama sekali.
             $this->details = $this->projectLive->details()

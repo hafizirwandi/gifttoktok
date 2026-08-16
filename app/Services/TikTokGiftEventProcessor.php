@@ -60,6 +60,10 @@ class TikTokGiftEventProcessor
 
             Cache::put($dedupeKey, true, now()->addMinutes(5));
 
+            // Pengosongan kursi setelah penuh TIDAK dipicu di sini — itu ditunda
+            // (lihat GiftLeaderboardService::maybeStartNewRoundIfExpired(), dipanggil
+            // dari LiveShow::syncFromDatabase() lewat wire:poll) supaya kursi yang
+            // baru saja penuh sempat kebaca dulu sebelum otomatis di-reset.
             $gifter = $this->upsertGifter($projectLive, $event);
             $this->leaderboard->recalculate($projectLive);
         });
@@ -74,7 +78,10 @@ class TikTokGiftEventProcessor
 
         $gifter->tiktok_unique_id = $event['gifter']['unique_id'] ?? $gifter->tiktok_unique_id;
         $gifter->nickname = $event['gifter']['nickname'] ?? $gifter->nickname;
+        // total_value = akumulasi lifetime, TIDAK PERNAH direset (tetap jalan terus).
+        // round_value = akumulasi putaran berjalan, dipakai untuk ranking kursi.
         $gifter->total_value = ($gifter->total_value ?? 0) + (int) $event['gift']['total_value'];
+        $gifter->round_value = ($gifter->round_value ?? 0) + (int) $event['gift']['total_value'];
         $gifter->gift_count = ($gifter->gift_count ?? 0) + 1;
         $gifter->last_gift_at = now();
         $gifter->save();

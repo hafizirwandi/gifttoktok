@@ -23,6 +23,7 @@ class ProjectLive extends Model
         'tiktok_username',
         'webhook_secret',
         'gift_listener_connected_at',
+        'board_filled_at',
     ];
 
     protected $hidden = [
@@ -35,6 +36,7 @@ class ProjectLive extends Model
             'status' => ProjectLiveStatus::class,
             'auto_gift_mode' => 'boolean',
             'gift_listener_connected_at' => 'datetime',
+            'board_filled_at' => 'datetime',
         ];
     }
 

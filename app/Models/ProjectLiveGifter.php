@@ -16,6 +16,7 @@ class ProjectLiveGifter extends Model
         'avatar_path',
         'dominant_color',
         'total_value',
+        'round_value',
         'gift_count',
         'last_gift_at',
     ];

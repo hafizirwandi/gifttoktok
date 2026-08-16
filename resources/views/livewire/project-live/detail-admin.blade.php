@@ -1,4 +1,4 @@
-<div>
+<div @if ($projectLive->auto_gift_mode) wire:poll.5s="$refresh" @endif>
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
@@ -33,15 +33,138 @@
                     </span>
                 @endcan
 
-                <button wire:click="hideAll" wire:confirm="Sembunyikan semua kursi?" type="button"
-                    class="flex-shrink-0 inline-flex items-center px-3 py-1.5 bg-gray-800 dark:bg-gray-700 text-white text-xs font-semibold rounded-md hover:bg-gray-700 dark:hover:bg-gray-600">
-                    Hide All
-                </button>
+                <div class="flex items-center gap-2">
+                    @if ($projectLive->auto_gift_mode)
+                        <button wire:click="resetLeaderboard" wire:confirm="Reset leaderboard? Semua kursi auto akan dikosongkan." type="button"
+                            class="flex-shrink-0 inline-flex items-center px-3 py-1.5 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-semibold rounded-md hover:bg-red-100 dark:hover:bg-red-900/50">
+                            Reset Leaderboard
+                        </button>
+                    @endif
+                    <button wire:click="hideAll" wire:confirm="Sembunyikan semua kursi?" type="button"
+                        class="flex-shrink-0 inline-flex items-center px-3 py-1.5 bg-gray-800 dark:bg-gray-700 text-white text-xs font-semibold rounded-md hover:bg-gray-700 dark:hover:bg-gray-600">
+                        Hide All
+                    </button>
+                </div>
+            </div>
+
+            <!-- Auto Gift Mode -->
+            <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-4">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Auto Gift Mode</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Kursi otomatis terisi dari leaderboard gift TikTok LIVE, tanpa hotkey manual.</p>
+                    </div>
+                    <button type="button" wire:click="toggleAutoGiftMode"
+                        class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full pl-1 pr-3 py-1 transition {{ $projectLive->auto_gift_mode ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                        <span class="relative inline-flex h-5 w-9 items-center rounded-full bg-black/20">
+                            <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition {{ $projectLive->auto_gift_mode ? 'translate-x-[18px]' : 'translate-x-1' }}"></span>
+                        </span>
+                        <span class="text-sm font-semibold text-white">{{ $projectLive->auto_gift_mode ? 'ON' : 'OFF' }}</span>
+                    </button>
+                </div>
+
+                @if ($projectLive->auto_gift_mode)
+                    <div class="flex items-center gap-1.5 text-xs font-medium {{ $projectLive->isGiftListenerOnline() ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500' }}">
+                        <span class="w-2 h-2 rounded-full {{ $projectLive->isGiftListenerOnline() ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600' }}"></span>
+                        {{ $projectLive->isGiftListenerOnline() ? 'Terhubung ke TikTok LIVE' : 'Belum terhubung — jalankan services/tiktok-gift-listener' }}
+                    </div>
+
+                    <div class="border-t border-gray-100 dark:border-gray-700 pt-4 space-y-4">
+                        <form wire:submit="saveTikTokUsername" class="flex items-end gap-2">
+                            <div class="flex-1">
+                                <x-input-label for="tiktokUsername" value="Username TikTok LIVE (tanpa @)" />
+                                <x-text-input wire:model="tiktokUsername" id="tiktokUsername" class="block mt-1 w-full" type="text" placeholder="namaakun" />
+                                <x-input-error :messages="$errors->get('tiktokUsername')" class="mt-2" />
+                            </div>
+                            <x-primary-button>Simpan</x-primary-button>
+                        </form>
+
+                        <div class="bg-gray-50 dark:bg-gray-900/50 rounded-md p-3 space-y-2 text-xs">
+                            <p class="text-gray-500 dark:text-gray-400">
+                                Salin nilai berikut ke <code class="font-mono">.env</code> di <code class="font-mono">services/tiktok-gift-listener</code>:
+                            </p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 font-mono">
+                                <div>
+                                    <span class="text-gray-400">WEBHOOK_URL</span>
+                                    <p class="text-gray-700 dark:text-gray-300 break-all select-all">{{ url('/api/webhooks/tiktok-gift') }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-gray-400">PROJECT_LIVE_ID</span>
+                                    <p class="text-gray-700 dark:text-gray-300 select-all">{{ $projectLive->id }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-gray-400">TIKTOK_USERNAME</span>
+                                    <p class="text-gray-700 dark:text-gray-300 select-all">{{ $projectLive->tiktok_username ?: '(belum diisi)' }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-gray-400">WEBHOOK_SECRET</span>
+                                    <p class="text-gray-700 dark:text-gray-300 break-all select-all">{{ $projectLive->webhook_secret }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Katalog & aturan gift -->
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between gap-3">
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Gift yang Dihitung</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                                        Katalog: {{ $giftCatalogCount }} jenis gift.
+                                        @if ($giftCatalogUpdatedAt)
+                                            Terakhir update {{ $giftCatalogUpdatedAt->diffForHumans() }}.
+                                        @else
+                                            Belum ada data.
+                                        @endif
+                                    </p>
+                                </div>
+                                <button type="button" wire:click="$refresh" title="Muat ulang daftar gift terbaru dari database"
+                                    class="flex-shrink-0 inline-flex items-center px-3 py-1.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-md hover:bg-gray-50 dark:hover:bg-gray-800">
+                                    Update Gift
+                                </button>
+                            </div>
+
+                            @if ($giftCatalogCount === 0)
+                                <p class="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-md p-2">
+                                    Katalog masih kosong. Jalankan <code class="font-mono">php artisan db:seed --class=TikTokGiftSeeder</code> untuk mengisi daftar gift.
+                                </p>
+                            @else
+                                <x-text-input wire:model.live.debounce.300ms="giftSearch" type="text" placeholder="Cari nama gift..." class="block w-full text-sm" />
+
+                                <div class="max-h-64 overflow-y-auto border border-gray-100 dark:border-gray-700 rounded-md divide-y divide-gray-100 dark:divide-gray-700">
+                                    @forelse ($gifts as $gift)
+                                        @php $isEnabled = in_array($gift->id, $enabledGiftIds); @endphp
+                                        <button type="button" wire:click="toggleGiftRule({{ $gift->id }})"
+                                            class="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-900/50">
+                                            @if ($gift->icon_url)
+                                                <img src="{{ $gift->icon_url }}" class="w-6 h-6 rounded flex-shrink-0" alt="">
+                                            @else
+                                                <div class="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700 flex-shrink-0"></div>
+                                            @endif
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm text-gray-800 dark:text-gray-200 truncate">{{ $gift->name }}</p>
+                                                <p class="text-xs text-gray-400">{{ number_format($gift->diamond_count) }} diamond</p>
+                                            </div>
+                                            <span class="relative inline-flex h-5 w-9 items-center rounded-full flex-shrink-0 transition {{ $isEnabled ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                                <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition {{ $isEnabled ? 'translate-x-[18px]' : 'translate-x-1' }}"></span>
+                                            </span>
+                                        </button>
+                                    @empty
+                                        <p class="text-xs text-gray-400 px-3 py-4 text-center">Tidak ada gift yang cocok dengan pencarian.</p>
+                                    @endforelse
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <div class="flex items-start justify-between gap-3">
                 <p class="text-sm text-gray-500 dark:text-gray-400">
-                    Atur 8 kursi tamu untuk project ini. Klik salah satu kotak untuk mengubah foto, nama, follower, hotkey, dan status tampil/sembunyi.
+                    @if ($projectLive->auto_gift_mode)
+                        Kursi diatur otomatis dari gift TikTok LIVE. Edit manual tetap bisa dipakai, tapi kursi bisa ketiban update otomatis berikutnya.
+                    @else
+                        Atur 8 kursi tamu untuk project ini. Klik salah satu kotak untuk mengubah foto, nama, follower, hotkey, dan status tampil/sembunyi.
+                    @endif
                 </p>
             </div>
 
@@ -49,8 +172,15 @@
                 @foreach ($details as $detail)
                     <div wire:click="openEdit({{ $detail->id }})" role="button" tabindex="0"
                         class="relative aspect-square rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center gap-1 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer">
-                        <span class="absolute top-1.5 left-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/60 text-white">
-                            #{{ $detail->position }}
+                        <span class="absolute top-1.5 left-1.5 flex items-center gap-1">
+                            <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/60 text-white">
+                                #{{ $detail->position }}
+                            </span>
+                            @if ($detail->source->value === 'auto')
+                                <span class="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-indigo-600 text-white">
+                                    AUTO
+                                </span>
+                            @endif
                         </span>
 
                         <!-- Toggle status: klik langsung ubah tanpa buka modal -->
@@ -76,7 +206,11 @@
                         </span>
 
                         <span class="text-[10px] text-gray-500 dark:text-gray-400">
-                            {{ $detail->follower ?: '0' }} follower
+                            @if ($detail->source->value === 'auto')
+                                {{ number_format($detail->gift_total_value) }} gift
+                            @else
+                                {{ $detail->follower ?: '0' }} follower
+                            @endif
                         </span>
 
                         @if ($detail->hotkey)

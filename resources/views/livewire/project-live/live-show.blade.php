@@ -14,7 +14,7 @@
         },
     }"
     @keydown.window="handle($event)"
-    wire:poll.visible.3s="syncFromDatabase"
+    wire:poll.{{ $projectLive->auto_gift_mode ? '1500ms' : 'visible.3s' }}="syncFromDatabase"
     class="min-h-screen bg-black text-white"
 >
     @if (! $projectLive->isLive())
@@ -24,8 +24,8 @@
             <p class="text-gray-500 text-sm">Hubungi superadmin untuk mengaktifkan status project ini.</p>
         </div>
     @else
-        <div class="max-w-[430px] mx-auto mt-8">
-            <div class="flex h-[50vh]">
+        <div class="max-w-[430px] mx-auto my-6">
+            <div class="flex h-[calc(100vh-3rem)]">
                 <!-- Panel kiri: area konten utama -->
                 <div class="flex-1 relative bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
                     <span class="text-gray-600 text-sm">{{ $projectLive->name }}</span>
@@ -61,7 +61,7 @@
                                             <path fill-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z" clip-rule="evenodd" />
                                         </svg>
                                     </span>
-                                    <span class="text-[8px] font-semibold text-white leading-none">{{ $detail['follower'] ?: '0' }}</span>
+                                    <span class="text-[8px] font-semibold text-white leading-none">{{ $detail['source'] === 'auto' ? number_format($detail['gift_total_value']) : ($detail['follower'] ?: '0') }}</span>
                                 </div>
 
                                 <!-- Badge nama + plus -->

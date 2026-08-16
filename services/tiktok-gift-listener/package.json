@@ -1,0 +1,16 @@
+{
+  "name": "tiktok-gift-listener",
+  "version": "1.0.0",
+  "description": "Connect ke 1 room TikTok LIVE dan kirim event gift ke webhook GiftTokTok",
+  "private": true,
+  "type": "commonjs",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "dotenv": "^16.4.5",
+    "tiktok-live-connector": "^2.4.3"
+  }
+}

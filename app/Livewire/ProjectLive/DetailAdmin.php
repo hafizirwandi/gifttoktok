@@ -2,12 +2,16 @@
 
 namespace App\Livewire\ProjectLive;
 
+use App\Enums\DetailSource;
 use App\Enums\DetailStatus;
 use App\Enums\ProjectLiveStatus;
 use App\Models\ProjectLive;
 use App\Models\ProjectLiveDetail;
+use App\Models\TikTokGift;
 use App\Services\DominantColorExtractor;
+use App\Services\GiftLeaderboardService;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -34,11 +38,16 @@ class DetailAdmin extends Component
 
     public string $status = 'hide';
 
+    public string $tiktokUsername = '';
+
+    public string $giftSearch = '';
+
     public function mount(ProjectLive $projectLive): void
     {
         $this->authorize('viewLive', $projectLive);
 
         $this->projectLive = $projectLive;
+        $this->tiktokUsername = (string) $projectLive->tiktok_username;
     }
 
     public function openEdit(int $detailId): void
@@ -77,6 +86,59 @@ class DetailAdmin extends Component
         ]);
 
         $this->projectLive->refresh();
+
+        if ($this->projectLive->auto_gift_mode) {
+            app(GiftLeaderboardService::class)->reset($this->projectLive);
+        }
+    }
+
+    public function toggleAutoGiftMode(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $data = ['auto_gift_mode' => ! $this->projectLive->auto_gift_mode];
+
+        if ($data['auto_gift_mode'] && ! $this->projectLive->webhook_secret) {
+            $data['webhook_secret'] = Str::random(40);
+        }
+
+        $this->projectLive->update($data);
+        $this->projectLive->refresh();
+    }
+
+    public function saveTikTokUsername(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $validated = $this->validate([
+            'tiktokUsername' => [
+                'nullable',
+                'string',
+                'max:100',
+                'regex:/^[a-zA-Z0-9._]+$/',
+                Rule::unique('project_lives', 'tiktok_username')->ignore($this->projectLive->id),
+            ],
+        ]);
+
+        $this->projectLive->update(['tiktok_username' => $validated['tiktokUsername'] ?: null]);
+    }
+
+    public function resetLeaderboard(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        app(GiftLeaderboardService::class)->reset($this->projectLive);
+    }
+
+    public function toggleGiftRule(int $tiktokGiftId): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        if ($this->projectLive->enabledGifts()->where('tiktok_gifts.id', $tiktokGiftId)->exists()) {
+            $this->projectLive->enabledGifts()->detach($tiktokGiftId);
+        } else {
+            $this->projectLive->enabledGifts()->attach($tiktokGiftId);
+        }
     }
 
     public function toggleStatus(int $detailId): void
@@ -123,6 +185,10 @@ class DetailAdmin extends Component
             'follower' => $validated['follower'],
             'hotkey' => $validated['hotkey'] !== '' ? $validated['hotkey'] : null,
             'status' => $validated['status'],
+            // Edit manual selalu mengembalikan kursi ke source "manual", supaya tidak
+            // langsung ketiban timpa oleh recalculation leaderboard auto-mode berikutnya.
+            'source' => DetailSource::Manual->value,
+            'project_live_gifter_id' => null,
         ];
 
         if ($this->img) {
@@ -146,6 +212,15 @@ class DetailAdmin extends Component
     {
         return view('livewire.project-live.detail-admin', [
             'details' => $this->projectLive->details,
+            'gifts' => TikTokGift::query()
+                ->when($this->giftSearch, fn ($q) => $q->where('name', 'like', '%'.$this->giftSearch.'%'))
+                ->orderByDesc('diamond_count')
+                ->get(),
+            'enabledGiftIds' => $this->projectLive->enabledGifts()->pluck('tiktok_gifts.id')->all(),
+            'giftCatalogCount' => TikTokGift::count(),
+            // ::max() adalah agregat mentah (bukan hasil hydrate model), jadi TIDAK melalui
+            // cast atribut model — hasilnya string, bukan Carbon, harus di-parse manual.
+            'giftCatalogUpdatedAt' => ($max = TikTokGift::max('updated_at')) ? \Carbon\Carbon::parse($max) : null,
         ]);
     }
 }

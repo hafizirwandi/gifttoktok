@@ -83,6 +83,18 @@ class LiveShow extends Component
     {
         $this->projectLive->refresh();
 
+        if ($this->projectLive->auto_gift_mode) {
+            // Auto Gift Mode: DB sepenuhnya otoritatif (leaderboard sudah tervalidasi
+            // server-side), tidak ada gating "tunggu trigger operator" sama sekali.
+            $this->details = $this->projectLive->details()
+                ->orderBy('position')
+                ->get()
+                ->map(fn (ProjectLiveDetail $detail) => $this->toArray($detail))
+                ->all();
+
+            return;
+        }
+
         $dbRows = $this->projectLive->details()->get(['id', 'status', 'hotkey'])->keyBy('id');
 
         foreach ($this->details as $i => $detail) {
@@ -113,6 +125,8 @@ class LiveShow extends Component
             'status' => $detail->status->value,
             'dominant_color' => $detail->dominant_color,
             'img_url' => $detail->imgUrl(),
+            'source' => $detail->source->value,
+            'gift_total_value' => $detail->gift_total_value,
         ];
     }
 

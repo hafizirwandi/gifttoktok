@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DetailSource;
 use App\Enums\DetailStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,18 +22,27 @@ class ProjectLiveDetail extends Model
         'hotkey',
         'status',
         'dominant_color',
+        'source',
+        'gift_total_value',
+        'project_live_gifter_id',
     ];
 
     protected function casts(): array
     {
         return [
             'status' => DetailStatus::class,
+            'source' => DetailSource::class,
         ];
     }
 
     public function projectLive(): BelongsTo
     {
         return $this->belongsTo(ProjectLive::class);
+    }
+
+    public function gifter(): BelongsTo
+    {
+        return $this->belongsTo(ProjectLiveGifter::class, 'project_live_gifter_id');
     }
 
     public function imgUrl(): ?string

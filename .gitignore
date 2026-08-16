@@ -13,6 +13,10 @@
 /.zed
 /auth.json
 /node_modules
+services/tiktok-gift-listener/node_modules
+services/tiktok-gift-listener/listener.pid
+services/tiktok-gift-listener/listener.log
+services/tiktok-gift-listener/listener.err.log
 /public/build
 /public/hot
 /public/storage

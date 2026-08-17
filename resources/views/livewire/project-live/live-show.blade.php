@@ -68,7 +68,7 @@
                                         x-transition:leave="transition ease-in duration-150"
                                         x-transition:leave-start="opacity-100"
                                         x-transition:leave-end="opacity-0"
-                                        class="text-xs font-semibold text-white leading-none inline-block">{{ $detail['gift_total_value'] > 0 ? number_format($detail['gift_total_value']) : ($detail['follower'] ?: '0') }}</span>
+                                        class="text-xs font-semibold text-white leading-none inline-block">{{ $detail['gift_total_value'] > 0 ? \Illuminate\Support\Number::abbreviate($detail['gift_total_value'], maxPrecision: 1) : ($detail['follower'] ?: '0') }}</span>
                                 </div>
 
                                 <!-- Badge nama + plus -->

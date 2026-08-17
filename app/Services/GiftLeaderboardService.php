@@ -96,9 +96,12 @@ class GiftLeaderboardService
     }
 
     /**
-     * Kosongkan semua kursi auto & reset round_value semua gifter project ini (mulai
-     * putaran baru dari 0) supaya gifter lain juga dapat giliran. total_value
-     * (lifetime) TIDAK PERNAH ikut direset atau dihapus di sini.
+     * Kosongkan TAMPILAN 8 kursi auto (papan terlihat kosong lagi) TANPA mereset
+     * round_value gifter — akumulasi koin tiap gifter tetap jalan terus, tidak pernah
+     * balik ke 0 hanya karena papan penuh & di-clear. Begitu ada gift berikutnya,
+     * recalculate() akan mengisi ulang kursi memakai round_value yang sudah terkumpul
+     * itu (bukan mulai dari nol). total_value (lifetime) juga TIDAK PERNAH ikut
+     * direset atau dihapus di sini — cuma tombol "Reset Leaderboard" admin yang boleh.
      */
     public function startNewRound(ProjectLive $projectLive): void
     {
@@ -113,8 +116,6 @@ class GiftLeaderboardService
                     'project_live_gifter_id' => null,
                     'dominant_color' => '#111111',
                 ]);
-
-            $projectLive->gifters()->update(['round_value' => 0]);
 
             $projectLive->update(['board_filled_at' => null]);
         });

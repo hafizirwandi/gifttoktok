@@ -105,22 +105,16 @@
 
                         <!-- Katalog & aturan gift -->
                         <div class="space-y-3">
-                            <div class="flex items-center justify-between gap-3">
-                                <div>
-                                    <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Gift yang Dihitung</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">
-                                        Katalog: {{ $giftCatalogCount }} jenis gift.
-                                        @if ($giftCatalogUpdatedAt)
-                                            Terakhir update {{ $giftCatalogUpdatedAt->diffForHumans() }}.
-                                        @else
-                                            Belum ada data.
-                                        @endif
-                                    </p>
-                                </div>
-                                <button type="button" wire:click="$refresh" title="Muat ulang daftar gift terbaru dari database"
-                                    class="flex-shrink-0 inline-flex items-center px-3 py-1.5 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-xs font-semibold rounded-md hover:bg-gray-50 dark:hover:bg-gray-800">
-                                    Update Gift
-                                </button>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Gift yang Dihitung</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                    Katalog: {{ $giftCatalogCount }} jenis gift.
+                                    @if ($giftCatalogUpdatedAt)
+                                        Terakhir update {{ $giftCatalogUpdatedAt->diffForHumans() }}.
+                                    @else
+                                        Belum ada data.
+                                    @endif
+                                </p>
                             </div>
 
                             @if ($giftCatalogCount === 0)
@@ -129,6 +123,22 @@
                                 </p>
                             @else
                                 <x-text-input wire:model.live.debounce.300ms="giftSearch" type="text" placeholder="Cari nama gift..." class="block w-full text-sm" />
+
+                                <div class="flex items-center justify-between gap-2">
+                                    <p class="text-xs text-gray-400">
+                                        {{ count($gifts) }} gift{{ $giftSearch ? ' (hasil pencarian)' : '' }}
+                                    </p>
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" wire:click="enableAllGifts"
+                                            class="inline-flex items-center px-2.5 py-1 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 text-xs font-semibold rounded-md hover:bg-green-100 dark:hover:bg-green-900/40">
+                                            Aktifkan Semua
+                                        </button>
+                                        <button type="button" wire:click="disableAllGifts" wire:confirm="Nonaktifkan semua gift {{ $giftSearch ? 'hasil pencarian ini' : 'di katalog' }}?"
+                                            class="inline-flex items-center px-2.5 py-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 text-xs font-semibold rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
+                                            Nonaktifkan Semua
+                                        </button>
+                                    </div>
+                                </div>
 
                                 <div class="max-h-64 overflow-y-auto border border-gray-100 dark:border-gray-700 rounded-md divide-y divide-gray-100 dark:divide-gray-700">
                                     @forelse ($gifts as $gift)

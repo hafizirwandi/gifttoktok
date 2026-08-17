@@ -141,6 +141,35 @@ class DetailAdmin extends Component
         }
     }
 
+    /**
+     * Aktifkan/nonaktifkan semua gift yang SEDANG TAMPIL di list (mengikuti filter
+     * pencarian `giftSearch` yang aktif) — bukan selalu seluruh katalog.
+     */
+    public function enableAllGifts(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $this->projectLive->enabledGifts()->syncWithoutDetaching($this->filteredGiftIds());
+    }
+
+    public function disableAllGifts(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $this->projectLive->enabledGifts()->detach($this->filteredGiftIds());
+    }
+
+    private function filteredGiftsQuery()
+    {
+        return TikTokGift::query()
+            ->when($this->giftSearch, fn ($q) => $q->where('name', 'like', '%'.$this->giftSearch.'%'));
+    }
+
+    private function filteredGiftIds(): array
+    {
+        return $this->filteredGiftsQuery()->pluck('id')->all();
+    }
+
     public function toggleStatus(int $detailId): void
     {
         $this->authorize('viewLive', $this->projectLive);
@@ -212,10 +241,7 @@ class DetailAdmin extends Component
     {
         return view('livewire.project-live.detail-admin', [
             'details' => $this->projectLive->details,
-            'gifts' => TikTokGift::query()
-                ->when($this->giftSearch, fn ($q) => $q->where('name', 'like', '%'.$this->giftSearch.'%'))
-                ->orderByDesc('diamond_count')
-                ->get(),
+            'gifts' => $this->filteredGiftsQuery()->orderByDesc('diamond_count')->get(),
             'enabledGiftIds' => $this->projectLive->enabledGifts()->pluck('tiktok_gifts.id')->all(),
             'giftCatalogCount' => TikTokGift::count(),
             // ::max() adalah agregat mentah (bukan hasil hydrate model), jadi TIDAK melalui

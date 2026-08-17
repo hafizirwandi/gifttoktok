@@ -56,6 +56,24 @@ class DetailAdmin extends Component
         $this->tiktokUsername = (string) $projectLive->tiktok_username;
     }
 
+    /**
+     * Dipanggil berkala oleh wire:poll di halaman admin ini. Auto-clear papan penuh
+     * (lihat GiftLeaderboardService::maybeStartNewRoundIfExpired) sebelumnya CUMA
+     * dicek dari polling halaman Live — kalau operator cuma buka halaman admin ini
+     * tanpa halaman Live terbuka, papan kelihatan "nyangkut" penuh terus walau
+     * delay-nya sudah lewat. Dicek juga di sini supaya konsisten di kedua halaman.
+     */
+    public function pollAutoGiftMode(): void
+    {
+        if (! $this->projectLive->auto_gift_mode) {
+            return;
+        }
+
+        app(GiftLeaderboardService::class)->maybeStartNewRoundIfExpired($this->projectLive);
+
+        $this->projectLive->refresh();
+    }
+
     public function openEdit(int $detailId): void
     {
         $detail = $this->projectLive->details()->findOrFail($detailId);

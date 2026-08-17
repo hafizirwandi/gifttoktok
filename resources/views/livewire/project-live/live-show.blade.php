@@ -35,6 +35,14 @@
                 <div class="w-[46%] grid grid-cols-2 gap-3 p-3 content-start">
                     @foreach ($details as $detail)
                         @if ($detail['status'] === 'show' && $detail['name'])
+                            @php
+                                // Di bawah 1000 tampil apa adanya; 1000 ke atas pakai singkatan K/M
+                                // 2 desimal ala format Indonesia (koma sebagai pemisah desimal),
+                                // mis. 6000 -> "6,00K", 268300 -> "268,30K".
+                                $coinDisplay = $detail['gift_total_value'] >= 1000
+                                    ? \Illuminate\Support\Number::withLocale('id', fn () => \Illuminate\Support\Number::abbreviate($detail['gift_total_value'], precision: 2))
+                                    : (string) $detail['gift_total_value'];
+                            @endphp
                             <div wire:key="seat-{{ $detail['id'] }}" wire:click="toggleClick({{ $detail['id'] }})"
                                 class="relative aspect-square rounded-xl overflow-hidden border-4 border-white/15 cursor-pointer">
                                 <!-- Background: foto yang sama, diblur & digelapkan sedikit -->
@@ -68,7 +76,7 @@
                                         x-transition:leave="transition ease-in duration-150"
                                         x-transition:leave-start="opacity-100"
                                         x-transition:leave-end="opacity-0"
-                                        class="text-xs font-semibold text-white leading-none inline-block">{{ $detail['gift_total_value'] > 0 ? \Illuminate\Support\Number::abbreviate($detail['gift_total_value'], maxPrecision: 1) : ($detail['follower'] ?: '0') }}</span>
+                                        class="text-xs font-semibold text-white leading-none inline-block">{{ $detail['gift_total_value'] > 0 ? $coinDisplay : ($detail['follower'] ?: '0') }}</span>
                                 </div>
 
                                 <!-- Badge nama + plus -->

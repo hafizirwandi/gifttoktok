@@ -136,7 +136,7 @@ WEBHOOK_SECRET="{{ $projectLive->webhook_secret }}"</pre>
                                 <div class="max-h-64 overflow-y-auto border border-gray-100 dark:border-gray-700 rounded-md divide-y divide-gray-100 dark:divide-gray-700">
                                     @forelse ($gifts as $gift)
                                         @php $isEnabled = in_array($gift->id, $enabledGiftIds); @endphp
-                                        <div class="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-900/50">
+                                        <div wire:key="gift-{{ $gift->id }}" class="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-900/50">
                                             <div wire:click="toggleGiftRule({{ $gift->id }})" role="button" tabindex="0"
                                                 class="flex items-center gap-3 flex-1 min-w-0 text-left cursor-pointer">
                                                 @if ($gift->icon_url)
@@ -157,16 +157,16 @@ WEBHOOK_SECRET="{{ $projectLive->webhook_secret }}"</pre>
 
                                             @can('manage', \App\Models\ProjectLive::class)
                                                 @if ($editingGiftId === $gift->id)
-                                                    <div class="flex items-center gap-1 flex-shrink-0" wire:click.stop>
+                                                    <div wire:key="gift-actions-{{ $gift->id }}-edit" class="flex items-center gap-1.5 flex-shrink-0" wire:click.stop>
                                                         <input type="number" min="0" wire:model="giftDiamondCount" wire:keydown.enter="saveGiftDiamond"
-                                                            class="w-16 text-xs rounded border-gray-300 dark:border-gray-600 dark:bg-gray-900 py-0.5 px-1">
+                                                            class="w-28 text-xs text-white placeholder-gray-400 rounded border-gray-300 dark:border-gray-600 bg-gray-700 dark:bg-gray-900 py-1 px-2">
                                                         <button type="button" wire:click="saveGiftDiamond"
                                                             class="text-[10px] font-semibold text-green-600 dark:text-green-400 hover:underline">Simpan</button>
                                                         <button type="button" wire:click="cancelEditGiftDiamond"
                                                             class="text-[10px] font-semibold text-gray-400 hover:underline">Batal</button>
                                                     </div>
                                                 @else
-                                                    <div class="flex items-center gap-1 flex-shrink-0">
+                                                    <div wire:key="gift-actions-{{ $gift->id }}-view" class="flex items-center gap-1 flex-shrink-0">
                                                         <button type="button" wire:click="openEditGiftDiamond({{ $gift->id }})" title="Edit coin"
                                                             class="p-1 rounded text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30">
                                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5">

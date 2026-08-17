@@ -39,19 +39,27 @@ class TikTokGiftEventProcessor
 
         // Opt-in: gift yang belum diaktifkan admin untuk project ini diabaikan sepenuhnya —
         // pengirimnya tidak masuk leaderboard sama sekali.
-        $isEnabled = $projectLive->enabledGifts()
+        $gift = $projectLive->enabledGifts()
             ->where('tiktok_gifts.tiktok_gift_id', $tiktokGiftId)
-            ->exists();
+            ->first();
 
-        if (! $isEnabled) {
+        if (! $gift) {
             return;
         }
+
+        // Nilai coin yang dihitung SELALU pakai diamond_count dari katalog kita (bisa
+        // diedit admin lewat "Edit coin" di list gift), BUKAN diamondCount asli yang
+        // dilaporkan TikTok — supaya admin bisa mengubah bobot poin sebuah gift tanpa
+        // tergantung harga diamond aslinya. repeat_count tetap dari TikTok apa adanya
+        // (combo gift beruntun, mis. kirim Rose x5).
+        $repeatCount = max(1, (int) $event['gift']['repeat_count']);
+        $value = $gift->diamond_count * $repeatCount;
 
         $groupId = (string) $event['gift']['group_id'];
 
         $lock = Cache::lock("leaderboard-{$projectLive->id}", 5);
 
-        $lock->block(3, function () use ($projectLive, $event, $groupId) {
+        $lock->block(3, function () use ($projectLive, $event, $groupId, $value) {
             $dedupeKey = "gift-dedupe:{$projectLive->id}:{$groupId}";
 
             if (Cache::has($dedupeKey)) {
@@ -64,12 +72,12 @@ class TikTokGiftEventProcessor
             // (lihat GiftLeaderboardService::maybeStartNewRoundIfExpired(), dipanggil
             // dari LiveShow::syncFromDatabase() lewat wire:poll) supaya kursi yang
             // baru saja penuh sempat kebaca dulu sebelum otomatis di-reset.
-            $gifter = $this->upsertGifter($projectLive, $event);
+            $gifter = $this->upsertGifter($projectLive, $event, $value);
             $this->leaderboard->recalculate($projectLive);
         });
     }
 
-    private function upsertGifter(ProjectLive $projectLive, array $event): ProjectLiveGifter
+    private function upsertGifter(ProjectLive $projectLive, array $event, int $value): ProjectLiveGifter
     {
         $gifter = ProjectLiveGifter::firstOrNew([
             'project_live_id' => $projectLive->id,
@@ -80,8 +88,8 @@ class TikTokGiftEventProcessor
         $gifter->nickname = $event['gifter']['nickname'] ?? $gifter->nickname;
         // total_value = akumulasi lifetime, TIDAK PERNAH direset (tetap jalan terus).
         // round_value = akumulasi putaran berjalan, dipakai untuk ranking kursi.
-        $gifter->total_value = ($gifter->total_value ?? 0) + (int) $event['gift']['total_value'];
-        $gifter->round_value = ($gifter->round_value ?? 0) + (int) $event['gift']['total_value'];
+        $gifter->total_value = ($gifter->total_value ?? 0) + $value;
+        $gifter->round_value = ($gifter->round_value ?? 0) + $value;
         $gifter->gift_count = ($gifter->gift_count ?? 0) + 1;
         $gifter->last_gift_at = now();
         $gifter->save();

@@ -103,8 +103,9 @@ function start() {
                 return;
             }
 
-            const totalValue = gift.diamondCount * gift.repeatCount;
-
+            // Nilai poin/coin dihitung di sisi Laravel dari katalog gift kita sendiri
+            // (bisa diedit admin), BUKAN dari diamondCount asli TikTok — di sini cuma
+            // kirim berapa kali gift ini di-kirim (repeat_count), bukan nilainya.
             sendWebhook({
                 project_live_id: PROJECT_LIVE_ID,
                 tiktok_username: TIKTOK_USERNAME,
@@ -117,11 +118,11 @@ function start() {
                 gift: {
                     tiktok_gift_id: String(gift.giftId),
                     group_id: String(gift.groupId || `${gift.userId}-${Date.now()}`),
-                    total_value: totalValue,
+                    repeat_count: gift.repeatCount,
                 },
             });
 
-            console.log(`Gift: ${gift.nickname ?? gift.userId} -> ${totalValue}`);
+            console.log(`Gift: ${gift.nickname ?? gift.userId} -> giftId ${gift.giftId} x${gift.repeatCount}`);
         } catch (err) {
             console.error('Gagal memproses event gift:', err.message);
         }

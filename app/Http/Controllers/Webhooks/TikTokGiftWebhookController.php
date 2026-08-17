@@ -21,7 +21,7 @@ class TikTokGiftWebhookController extends Controller
             'gifter.avatar_url' => ['nullable', 'string'],
             'gift.tiktok_gift_id' => ['required', 'string'],
             'gift.group_id' => ['required', 'string'],
-            'gift.total_value' => ['required', 'integer', 'min:0'],
+            'gift.repeat_count' => ['required', 'integer', 'min:1'],
         ]);
 
         $projectLive = ProjectLive::find($validated['project_live_id']);

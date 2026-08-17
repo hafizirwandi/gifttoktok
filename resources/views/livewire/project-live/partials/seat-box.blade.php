@@ -61,16 +61,15 @@
              (mis. Donat dipetakan ke gift "Lion") atau icon_url gift itu sendiri kalau
              belum dipetakan admin (lihat GiftMapping). -->
         @if ($detail['show_gift_badge'] && $detail['last_gift_icon_url'])
-            <div wire:key="giftbadge-{{ $detail['id'] }}-{{ $detail['last_gift_at'] }}"
+            <img wire:key="giftbadge-{{ $detail['id'] }}-{{ $detail['last_gift_at'] }}"
+                src="{{ $detail['last_gift_icon_url'] }}" alt=""
                 x-transition:enter="transition ease-out duration-500"
                 x-transition:enter-start="opacity-0 scale-50"
                 x-transition:enter-end="opacity-100 scale-100"
                 x-transition:leave="transition ease-in duration-700"
                 x-transition:leave-start="opacity-100 scale-100"
                 x-transition:leave-end="opacity-0 scale-75"
-                class="absolute top-2 right-2 w-9 h-9 rounded-full bg-black/60 ring-2 ring-white/20 flex items-center justify-center overflow-hidden">
-                <img src="{{ $detail['last_gift_icon_url'] }}" alt="" class="w-6 h-6 object-contain">
-            </div>
+                class="absolute top-2 right-2 w-12 h-12 object-contain drop-shadow-lg">
         @endif
     </div>
 @else

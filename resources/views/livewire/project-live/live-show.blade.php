@@ -48,9 +48,9 @@
                                 <!-- Avatar -->
                                 <div class="relative h-full flex items-center justify-center">
                                     @if ($detail['img_url'])
-                                        <img src="{{ $detail['img_url'] }}" alt="{{ $detail['name'] }}" class="w-[42%] aspect-square rounded-full object-cover ring-2 ring-white/20">
+                                        <img src="{{ $detail['img_url'] }}" alt="{{ $detail['name'] }}" class="w-[62%] aspect-square rounded-full object-cover ring-2 ring-white/20">
                                     @else
-                                        <div class="w-[42%] aspect-square rounded-full bg-gray-700"></div>
+                                        <div class="w-[62%] aspect-square rounded-full bg-gray-700"></div>
                                     @endif
                                 </div>
 

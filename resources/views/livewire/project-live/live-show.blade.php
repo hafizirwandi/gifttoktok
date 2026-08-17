@@ -34,8 +34,8 @@
                 <!-- Panel kanan: grid 2x4 kursi, tiap kotak dipaksa persegi (aspect-square) -->
                 <div class="w-[46%] grid grid-cols-2 gap-3 p-3 content-start">
                     @foreach ($details as $detail)
-                        @if ($detail['status'] === 'show')
-                            <div wire:click="toggleClick({{ $detail['id'] }})"
+                        @if ($detail['status'] === 'show' && $detail['name'])
+                            <div wire:key="seat-{{ $detail['id'] }}" wire:click="toggleClick({{ $detail['id'] }})"
                                 class="relative aspect-square rounded-xl overflow-hidden border-4 border-white/15 cursor-pointer">
                                 <!-- Background: foto yang sama, diblur & digelapkan sedikit -->
                                 @if ($detail['img_url'])
@@ -55,19 +55,19 @@
                                 </div>
 
                                 <!-- Badge follower: bintang biru + angka -->
-                                <div class="absolute top-2 left-2 flex items-center gap-1 bg-black/60 rounded-full pl-1 pr-2 py-1">
-                                    <span class="w-5 h-5 rounded-full bg-sky-400 border-2 border-white flex items-center justify-center flex-shrink-0">
-                                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3 text-white">
+                                <div class="absolute top-2 left-2 flex items-center gap-1 bg-black/60 rounded-full pl-0.5 pr-1.5 py-0.5">
+                                    <span class="w-4 h-4 rounded-full bg-sky-400 border-2 border-white flex items-center justify-center flex-shrink-0">
+                                        <svg viewBox="0 0 20 20" fill="currentColor" class="w-2.5 h-2.5 text-white">
                                             <path fill-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z" clip-rule="evenodd" />
                                         </svg>
                                     </span>
-                                    <span class="text-base font-semibold text-white leading-none">{{ $detail['source'] === 'auto' ? number_format($detail['gift_total_value']) : ($detail['follower'] ?: '0') }}</span>
+                                    <span class="text-xs font-semibold text-white leading-none">{{ $detail['gift_total_value'] > 0 ? number_format($detail['gift_total_value']) : ($detail['follower'] ?: '0') }}</span>
                                 </div>
 
                                 <!-- Badge nama + plus -->
-                                <div class="absolute bottom-2 left-2 h-10 flex items-center gap-1 bg-black/60 rounded-full py-1 pl-2 pr-1">
-                                    <span class="text-base font-medium text-white truncate max-w-[8ch]">{{ $detail['name'] ?: 'Guest' }}</span>
-                                    <span class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-white text-base leading-none flex-shrink-0">+</span>
+                                <div class="absolute bottom-2 left-2 h-7 flex items-center gap-1 bg-black/60 rounded-full py-0.5 pl-1.5 pr-0.5">
+                                    <span class="text-xs font-medium text-white truncate max-w-[8ch]">{{ $detail['name'] }}</span>
+                                    <span class="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-white text-xs leading-none flex-shrink-0">+</span>
                                 </div>
 
                                 <!-- Mic mute: pojok kanan bawah, transparan tanpa badge -->
@@ -80,7 +80,7 @@
                                 </div>
                             </div>
                         @else
-                            <div wire:click="toggleClick({{ $detail['id'] }})"
+                            <div wire:key="seat-{{ $detail['id'] }}" wire:click="toggleClick({{ $detail['id'] }})"
                                 class="relative aspect-square rounded-xl bg-black border-4 border-white/10 flex flex-col items-center justify-center gap-2 cursor-pointer">
                                 <div class="text-white/70 text-4xl leading-none">
                                     +

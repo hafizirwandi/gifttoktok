@@ -34,6 +34,8 @@ class DetailAdmin extends Component
 
     public string $follower = '';
 
+    public string $coin = '0';
+
     public string $hotkey = '';
 
     public string $status = 'hide';
@@ -57,6 +59,7 @@ class DetailAdmin extends Component
         $this->editingDetailId = $detail->id;
         $this->name = (string) $detail->name;
         $this->follower = (string) $detail->follower;
+        $this->coin = (string) $detail->gift_total_value;
         $this->hotkey = (string) $detail->hotkey;
         $this->status = $detail->status->value;
         $this->img = null;
@@ -64,7 +67,7 @@ class DetailAdmin extends Component
 
     public function closeEdit(): void
     {
-        $this->reset(['editingDetailId', 'img', 'name', 'follower', 'hotkey', 'status']);
+        $this->reset(['editingDetailId', 'img', 'name', 'follower', 'coin', 'hotkey', 'status']);
     }
 
     public function hideAll(): void
@@ -86,10 +89,6 @@ class DetailAdmin extends Component
         ]);
 
         $this->projectLive->refresh();
-
-        if ($this->projectLive->auto_gift_mode) {
-            app(GiftLeaderboardService::class)->reset($this->projectLive);
-        }
     }
 
     public function toggleAutoGiftMode(): void
@@ -197,6 +196,7 @@ class DetailAdmin extends Component
         $validated = $this->validate([
             'name' => 'nullable|string|max:255',
             'follower' => 'nullable|string|max:50',
+            'coin' => 'required|integer|min:0',
             'hotkey' => [
                 'nullable',
                 'string',
@@ -212,6 +212,7 @@ class DetailAdmin extends Component
         $data = [
             'name' => $validated['name'],
             'follower' => $validated['follower'],
+            'gift_total_value' => $validated['coin'],
             'hotkey' => $validated['hotkey'] !== '' ? $validated['hotkey'] : null,
             'status' => $validated['status'],
             // Edit manual selalu mengembalikan kursi ke source "manual", supaya tidak

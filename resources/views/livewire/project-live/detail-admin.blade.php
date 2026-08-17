@@ -79,28 +79,21 @@
                             <x-primary-button>Simpan</x-primary-button>
                         </form>
 
-                        <div class="bg-gray-50 dark:bg-gray-900/50 rounded-md p-3 space-y-2 text-xs">
-                            <p class="text-gray-500 dark:text-gray-400">
-                                Salin nilai berikut ke <code class="font-mono">.env</code> di <code class="font-mono">services/tiktok-gift-listener</code>:
-                            </p>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 font-mono">
-                                <div>
-                                    <span class="text-gray-400">WEBHOOK_URL</span>
-                                    <p class="text-gray-700 dark:text-gray-300 break-all select-all">{{ url('/api/webhooks/tiktok-gift') }}</p>
-                                </div>
-                                <div>
-                                    <span class="text-gray-400">PROJECT_LIVE_ID</span>
-                                    <p class="text-gray-700 dark:text-gray-300 select-all">{{ $projectLive->id }}</p>
-                                </div>
-                                <div>
-                                    <span class="text-gray-400">TIKTOK_USERNAME</span>
-                                    <p class="text-gray-700 dark:text-gray-300 select-all">{{ $projectLive->tiktok_username ?: '(belum diisi)' }}</p>
-                                </div>
-                                <div>
-                                    <span class="text-gray-400">WEBHOOK_SECRET</span>
-                                    <p class="text-gray-700 dark:text-gray-300 break-all select-all">{{ $projectLive->webhook_secret }}</p>
-                                </div>
+                        <div class="bg-gray-50 dark:bg-gray-900/50 rounded-md p-3 space-y-2 text-xs" x-data="{ copied: false }">
+                            <div class="flex items-center justify-between gap-2">
+                                <p class="text-gray-500 dark:text-gray-400">
+                                    Copy langsung ke <code class="font-mono">.env</code> di <code class="font-mono">services/tiktok-gift-listener</code>:
+                                </p>
+                                <button type="button"
+                                    x-on:click="navigator.clipboard.writeText($refs.envBlock.innerText); copied = true; setTimeout(() => copied = false, 1500)"
+                                    class="flex-shrink-0 inline-flex items-center px-2 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 text-[10px] font-semibold rounded hover:bg-indigo-100 dark:hover:bg-indigo-900/50">
+                                    <span x-text="copied ? 'Tersalin!' : 'Copy'"></span>
+                                </button>
                             </div>
+                            <pre x-ref="envBlock" class="font-mono text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-all select-all bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-2">TIKTOK_USERNAME={{ $projectLive->tiktok_username }}
+PROJECT_LIVE_ID={{ $projectLive->id }}
+WEBHOOK_URL={{ url('/api/webhooks/tiktok-gift') }}
+WEBHOOK_SECRET="{{ $projectLive->webhook_secret }}"</pre>
                         </div>
 
                         <!-- Katalog & aturan gift -->
@@ -216,7 +209,7 @@
                         </span>
 
                         <span class="text-[10px] text-gray-500 dark:text-gray-400">
-                            @if ($detail->source->value === 'auto')
+                            @if ($detail->gift_total_value > 0)
                                 {{ number_format($detail->gift_total_value) }} gift
                             @else
                                 {{ $detail->follower ?: '0' }} follower
@@ -284,6 +277,13 @@
                             <x-text-input wire:model="hotkey" id="hotkey" maxlength="1" class="block mt-1 w-full" type="text" placeholder="1" />
                             <x-input-error :messages="$errors->get('hotkey')" class="mt-2" />
                         </div>
+                    </div>
+
+                    <div>
+                        <x-input-label for="coin" value="Coin" />
+                        <x-text-input wire:model="coin" id="coin" class="block mt-1 w-full" type="number" min="0" placeholder="0" />
+                        <p class="text-xs text-gray-400 mt-1">Angka gift/coin yang tampil di badge kursi ini.</p>
+                        <x-input-error :messages="$errors->get('coin')" class="mt-2" />
                     </div>
 
                     <div>

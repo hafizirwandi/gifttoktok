@@ -44,6 +44,10 @@ class DetailAdmin extends Component
 
     public string $giftSearch = '';
 
+    public ?int $editingGiftId = null;
+
+    public string $giftDiamondCount = '';
+
     public function mount(ProjectLive $projectLive): void
     {
         $this->authorize('viewLive', $projectLive);
@@ -156,6 +160,48 @@ class DetailAdmin extends Component
         $this->authorize('viewLive', $this->projectLive);
 
         $this->projectLive->enabledGifts()->detach($this->filteredGiftIds());
+    }
+
+    /**
+     * Edit/hapus gift di sini menyentuh katalog GLOBAL (tabel tiktok_gifts), dipakai
+     * bersama oleh semua project — sengaja dibatasi hanya untuk superadmin, beda dengan
+     * toggleGiftRule() yang cuma mengubah aturan on/off per project.
+     */
+    public function openEditGiftDiamond(int $giftId): void
+    {
+        $this->authorize('manage', ProjectLive::class);
+
+        $gift = TikTokGift::findOrFail($giftId);
+
+        $this->editingGiftId = $gift->id;
+        $this->giftDiamondCount = (string) $gift->diamond_count;
+    }
+
+    public function cancelEditGiftDiamond(): void
+    {
+        $this->reset(['editingGiftId', 'giftDiamondCount']);
+    }
+
+    public function saveGiftDiamond(): void
+    {
+        $this->authorize('manage', ProjectLive::class);
+
+        $validated = $this->validate([
+            'giftDiamondCount' => 'required|integer|min:0',
+        ]);
+
+        TikTokGift::whereKey($this->editingGiftId)->update([
+            'diamond_count' => $validated['giftDiamondCount'],
+        ]);
+
+        $this->reset(['editingGiftId', 'giftDiamondCount']);
+    }
+
+    public function deleteGift(int $giftId): void
+    {
+        $this->authorize('manage', ProjectLive::class);
+
+        TikTokGift::whereKey($giftId)->delete();
     }
 
     private function filteredGiftsQuery()

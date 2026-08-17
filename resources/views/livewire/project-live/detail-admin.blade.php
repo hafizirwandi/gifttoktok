@@ -136,21 +136,55 @@ WEBHOOK_SECRET="{{ $projectLive->webhook_secret }}"</pre>
                                 <div class="max-h-64 overflow-y-auto border border-gray-100 dark:border-gray-700 rounded-md divide-y divide-gray-100 dark:divide-gray-700">
                                     @forelse ($gifts as $gift)
                                         @php $isEnabled = in_array($gift->id, $enabledGiftIds); @endphp
-                                        <button type="button" wire:click="toggleGiftRule({{ $gift->id }})"
-                                            class="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-900/50">
-                                            @if ($gift->icon_url)
-                                                <img src="{{ $gift->icon_url }}" class="w-6 h-6 rounded flex-shrink-0" alt="">
-                                            @else
-                                                <div class="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700 flex-shrink-0"></div>
-                                            @endif
-                                            <div class="flex-1 min-w-0">
-                                                <p class="text-sm text-gray-800 dark:text-gray-200 truncate">{{ $gift->name }}</p>
-                                                <p class="text-xs text-gray-400">{{ number_format($gift->diamond_count) }} diamond</p>
+                                        <div class="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-900/50">
+                                            <div wire:click="toggleGiftRule({{ $gift->id }})" role="button" tabindex="0"
+                                                class="flex items-center gap-3 flex-1 min-w-0 text-left cursor-pointer">
+                                                @if ($gift->icon_url)
+                                                    <img src="{{ $gift->icon_url }}" class="w-6 h-6 rounded flex-shrink-0" alt="">
+                                                @else
+                                                    <div class="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700 flex-shrink-0"></div>
+                                                @endif
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-sm text-gray-800 dark:text-gray-200 truncate">{{ $gift->name }}</p>
+                                                    @if ($editingGiftId !== $gift->id)
+                                                        <p class="text-xs text-gray-400">{{ number_format($gift->diamond_count) }} diamond</p>
+                                                    @endif
+                                                </div>
+                                                <span class="relative inline-flex h-5 w-9 items-center rounded-full flex-shrink-0 transition {{ $isEnabled ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                                    <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition {{ $isEnabled ? 'translate-x-[18px]' : 'translate-x-1' }}"></span>
+                                                </span>
                                             </div>
-                                            <span class="relative inline-flex h-5 w-9 items-center rounded-full flex-shrink-0 transition {{ $isEnabled ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
-                                                <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition {{ $isEnabled ? 'translate-x-[18px]' : 'translate-x-1' }}"></span>
-                                            </span>
-                                        </button>
+
+                                            @can('manage', \App\Models\ProjectLive::class)
+                                                @if ($editingGiftId === $gift->id)
+                                                    <div class="flex items-center gap-1 flex-shrink-0" wire:click.stop>
+                                                        <input type="number" min="0" wire:model="giftDiamondCount" wire:keydown.enter="saveGiftDiamond"
+                                                            class="w-16 text-xs rounded border-gray-300 dark:border-gray-600 dark:bg-gray-900 py-0.5 px-1">
+                                                        <button type="button" wire:click="saveGiftDiamond"
+                                                            class="text-[10px] font-semibold text-green-600 dark:text-green-400 hover:underline">Simpan</button>
+                                                        <button type="button" wire:click="cancelEditGiftDiamond"
+                                                            class="text-[10px] font-semibold text-gray-400 hover:underline">Batal</button>
+                                                    </div>
+                                                @else
+                                                    <div class="flex items-center gap-1 flex-shrink-0">
+                                                        <button type="button" wire:click="openEditGiftDiamond({{ $gift->id }})" title="Edit coin"
+                                                            class="p-1 rounded text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5">
+                                                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793ZM11.379 5.793 3 14.172V17h2.828l8.38-8.379-2.83-2.828Z" />
+                                                            </svg>
+                                                        </button>
+                                                        <button type="button" wire:click="deleteGift({{ $gift->id }})"
+                                                            wire:confirm="Hapus gift &quot;{{ $gift->name }}&quot; dari katalog? Ini menghapusnya untuk semua project."
+                                                            title="Hapus gift"
+                                                            class="p-1 rounded text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5">
+                                                                <path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 006 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 10.23 1.482l.149-.022.841 10.518A2.75 2.75 0 007.596 19h4.807a2.75 2.75 0 002.742-2.53l.841-10.52.149.023a.75.75 0 00.23-1.482A41.03 41.03 0 0014 4.193V3.75A2.75 2.75 0 0011.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 00-1.5.06l.3 7.5a.75.75 0 101.5-.06l-.3-7.5Zm4.34.06a.75.75 0 10-1.5-.06l-.3 7.5a.75.75 0 101.5.06l.3-7.5Z" clip-rule="evenodd" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                @endif
+                                            @endcan
+                                        </div>
                                     @empty
                                         <p class="text-xs text-gray-400 px-3 py-4 text-center">Tidak ada gift yang cocok dengan pencarian.</p>
                                     @endforelse

@@ -55,17 +55,24 @@
                                 </div>
 
                                 <!-- Badge follower: bintang biru + angka -->
-                                <div class="absolute top-2 left-2 flex items-center gap-1 bg-black/60 rounded-full pl-0.5 pr-1.5 py-0.5">
+                                <div class="absolute top-2 left-2 flex items-center gap-1.5 bg-black/60 rounded-full pl-1.5 pr-2.5 py-1">
                                     <span class="w-4 h-4 rounded-full bg-sky-400 border-2 border-white flex items-center justify-center flex-shrink-0">
                                         <svg viewBox="0 0 20 20" fill="currentColor" class="w-2.5 h-2.5 text-white">
                                             <path fill-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z" clip-rule="evenodd" />
                                         </svg>
                                     </span>
-                                    <span class="text-xs font-semibold text-white leading-none">{{ $detail['gift_total_value'] > 0 ? number_format($detail['gift_total_value']) : ($detail['follower'] ?: '0') }}</span>
+                                    <span wire:key="coin-{{ $detail['id'] }}-{{ $detail['gift_total_value'] }}"
+                                        x-transition:enter="transition ease-out duration-300"
+                                        x-transition:enter-start="opacity-0"
+                                        x-transition:enter-end="opacity-100"
+                                        x-transition:leave="transition ease-in duration-150"
+                                        x-transition:leave-start="opacity-100"
+                                        x-transition:leave-end="opacity-0"
+                                        class="text-xs font-semibold text-white leading-none inline-block">{{ $detail['gift_total_value'] > 0 ? number_format($detail['gift_total_value']) : ($detail['follower'] ?: '0') }}</span>
                                 </div>
 
                                 <!-- Badge nama + plus -->
-                                <div class="absolute bottom-2 left-2 h-7 flex items-center gap-1 bg-black/60 rounded-full py-0.5 pl-1.5 pr-0.5">
+                                <div class="absolute bottom-2 left-2 h-7 flex items-center gap-1.5 bg-black/60 rounded-full py-1 pl-2.5 pr-1">
                                     <span class="text-xs font-medium text-white truncate max-w-[8ch]">{{ $detail['name'] }}</span>
                                     <span class="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-white text-xs leading-none flex-shrink-0">+</span>
                                 </div>

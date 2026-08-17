@@ -22,9 +22,13 @@ class ProjectLiveDetail extends Model
         'hotkey',
         'status',
         'dominant_color',
+        'empty_label',
+        'empty_icon',
         'source',
         'gift_total_value',
         'project_live_gifter_id',
+        'last_gift_icon_url',
+        'last_gift_at',
     ];
 
     protected function casts(): array
@@ -32,6 +36,7 @@ class ProjectLiveDetail extends Model
         return [
             'status' => DetailStatus::class,
             'source' => DetailSource::class,
+            'last_gift_at' => 'datetime',
         ];
     }
 

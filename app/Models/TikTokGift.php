@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class TikTokGift extends Model
 {
@@ -15,10 +17,27 @@ class TikTokGift extends Model
         'name',
         'diamond_count',
         'icon_url',
+        'mapped_to_gift_id',
     ];
 
     public function projectLives(): BelongsToMany
     {
         return $this->belongsToMany(ProjectLive::class, 'project_live_gift_rules', 'tiktok_gift_id', 'project_live_id');
+    }
+
+    /**
+     * Gift lain yang "wajahnya" dipakai gift ini kalau dikirim (lihat GiftMapping).
+     */
+    public function mappedTo(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'mapped_to_gift_id');
+    }
+
+    /**
+     * Gift lain (kalau ada) yang memetakan dirinya ke gift ini.
+     */
+    public function mappedFrom(): HasOne
+    {
+        return $this->hasOne(self::class, 'mapped_to_gift_id');
     }
 }

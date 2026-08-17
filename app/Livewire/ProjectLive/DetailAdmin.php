@@ -4,6 +4,7 @@ namespace App\Livewire\ProjectLive;
 
 use App\Enums\DetailSource;
 use App\Enums\DetailStatus;
+use App\Enums\DisplayMode;
 use App\Enums\ProjectLiveStatus;
 use App\Models\ProjectLive;
 use App\Models\ProjectLiveDetail;
@@ -36,6 +37,10 @@ class DetailAdmin extends Component
 
     public string $coin = '0';
 
+    public string $emptyLabel = '';
+
+    public string $emptyIcon = '';
+
     public string $hotkey = '';
 
     public string $status = 'hide';
@@ -48,30 +53,17 @@ class DetailAdmin extends Component
 
     public string $giftDiamondCount = '';
 
+    /**
+     * Pilihan ikon (emoji) untuk kotak kursi yang masih kosong di layar Live.
+     */
+    public const EMPTY_ICON_CHOICES = ['+', '❤️', '⭐', '🎁', '🎤', '🔥', '👍', '❓'];
+
     public function mount(ProjectLive $projectLive): void
     {
         $this->authorize('viewLive', $projectLive);
 
         $this->projectLive = $projectLive;
         $this->tiktokUsername = (string) $projectLive->tiktok_username;
-    }
-
-    /**
-     * Dipanggil berkala oleh wire:poll di halaman admin ini. Auto-clear papan penuh
-     * (lihat GiftLeaderboardService::maybeStartNewRoundIfExpired) sebelumnya CUMA
-     * dicek dari polling halaman Live — kalau operator cuma buka halaman admin ini
-     * tanpa halaman Live terbuka, papan kelihatan "nyangkut" penuh terus walau
-     * delay-nya sudah lewat. Dicek juga di sini supaya konsisten di kedua halaman.
-     */
-    public function pollAutoGiftMode(): void
-    {
-        if (! $this->projectLive->auto_gift_mode) {
-            return;
-        }
-
-        app(GiftLeaderboardService::class)->maybeStartNewRoundIfExpired($this->projectLive);
-
-        $this->projectLive->refresh();
     }
 
     public function openEdit(int $detailId): void
@@ -82,6 +74,8 @@ class DetailAdmin extends Component
         $this->name = (string) $detail->name;
         $this->follower = (string) $detail->follower;
         $this->coin = (string) $detail->gift_total_value;
+        $this->emptyLabel = (string) $detail->empty_label;
+        $this->emptyIcon = (string) ($detail->empty_icon ?: '+');
         $this->hotkey = (string) $detail->hotkey;
         $this->status = $detail->status->value;
         $this->img = null;
@@ -89,7 +83,7 @@ class DetailAdmin extends Component
 
     public function closeEdit(): void
     {
-        $this->reset(['editingDetailId', 'img', 'name', 'follower', 'coin', 'hotkey', 'status']);
+        $this->reset(['editingDetailId', 'img', 'name', 'follower', 'coin', 'emptyLabel', 'emptyIcon', 'hotkey', 'status']);
     }
 
     public function hideAll(): void
@@ -108,6 +102,19 @@ class DetailAdmin extends Component
             'status' => $this->projectLive->status === ProjectLiveStatus::Live
                 ? ProjectLiveStatus::Off->value
                 : ProjectLiveStatus::Live->value,
+        ]);
+
+        $this->projectLive->refresh();
+    }
+
+    public function updateDisplayMode(string $mode): void
+    {
+        // Cuma superadmin — ini mengubah tampilan halaman Live buat semua penonton,
+        // bukan sekadar data kursi.
+        $this->authorize('manage', ProjectLive::class);
+
+        $this->projectLive->update([
+            'display_mode' => DisplayMode::from($mode)->value,
         ]);
 
         $this->projectLive->refresh();
@@ -182,12 +189,13 @@ class DetailAdmin extends Component
 
     /**
      * Edit/hapus gift di sini menyentuh katalog GLOBAL (tabel tiktok_gifts), dipakai
-     * bersama oleh semua project — sengaja dibatasi hanya untuk superadmin, beda dengan
-     * toggleGiftRule() yang cuma mengubah aturan on/off per project.
+     * bersama oleh semua project — jadi bisa berdampak ke project lain juga, tapi
+     * tetap dibolehkan buat akun role "live" yang di-assign ke project ini (sama
+     * seperti toggleGiftRule() dkk), bukan cuma superadmin.
      */
     public function openEditGiftDiamond(int $giftId): void
     {
-        $this->authorize('manage', ProjectLive::class);
+        $this->authorize('viewLive', $this->projectLive);
 
         $gift = TikTokGift::findOrFail($giftId);
 
@@ -202,7 +210,7 @@ class DetailAdmin extends Component
 
     public function saveGiftDiamond(): void
     {
-        $this->authorize('manage', ProjectLive::class);
+        $this->authorize('viewLive', $this->projectLive);
 
         $validated = $this->validate([
             'giftDiamondCount' => 'required|integer|min:0',
@@ -217,7 +225,7 @@ class DetailAdmin extends Component
 
     public function deleteGift(int $giftId): void
     {
-        $this->authorize('manage', ProjectLive::class);
+        $this->authorize('viewLive', $this->projectLive);
 
         TikTokGift::whereKey($giftId)->delete();
     }
@@ -261,6 +269,8 @@ class DetailAdmin extends Component
             'name' => 'nullable|string|max:255',
             'follower' => 'nullable|string|max:50',
             'coin' => 'required|integer|min:0',
+            'emptyLabel' => 'nullable|string|max:30',
+            'emptyIcon' => ['nullable', 'string', Rule::in(self::EMPTY_ICON_CHOICES)],
             'hotkey' => [
                 'nullable',
                 'string',
@@ -277,6 +287,8 @@ class DetailAdmin extends Component
             'name' => $validated['name'],
             'follower' => $validated['follower'],
             'gift_total_value' => $validated['coin'],
+            'empty_label' => $validated['emptyLabel'] !== '' ? $validated['emptyLabel'] : null,
+            'empty_icon' => $validated['emptyIcon'] !== '' ? $validated['emptyIcon'] : null,
             'hotkey' => $validated['hotkey'] !== '' ? $validated['hotkey'] : null,
             'status' => $validated['status'],
             // Edit manual selalu mengembalikan kursi ke source "manual", supaya tidak

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ProjectLive;
 use App\Models\ProjectLiveGifter;
+use App\Models\TikTokGift;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -59,7 +60,7 @@ class TikTokGiftEventProcessor
 
         $lock = Cache::lock("leaderboard-{$projectLive->id}", 5);
 
-        $lock->block(3, function () use ($projectLive, $event, $groupId, $value) {
+        $lock->block(3, function () use ($projectLive, $event, $groupId, $value, $gift) {
             $dedupeKey = "gift-dedupe:{$projectLive->id}:{$groupId}";
 
             if (Cache::has($dedupeKey)) {
@@ -68,13 +69,40 @@ class TikTokGiftEventProcessor
 
             Cache::put($dedupeKey, true, now()->addMinutes(5));
 
-            // Pengosongan kursi setelah penuh TIDAK dipicu di sini — itu ditunda
-            // (lihat GiftLeaderboardService::maybeStartNewRoundIfExpired(), dipanggil
-            // dari LiveShow::syncFromDatabase() lewat wire:poll) supaya kursi yang
-            // baru saja penuh sempat kebaca dulu sebelum otomatis di-reset.
+            // Papan yang sudah penuh TIDAK otomatis dikosongkan di sini — itu murni
+            // keputusan admin lewat tombol "Reset Leaderboard" (GiftLeaderboardService::reset()).
             $gifter = $this->upsertGifter($projectLive, $event, $value);
             $this->leaderboard->recalculate($projectLive);
+            $this->stampGiftIcon($projectLive, $gifter, $gift);
         });
+    }
+
+    /**
+     * Tandai kursi gifter ini dengan ikon gift yang baru dikirim — icon_url gift TUJUAN
+     * pemetaan kalau gift ini sudah dipetakan admin (lihat GiftMapping), kalau belum
+     * pakai icon_url gift itu sendiri apa adanya. live-show.blade.php nampilinnya
+     * sebentar di pojok kanan atas lalu fade-out sendiri berdasarkan last_gift_at
+     * (lihat LiveShow::toArray()). Tidak ngefek kalau gifter ini kebetulan sedang
+     * tidak dapat kursi (belum/tidak masuk top 8).
+     */
+    private function stampGiftIcon(ProjectLive $projectLive, ProjectLiveGifter $gifter, TikTokGift $gift): void
+    {
+        $seat = $projectLive->details()
+            ->where('project_live_gifter_id', $gifter->id)
+            ->first();
+
+        if (! $seat) {
+            return;
+        }
+
+        $displayIconUrl = $gift->mapped_to_gift_id
+            ? $gift->mappedTo?->icon_url
+            : $gift->icon_url;
+
+        $seat->update([
+            'last_gift_icon_url' => $displayIconUrl,
+            'last_gift_at' => now(),
+        ]);
     }
 
     private function upsertGifter(ProjectLive $projectLive, array $event, int $value): ProjectLiveGifter

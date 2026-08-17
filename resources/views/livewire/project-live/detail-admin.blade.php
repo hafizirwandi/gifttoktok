@@ -1,4 +1,4 @@
-<div @if ($projectLive->auto_gift_mode) wire:poll.5s="pollAutoGiftMode" @endif>
+<div @if ($projectLive->auto_gift_mode) wire:poll.5s="$refresh" @endif>
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
@@ -9,6 +9,8 @@
                     <a href="{{ route('project-live.index') }}" wire:navigate
                         class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">&larr; Kembali ke daftar project</a>
                 @endcan
+                <a href="{{ route('project-live.gift-mapping', $projectLive) }}" wire:navigate
+                    class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Pemetaan Gift</a>
                 <a href="{{ route('project-live.live', $projectLive) }}" wire:navigate
                     class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Buka Live &rarr;</a>
             </div>
@@ -46,6 +48,24 @@
                     </button>
                 </div>
             </div>
+
+            @can('manage', \App\Models\ProjectLive::class)
+                <!-- Tata Letak Halaman Live -->
+                <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-3">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Tata Letak Halaman Live</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Menentukan susunan kursi di halaman Live (yang dibuka lewat "Buka Live").</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        @foreach (\App\Enums\DisplayMode::cases() as $mode)
+                            <button type="button" wire:click="updateDisplayMode('{{ $mode->value }}')"
+                                class="text-left px-3 py-2 rounded-md border text-xs font-medium transition {{ $projectLive->display_mode === $mode ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                                {{ $mode->label() }}
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+            @endcan
 
             <!-- Auto Gift Mode -->
             <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-4">
@@ -155,7 +175,7 @@ WEBHOOK_SECRET="{{ $projectLive->webhook_secret }}"</pre>
                                                 </span>
                                             </div>
 
-                                            @can('manage', \App\Models\ProjectLive::class)
+                                            @can('viewLive', $projectLive)
                                                 @if ($editingGiftId === $gift->id)
                                                     <div wire:key="gift-actions-{{ $gift->id }}-edit" class="flex items-center gap-1.5 flex-shrink-0" wire:click.stop>
                                                         <input type="number" min="0" wire:model="giftDiamondCount" wire:keydown.enter="saveGiftDiamond"
@@ -318,6 +338,29 @@ WEBHOOK_SECRET="{{ $projectLive->webhook_secret }}"</pre>
                         <x-text-input wire:model="coin" id="coin" class="block mt-1 w-full" type="number" min="0" placeholder="0" />
                         <p class="text-xs text-gray-400 mt-1">Angka gift/coin yang tampil di badge kursi ini.</p>
                         <x-input-error :messages="$errors->get('coin')" class="mt-2" />
+                    </div>
+
+                    <div class="border-t border-gray-100 dark:border-gray-700 pt-4 space-y-3">
+                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">Tampilan kotak ini saat kosong (belum ada gifter/tamu)</p>
+
+                        <div>
+                            <x-input-label for="emptyLabel" value="Teks" />
+                            <x-text-input wire:model="emptyLabel" id="emptyLabel" class="block mt-1 w-full" type="text" placeholder="Request" maxlength="30" />
+                            <x-input-error :messages="$errors->get('emptyLabel')" class="mt-2" />
+                        </div>
+
+                        <div>
+                            <x-input-label value="Ikon" />
+                            <div class="flex flex-wrap gap-2 mt-1">
+                                @foreach (\App\Livewire\ProjectLive\DetailAdmin::EMPTY_ICON_CHOICES as $icon)
+                                    <button type="button" wire:click="$set('emptyIcon', '{{ $icon }}')"
+                                        class="w-9 h-9 flex items-center justify-center text-lg rounded-md border transition {{ $emptyIcon === $icon ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30' : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                                        {{ $icon }}
+                                    </button>
+                                @endforeach
+                            </div>
+                            <x-input-error :messages="$errors->get('emptyIcon')" class="mt-2" />
+                        </div>
                     </div>
 
                     <div>

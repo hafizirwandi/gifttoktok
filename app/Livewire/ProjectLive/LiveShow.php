@@ -5,7 +5,6 @@ namespace App\Livewire\ProjectLive;
 use App\Enums\DetailStatus;
 use App\Models\ProjectLive;
 use App\Models\ProjectLiveDetail;
-use App\Services\GiftLeaderboardService;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -24,7 +23,7 @@ class LiveShow extends Component
      * hotkey/klik. Status "hide" dari admin sebaliknya langsung tersinkron otomatis
      * (lihat syncFromDatabase()).
      *
-     * @var array<int, array{id:int, position:int, name:?string, follower:?string, hotkey:?string, status:string, dominant_color:string, img_url:?string}>
+     * @var array<int, array{id:int, position:int, name:?string, follower:?string, hotkey:?string, status:string, dominant_color:string, img_url:?string, empty_label:?string, empty_icon:?string, last_gift_icon_url:?string, last_gift_at:?int, show_gift_badge:bool}>
      */
     public array $details = [];
 
@@ -85,12 +84,6 @@ class LiveShow extends Component
         $this->projectLive->refresh();
 
         if ($this->projectLive->auto_gift_mode) {
-            // Kalau kursi sudah penuh cukup lama, baru sekarang benar-benar
-            // dikosongkan & mulai putaran baru (delay-nya diatur di service, bukan
-            // di sini) — supaya nama-nama yang penuh sempat kebaca dulu di layar.
-            app(GiftLeaderboardService::class)->maybeStartNewRoundIfExpired($this->projectLive);
-            $this->projectLive->refresh();
-
             // Auto Gift Mode: DB sepenuhnya otoritatif (leaderboard sudah tervalidasi
             // server-side), tidak ada gating "tunggu trigger operator" sama sekali.
             $this->details = $this->projectLive->details()
@@ -121,6 +114,12 @@ class LiveShow extends Component
         }
     }
 
+    /**
+     * Berapa lama badge ikon gift terakhir tetap tampil di pojok kotak sebelum fade-out
+     * otomatis (lihat GiftBadgeVisibility di partials/seat-box.blade.php).
+     */
+    private const GIFT_BADGE_SECONDS = 8;
+
     private function toArray(ProjectLiveDetail $detail): array
     {
         return [
@@ -134,6 +133,12 @@ class LiveShow extends Component
             'img_url' => $detail->imgUrl(),
             'source' => $detail->source->value,
             'gift_total_value' => $detail->gift_total_value,
+            'empty_label' => $detail->empty_label,
+            'empty_icon' => $detail->empty_icon,
+            'last_gift_icon_url' => $detail->last_gift_icon_url,
+            'last_gift_at' => $detail->last_gift_at?->timestamp,
+            'show_gift_badge' => $detail->last_gift_at !== null
+                && $detail->last_gift_at->gt(now()->subSeconds(self::GIFT_BADGE_SECONDS)),
         ];
     }
 

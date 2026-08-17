@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\ProjectLive\DetailAdmin;
+use App\Livewire\ProjectLive\GiftMapping;
 use App\Livewire\ProjectLive\Index as ProjectLiveIndex;
 use App\Livewire\ProjectLive\LiveShow;
 use App\Livewire\User\Index as UserIndex;
@@ -33,6 +34,7 @@ Route::middleware('auth')->group(function () {
     // Superadmin (project apa pun) atau akun live (project miliknya sendiri) — dicek via Policy di mount().
     Route::get('/project-live/{projectLive}/admin', DetailAdmin::class)->name('project-live.admin');
     Route::get('/project-live/{projectLive}/live', LiveShow::class)->name('project-live.live');
+    Route::get('/project-live/{projectLive}/gift-mapping', GiftMapping::class)->name('project-live.gift-mapping');
 });
 
 require __DIR__.'/auth.php';

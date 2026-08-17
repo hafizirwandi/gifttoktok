@@ -36,12 +36,7 @@
                     @foreach ($details as $detail)
                         @if ($detail['status'] === 'show' && $detail['name'])
                             @php
-                                // Di bawah 1000 tampil apa adanya; 1000 ke atas pakai singkatan K/M
-                                // 2 desimal ala format Indonesia (koma sebagai pemisah desimal),
-                                // mis. 6000 -> "6,00K", 268300 -> "268,30K".
-                                $coinDisplay = $detail['gift_total_value'] >= 1000
-                                    ? \Illuminate\Support\Number::withLocale('id', fn () => \Illuminate\Support\Number::abbreviate($detail['gift_total_value'], precision: 2))
-                                    : (string) $detail['gift_total_value'];
+                                $coinDisplay = \App\Support\CoinFormatter::format($detail['gift_total_value']);
                             @endphp
                             <div wire:key="seat-{{ $detail['id'] }}" wire:click="toggleClick({{ $detail['id'] }})"
                                 class="relative aspect-square rounded-xl overflow-hidden border-4 border-white/15 cursor-pointer">

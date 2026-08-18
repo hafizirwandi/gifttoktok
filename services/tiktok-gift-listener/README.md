@@ -6,12 +6,14 @@ Service kecil yang jalan lokal di PC/laptop streamer (bareng TikTok LIVE Studio)
 
 1. Buka halaman **Admin** project di GiftTokTok, aktifkan **Auto Gift Mode**, isi **Username TikTok LIVE**, lalu salin 4 nilai dari panel info di bawahnya.
 2. Copy `.env.example` jadi `.env` (di folder ini), isi 4 nilai tadi.
-3. Double-click **`start.bat`** — otomatis `npm install` kalau belum pernah, lalu jalankan service di background (jendela tidak perlu dibiarkan terbuka).
+3. Double-click **`start.bat`** — otomatis `npm install` kalau belum pernah, lalu membuka **jendela baru** yang menampilkan log live service ini (persis seperti menjalankan `npm start` manual). **Biarkan jendela itu tetap terbuka** selama live berlangsung — menutupnya = mematikan service.
 4. Mulai live di TikTok LIVE Studio (boleh sebelum atau sesudah `start.bat`, service otomatis coba lagi tiap 10 detik sampai room-nya aktif).
 5. Cek halaman Admin GiftTokTok — kalau sudah terhubung, muncul indikator hijau **"Terhubung ke TikTok LIVE"**.
-6. Selesai live: double-click **`stop.bat`** untuk menghentikan service.
+6. Selesai live: double-click **`stop.bat`** untuk menghentikan service (atau tutup langsung jendela log-nya).
 
-Log aktivitas ada di `listener.log` (dan error di `listener.err.log`) — buka pakai Notepad kalau perlu cek kenapa gift tidak masuk.
+Kalau gift tidak masuk, cek langsung di jendela log itu — error TikTok/koneksi/webhook langsung kelihatan real-time di sana, tidak perlu buka file log terpisah lagi.
+
+**`start.bat` "gagal" padahal service sudah mati?** Sekarang start.bat mengecek dulu apakah PID di `listener.pid` beneran masih proses node yang hidup (bukan cuma percaya file-nya ada) — kalau ternyata basi (proses sudah mati tapi file belum sempat dibersihkan, misal PC restart mendadak), akan dibersihkan otomatis lalu tetap jalan, bukan menolak dengan pesan "sudah jalan" yang keliru.
 
 ## Cara pakai (Mac/Linux, manual)
 

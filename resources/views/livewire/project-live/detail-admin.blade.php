@@ -139,7 +139,10 @@ WEBHOOK_SECRET="{{ $projectLive->webhook_secret }}"</pre>
 
                                 <div class="flex items-center justify-between gap-2">
                                     <p class="text-xs text-gray-400">
-                                        {{ count($gifts) }} gift{{ $giftSearch ? ' (hasil pencarian)' : '' }}
+                                        Menampilkan {{ count($gifts) }} dari {{ number_format($giftMatchCount) }} gift{{ $giftSearch ? ' (hasil pencarian)' : '' }}
+                                        @if ($giftMatchCount > count($gifts))
+                                            — ketik nama buat mempersempit
+                                        @endif
                                     </p>
                                     <div class="flex items-center gap-2">
                                         <button type="button" wire:click="enableAllGifts"

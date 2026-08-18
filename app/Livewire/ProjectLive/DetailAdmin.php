@@ -314,11 +314,21 @@ class DetailAdmin extends Component
         $this->closeEdit();
     }
 
+    /**
+     * Katalog gift sekarang 10rb+ baris (bukan ~600 seperti dulu) — list di admin JANGAN
+     * pernah nge-render semuanya sekaligus (halaman ini polling tiap 5 detik saat Auto
+     * Gift Mode nyala), jadi selalu dibatasi. "Aktifkan/Nonaktifkan Semua" tetap bisa
+     * kena SEMUA hasil filter (bukan cuma yang tampil) karena itu cuma 1 query UPDATE,
+     * bukan render — lihat filteredGiftIds().
+     */
+    private const GIFT_LIST_DISPLAY_LIMIT = 100;
+
     public function render()
     {
         return view('livewire.project-live.detail-admin', [
             'details' => $this->projectLive->details,
-            'gifts' => $this->filteredGiftsQuery()->orderByDesc('diamond_count')->get(),
+            'gifts' => $this->filteredGiftsQuery()->orderByDesc('diamond_count')->limit(self::GIFT_LIST_DISPLAY_LIMIT)->get(),
+            'giftMatchCount' => $this->filteredGiftsQuery()->count(),
             'enabledGiftIds' => $this->projectLive->enabledGifts()->pluck('tiktok_gifts.id')->all(),
             'giftCatalogCount' => TikTokGift::count(),
             // ::max() adalah agregat mentah (bukan hasil hydrate model), jadi TIDAK melalui

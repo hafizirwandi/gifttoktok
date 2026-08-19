@@ -61,6 +61,12 @@
                             <x-input-error :messages="$errors->get('radius')" class="mt-1" />
                         </div>
 
+                        <div>
+                            <x-input-label for="borderWidth" value="Tebal border (px)" />
+                            <x-text-input wire:model.live.debounce.300ms="borderWidth" type="number" id="borderWidth" min="1" max="100" class="block mt-1 w-full text-sm" />
+                            <x-input-error :messages="$errors->get('borderWidth')" class="mt-1" />
+                        </div>
+
                         <div class="flex justify-end">
                             <button type="button" wire:click="saveAppearance"
                                 class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700">
@@ -85,15 +91,21 @@
 
                 <!-- Preview -->
                 <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4">
-                    <p class="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-3">Preview</p>
-                    <div class="bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjEwIiBmaWxsPSIjZTVlN2ViIi8+PHJlY3QgeD0iMTAiIHk9IjEwIiB3aWR0aD0iMTAiIGhlaWdodD0iMTAiIGZpbGw9IiNlNWU3ZWIiLz48L3N2Zz4=')] dark:opacity-80 rounded-lg p-6 flex items-center justify-center min-h-[320px]">
+                    <div class="flex items-center justify-between gap-3 mb-3">
+                        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Preview</p>
+                        <a href="{{ route('project-live.frame-host-live', $projectLive) }}" target="_blank" rel="noopener"
+                            class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700">
+                            Lihat Frame &nearr;
+                        </a>
+                    </div>
+                    <div class="bg-black rounded-lg p-6 flex items-center justify-center min-h-[320px]">
                         @if ($projectLive->frame_orientation->value === 'landscape')
                             <div class="w-full max-w-[360px] aspect-[16/9]"
-                                style="border-radius: {{ $radius }}px; {{ $projectLive->frame_visible ? 'border: 8px solid '.$color.';' : 'border: 2px dashed #9ca3af;' }}">
+                                style="border-radius: {{ $radius }}px; {{ $projectLive->frame_visible ? 'border: '.$borderWidth.'px solid '.$color.';' : 'border: 2px dashed #9ca3af;' }}">
                             </div>
                         @else
                             <div class="h-[320px] aspect-[9/16]"
-                                style="border-radius: {{ $radius }}px; {{ $projectLive->frame_visible ? 'border: 8px solid '.$color.';' : 'border: 2px dashed #9ca3af;' }}">
+                                style="border-radius: {{ $radius }}px; {{ $projectLive->frame_visible ? 'border: '.$borderWidth.'px solid '.$color.';' : 'border: 2px dashed #9ca3af;' }}">
                             </div>
                         @endif
                     </div>

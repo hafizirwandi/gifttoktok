@@ -116,6 +116,8 @@ class GiftMapping extends Component
         TikTokGift::whereKey($this->sourceGiftId)->update(['mapped_to_gift_id' => $this->targetGiftId]);
 
         $this->closeModal();
+
+        $this->dispatch('notify', message: 'Pemetaan gift berhasil disimpan.');
     }
 
     public function delete(int $giftId): void
@@ -123,6 +125,8 @@ class GiftMapping extends Component
         $this->authorize('viewLive', $this->projectLive);
 
         TikTokGift::whereKey($giftId)->update(['mapped_to_gift_id' => null]);
+
+        $this->dispatch('notify', message: 'Pemetaan gift berhasil dihapus.');
     }
 
     public function render()

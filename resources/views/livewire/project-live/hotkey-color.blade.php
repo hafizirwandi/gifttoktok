@@ -13,16 +13,17 @@
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4">
                 <p class="text-sm text-gray-600 dark:text-gray-300">
-                    Pencet hotkey di halaman Live untuk ganti warna + bayangan <strong>semua</strong> kotak kursi
-                    yang masih kosong sekaligus (efek global). Kalau tidak ada hotkey warna yang aktif, tiap
-                    kotak balik pakai warna kustomnya sendiri-sendiri (atur di bagian "Warna Per Kursi" di bawah).
+                    Pencet hotkey di halaman Live untuk ganti warna kotak kursi yang masih kosong — pilih
+                    <strong>Global</strong> (semua kotak kosong sekaligus) atau target ke <strong>satu kursi</strong>
+                    tertentu saat bikin hotkey-nya. Kalau tidak ada hotkey yang aktif, kotak balik pakai warna
+                    kustomnya sendiri-sendiri (atur di bagian "Warna Per Kursi" di bawah).
                 </p>
             </div>
 
-            <!-- Hotkey Warna Global -->
+            <!-- Hotkey Warna -->
             <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-3">
                 <div class="flex items-center justify-between gap-3">
-                    <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Hotkey Warna Global</p>
+                    <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Hotkey Warna</p>
                     <button type="button" wire:click="openCreate"
                         class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700">
                         + Tambah
@@ -36,8 +37,12 @@
                                 {{ $entry->hotkey }}
                             </span>
                             <span class="w-6 h-6 rounded-full flex-shrink-0 border border-gray-200 dark:border-gray-600" style="background: {{ $entry->color }};"></span>
-                            <span class="text-xs font-mono text-gray-500 dark:text-gray-400 flex-1">{{ $entry->color }}</span>
-                            @if ($projectLive->active_hotkey_color === $entry->color)
+                            <span class="text-xs font-mono text-gray-500 dark:text-gray-400">{{ $entry->color }}</span>
+                            <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded {{ $entry->project_live_detail_id ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300' }}">
+                                {{ $entry->project_live_detail_id ? 'Kursi #'.$entry->detail?->position : 'Global' }}
+                            </span>
+                            <span class="flex-1"></span>
+                            @if ($entry->project_live_detail_id ? $entry->detail?->active_hotkey_color === $entry->color : $projectLive->active_hotkey_color === $entry->color)
                                 <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">Aktif</span>
                             @endif
                             <button type="button" wire:click="openEdit({{ $entry->id }})" class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Edit</button>
@@ -52,7 +57,7 @@
                     <div class="flex-1">
                         <x-input-label for="defaultHotkey" value="Hotkey Default (reset)" />
                         <x-text-input wire:model="defaultHotkey" id="defaultHotkey" maxlength="1" class="block mt-1 w-full text-sm" type="text" placeholder="0" />
-                        <p class="text-xs text-gray-400 mt-1">Ditekan di Live &rarr; balikin semua kotak kosong ke warna default (bukan warna global lagi).</p>
+                        <p class="text-xs text-gray-400 mt-1">Ditekan di Live &rarr; matikan semua override warna (global maupun per-kursi), kotak kosong balik ke warna default masing-masing.</p>
                         <x-input-error :messages="$errors->get('defaultHotkey')" class="mt-1" />
                     </div>
                     <button type="button" wire:click="saveDefaultHotkey"
@@ -115,6 +120,18 @@
                         <x-text-input wire:model.live.debounce.300ms="colorInput" type="text" class="block w-full text-sm font-mono" maxlength="7" />
                     </div>
                     <x-input-error :messages="$errors->get('colorInput')" class="mt-2" />
+                </div>
+
+                <div>
+                    <x-input-label for="targetDetailId" value="Target" />
+                    <select wire:model="targetDetailId" id="targetDetailId"
+                        class="block mt-1 w-full text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600">
+                        <option value="">Global (semua kotak kosong)</option>
+                        @foreach ($details as $detail)
+                            <option value="{{ $detail->id }}">Kursi #{{ $detail->position }}{{ $detail->name ? ' — '.$detail->name : '' }}</option>
+                        @endforeach
+                    </select>
+                    <x-input-error :messages="$errors->get('targetDetailId')" class="mt-2" />
                 </div>
 
                 <div class="flex justify-end gap-2 pt-2">

@@ -50,7 +50,7 @@
         </div>
 
         <!-- Mic mute: pojok kanan bawah, transparan tanpa badge -->
-        <div class="absolute bottom-2 right-2 h-10 flex items-center justify-center">
+        <div class="absolute bottom-2 right-2 h-10 flex items-center justify-center" style="transform: scale({{ $projectLive->mic_size / 100 }}); transform-origin: bottom right;">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="w-5 h-5 text-white/80 drop-shadow">
                 <path d="M12 15a3 3 0 003-3V6a3 3 0 10-6 0v6a3 3 0 003 3z" stroke="currentColor" stroke-width="1.5"/>
                 <path d="M5 10v2a7 7 0 0014 0v-2M12 19v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -84,16 +84,18 @@
     </div>
 @else
     @php
-        // active_hotkey_color (lihat App\Livewire\ProjectLive\HotkeyColor) adalah
-        // override GLOBAL yang menang buat SEMUA kotak kosong sekaligus saat operator
-        // pencet hotkey warna di Live — kalau tidak ada yang aktif, tiap kotak balik
-        // pakai warna kustomnya sendiri (empty_bg_color), fallback hitam.
-        $emptyColor = $projectLive->active_hotkey_color ?: ($detail['empty_bg_color'] ?: '#000000');
-        $emptyShadow = $projectLive->active_hotkey_color ? 'box-shadow: 0 0 40px '.$projectLive->active_hotkey_color.';' : '';
+        // Prioritas warna kotak kosong (lihat App\Livewire\ProjectLive\HotkeyColor):
+        // 1. Hotkey PER-KURSI yang lagi aktif buat kursi ini ($detail['active_hotkey_color'])
+        // 2. Hotkey GLOBAL yang lagi aktif ($projectLive->active_hotkey_color) — menang
+        //    buat SEMUA kotak kosong sekaligus
+        // 3. Warna kustom statis kursi ini (empty_bg_color)
+        // 4. Hitam (default)
+        $activeColor = $detail['active_hotkey_color'] ?: $projectLive->active_hotkey_color;
+        $emptyColor = $activeColor ?: ($detail['empty_bg_color'] ?: '#000000');
     @endphp
     <div wire:key="seat-{{ $detail['id'] }}" wire:click="toggleClick({{ $detail['id'] }})"
-        class="relative w-full h-full rounded-xl border-4 border-white/10 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all duration-500"
-        style="background: {{ $emptyColor }}; {{ $emptyShadow }}">
+        class="relative w-full h-full rounded-xl border-4 border-white/10 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors duration-500"
+        style="background: {{ $emptyColor }};">
         <div class="text-white/70 text-4xl leading-none" style="transform: scale({{ $projectLive->empty_icon_size / 100 }});">
             {{ $detail['empty_icon'] ?: '+' }}
         </div>

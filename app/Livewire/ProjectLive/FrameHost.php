@@ -24,6 +24,8 @@ class FrameHost extends Component
 
     public int $radius = 24;
 
+    public int $borderWidth = 8;
+
     public function mount(ProjectLive $projectLive): void
     {
         $this->authorize('viewLive', $projectLive);
@@ -31,6 +33,7 @@ class FrameHost extends Component
         $this->projectLive = $projectLive;
         $this->color = $projectLive->frame_color;
         $this->radius = $projectLive->frame_radius;
+        $this->borderWidth = $projectLive->frame_border_width;
     }
 
     public function updateOrientation(string $value): void
@@ -56,14 +59,18 @@ class FrameHost extends Component
         $validated = $this->validate([
             'color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'radius' => ['required', 'integer', 'min:0', 'max:200'],
+            'borderWidth' => ['required', 'integer', 'min:1', 'max:100'],
         ]);
 
         $this->projectLive->update([
             'frame_color' => $validated['color'],
             'frame_radius' => $validated['radius'],
+            'frame_border_width' => $validated['borderWidth'],
         ]);
 
         $this->projectLive->refresh();
+
+        $this->dispatch('notify', message: 'Tampilan frame berhasil disimpan.');
     }
 
     public function render()

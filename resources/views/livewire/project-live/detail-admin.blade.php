@@ -15,7 +15,7 @@
                     class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Frame Host</a>
                 <a href="{{ route('project-live.hotkey-color', $projectLive) }}" wire:navigate
                     class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Hotkey Warna</a>
-                <a href="{{ route('project-live.live', $projectLive) }}" wire:navigate
+                <a href="{{ route('project-live.live', $projectLive) }}" target="_blank" rel="noopener"
                     class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Buka Live &rarr;</a>
             </div>
         </div>
@@ -93,6 +93,7 @@
                         'empty_icon' => 'Icon kotak kosong',
                         'empty_label' => 'Teks kotak kosong',
                         'gift_badge' => 'Icon pemetaan gift',
+                        'mic' => 'Icon mic',
                     ] as $field => $label)
                         <div>
                             <x-input-label :for="'size-'.$field" :value="$label" />
@@ -355,6 +356,7 @@ WEBHOOK_SECRET="{{ $projectLive->webhook_secret }}"</pre>
                                 reader.readAsDataURL(file);
                             "
                             class="block mt-1 w-full text-sm text-gray-600 dark:text-gray-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/40 file:text-indigo-700 dark:file:text-indigo-300">
+                        <p class="text-xs text-gray-400 mt-1">JPG, PNG, atau WEBP, maksimal 8MB.</p>
                         <div wire:loading wire:target="img" class="text-xs text-gray-400 mt-1">Mengunggah...</div>
                         <template x-if="preview">
                             <img :src="preview" class="w-16 h-16 rounded-full object-cover mt-2">

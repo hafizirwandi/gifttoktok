@@ -16,9 +16,10 @@ class HotkeyColor extends Component
     public ProjectLive $projectLive;
 
     /**
-     * Bagian 1: hotkey warna GLOBAL — pencet hotkey-nya di Live, SEMUA kotak kursi yang
-     * masih kosong ganti warna+bayangan bareng-bareng (lihat LiveShow::activateColorHotkey()
-     * dan partials/seat-box.blade.php). CRUD lewat modal di bawah.
+     * Bagian 1: hotkey warna — pencet hotkey-nya di Live, kotak kursi ganti warna +
+     * bayangan (lihat LiveShow::activateColorHotkey() dan partials/seat-box.blade.php).
+     * targetDetailId null = GLOBAL (semua kotak kosong sekaligus), diisi = cuma satu
+     * kursi itu yang berubah. CRUD lewat modal di bawah.
      */
     public bool $showModal = false;
 
@@ -28,15 +29,18 @@ class HotkeyColor extends Component
 
     public string $colorInput = '#ef4444';
 
+    public ?int $targetDetailId = null;
+
     /**
-     * Hotkey khusus buat reset active_hotkey_color balik ke null (kotak kosong balik
-     * pakai warna per-kursi masing-masing, bukan warna global lagi).
+     * Hotkey khusus buat reset SEMUA override warna (global maupun per-kursi) balik ke
+     * null — kotak kosong balik pakai warna per-kursi statisnya masing-masing.
      */
     public string $defaultHotkey = '';
 
     /**
      * Bagian 2: warna per-kursi (dulu ada di modal Edit Kursi, sekarang dipindah ke
-     * sini) — dipakai sebagai FALLBACK saat tidak ada warna hotkey global yang aktif.
+     * sini) — dipakai sebagai FALLBACK saat tidak ada warna hotkey (global/per-kursi)
+     * yang aktif.
      */
     public array $seatColors = [];
 
@@ -54,7 +58,7 @@ class HotkeyColor extends Component
 
     public function openCreate(): void
     {
-        $this->reset(['editingId', 'hotkeyInput', 'colorInput']);
+        $this->reset(['editingId', 'hotkeyInput', 'colorInput', 'targetDetailId']);
         $this->colorInput = '#ef4444';
         $this->resetErrorBag();
         $this->showModal = true;
@@ -69,13 +73,14 @@ class HotkeyColor extends Component
         $this->editingId = $entry->id;
         $this->hotkeyInput = $entry->hotkey;
         $this->colorInput = $entry->color;
+        $this->targetDetailId = $entry->project_live_detail_id;
         $this->resetErrorBag();
         $this->showModal = true;
     }
 
     public function closeModal(): void
     {
-        $this->reset(['showModal', 'editingId', 'hotkeyInput', 'colorInput']);
+        $this->reset(['showModal', 'editingId', 'hotkeyInput', 'colorInput', 'targetDetailId']);
         $this->resetErrorBag();
     }
 
@@ -98,18 +103,25 @@ class HotkeyColor extends Component
                 },
             ],
             'colorInput' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'targetDetailId' => [
+                'nullable',
+                Rule::exists('project_live_details', 'id')->where('project_live_id', $this->projectLive->id),
+            ],
         ]);
 
         ProjectLiveColorHotkey::updateOrCreate(
             ['id' => $this->editingId],
             [
                 'project_live_id' => $this->projectLive->id,
+                'project_live_detail_id' => $validated['targetDetailId'] ?: null,
                 'hotkey' => strtolower($validated['hotkeyInput']),
                 'color' => $validated['colorInput'],
             ]
         );
 
         $this->closeModal();
+
+        $this->dispatch('notify', message: 'Hotkey warna berhasil disimpan.');
     }
 
     public function deleteHotkey(int $id): void
@@ -117,6 +129,8 @@ class HotkeyColor extends Component
         $this->authorize('viewLive', $this->projectLive);
 
         ProjectLiveColorHotkey::where('project_live_id', $this->projectLive->id)->whereKey($id)->delete();
+
+        $this->dispatch('notify', message: 'Hotkey warna berhasil dihapus.');
     }
 
     public function saveDefaultHotkey(): void
@@ -153,6 +167,8 @@ class HotkeyColor extends Component
         ]);
 
         $this->projectLive->refresh();
+
+        $this->dispatch('notify', message: 'Hotkey default berhasil disimpan.');
     }
 
     /**
@@ -172,8 +188,8 @@ class HotkeyColor extends Component
     }
 
     /**
-     * Tombol "Reset ke Default" — langsung matikan override warna global sekarang juga
-     * (sama seperti hotkey default kalau ditekan di Live).
+     * Tombol "Reset ke Default" — langsung matikan SEMUA override warna (global maupun
+     * per-kursi) sekarang juga, sama seperti hotkey default kalau ditekan di Live.
      */
     public function resetActiveColor(): void
     {
@@ -181,6 +197,10 @@ class HotkeyColor extends Component
 
         $this->projectLive->update(['active_hotkey_color' => null]);
         $this->projectLive->refresh();
+
+        $this->projectLive->details()->update(['active_hotkey_color' => null]);
+
+        $this->dispatch('notify', message: 'Warna berhasil direset ke default.');
     }
 
     public function saveSeatColor(int $detailId): void
@@ -194,12 +214,14 @@ class HotkeyColor extends Component
         ]);
 
         $this->projectLive->details()->whereKey($detailId)->update(['empty_bg_color' => $color]);
+
+        $this->dispatch('notify', message: 'Warna kursi berhasil disimpan.');
     }
 
     public function render()
     {
         return view('livewire.project-live.hotkey-color', [
-            'colorHotkeys' => $this->projectLive->colorHotkeys()->orderBy('hotkey')->get(),
+            'colorHotkeys' => $this->projectLive->colorHotkeys()->with('detail')->orderBy('hotkey')->get(),
             'details' => $this->projectLive->details,
         ]);
     }

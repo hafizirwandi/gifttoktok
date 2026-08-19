@@ -23,7 +23,7 @@ class LiveShow extends Component
      * hotkey/klik. Status "hide" dari admin sebaliknya langsung tersinkron otomatis
      * (lihat syncFromDatabase()).
      *
-     * @var array<int, array{id:int, position:int, name:?string, hotkey:?string, status:string, dominant_color:string, img_url:?string, empty_label:?string, empty_icon:?string, empty_bg_color:?string, last_gift_icon_url:?string, last_gift_at:?int, show_gift_badge:bool}>
+     * @var array<int, array{id:int, position:int, name:?string, hotkey:?string, status:string, dominant_color:string, img_url:?string, empty_label:?string, empty_icon:?string, empty_bg_color:?string, active_hotkey_color:?string, last_gift_icon_url:?string, last_gift_at:?int, show_gift_badge:bool}>
      */
     public array $details = [];
 
@@ -54,9 +54,11 @@ class LiveShow extends Component
     }
 
     /**
-     * Dipencet operator di Live — cari warna dari hotkey ini, lalu jadikan warna
-     * override GLOBAL buat semua kotak kursi yang masih kosong (lihat
-     * partials/seat-box.blade.php). Tidak ngefek kalau hotkey-nya tidak terdaftar.
+     * Dipencet operator di Live — cari warna dari hotkey ini. Kalau hotkey-nya GLOBAL
+     * (project_live_detail_id null), semua kotak kursi yang masih kosong ikut ganti
+     * warna. Kalau hotkey-nya PER-KURSI, cuma kursi itu yang ganti warna (lihat
+     * partials/seat-box.blade.php buat urutan prioritasnya). Tidak ngefek kalau
+     * hotkey-nya tidak terdaftar.
      */
     public function activateColorHotkey(string $hotkey): void
     {
@@ -66,18 +68,40 @@ class LiveShow extends Component
             return;
         }
 
-        $this->projectLive->update(['active_hotkey_color' => $entry->color]);
-        $this->projectLive->refresh();
+        if ($entry->project_live_detail_id === null) {
+            $this->projectLive->update(['active_hotkey_color' => $entry->color]);
+            $this->projectLive->refresh();
+
+            return;
+        }
+
+        $this->projectLive->details()->whereKey($entry->project_live_detail_id)->update([
+            'active_hotkey_color' => $entry->color,
+        ]);
+
+        foreach ($this->details as $i => $detail) {
+            if ($detail['id'] === $entry->project_live_detail_id) {
+                $this->details[$i]['active_hotkey_color'] = $entry->color;
+                break;
+            }
+        }
     }
 
     /**
      * Hotkey default (atau tombol "Reset ke Default" di halaman Hotkey Warna) —
-     * matikan override warna global, kotak kosong balik pakai warna per-kursi masing-masing.
+     * matikan SEMUA override warna (global maupun per-kursi), kotak kosong balik
+     * pakai warna per-kursi statisnya masing-masing.
      */
     public function resetColorHotkey(): void
     {
         $this->projectLive->update(['active_hotkey_color' => null]);
         $this->projectLive->refresh();
+
+        $this->projectLive->details()->update(['active_hotkey_color' => null]);
+
+        foreach ($this->details as $i => $detail) {
+            $this->details[$i]['active_hotkey_color'] = null;
+        }
     }
 
     private function syncColorHotkeys(): void
@@ -183,6 +207,7 @@ class LiveShow extends Component
             'empty_label' => $detail->empty_label,
             'empty_icon' => $detail->empty_icon,
             'empty_bg_color' => $detail->empty_bg_color,
+            'active_hotkey_color' => $detail->active_hotkey_color,
             'last_gift_icon_url' => $detail->last_gift_icon_url,
             'last_gift_at' => $detail->last_gift_at?->timestamp,
             'show_gift_badge' => $detail->last_gift_at !== null

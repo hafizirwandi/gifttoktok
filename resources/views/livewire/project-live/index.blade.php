@@ -47,7 +47,7 @@
                                 class="inline-flex items-center px-3 py-1.5 bg-gray-800 dark:bg-gray-700 text-white text-xs font-semibold rounded-md">
                                 Admin
                             </a>
-                            <a href="{{ route('project-live.live', $project) }}" wire:navigate
+                            <a href="{{ route('project-live.live', $project) }}" target="_blank" rel="noopener"
                                 class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-md">
                                 Live
                             </a>
@@ -100,7 +100,7 @@
                                             class="inline-flex items-center px-3 py-1.5 bg-gray-800 dark:bg-gray-700 text-white text-xs font-semibold rounded-md hover:bg-gray-700 dark:hover:bg-gray-600">
                                             Admin
                                         </a>
-                                        <a href="{{ route('project-live.live', $project) }}" wire:navigate
+                                        <a href="{{ route('project-live.live', $project) }}" target="_blank" rel="noopener"
                                             class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-500">
                                             Live
                                         </a>

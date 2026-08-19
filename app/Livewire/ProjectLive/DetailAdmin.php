@@ -61,7 +61,7 @@ class DetailAdmin extends Component
      * lihat kolom *_size di project_lives — diterapkan lewat transform:scale di
      * partials/seat-box.blade.php.
      */
-    public const SIZE_FIELDS = ['coin', 'name', 'avatar', 'empty_icon', 'empty_label', 'gift_badge'];
+    public const SIZE_FIELDS = ['coin', 'name', 'avatar', 'empty_icon', 'empty_label', 'gift_badge', 'mic'];
 
     public array $sizes = [];
 
@@ -98,6 +98,8 @@ class DetailAdmin extends Component
 
         $this->projectLive->update($data);
         $this->projectLive->refresh();
+
+        $this->dispatch('notify', message: 'Ukuran konten berhasil disimpan.');
     }
 
     public function resetSizes(): void
@@ -193,6 +195,8 @@ class DetailAdmin extends Component
         ]);
 
         $this->projectLive->update(['tiktok_username' => $validated['tiktokUsername'] ?: null]);
+
+        $this->dispatch('notify', message: 'Username TikTok berhasil disimpan.');
     }
 
     public function resetLeaderboard(): void
@@ -265,6 +269,8 @@ class DetailAdmin extends Component
         ]);
 
         $this->reset(['editingGiftId', 'giftDiamondCount']);
+
+        $this->dispatch('notify', message: 'Nilai coin gift berhasil disimpan.');
     }
 
     public function deleteGift(int $giftId): void
@@ -272,6 +278,8 @@ class DetailAdmin extends Component
         $this->authorize('viewLive', $this->projectLive);
 
         TikTokGift::whereKey($giftId)->delete();
+
+        $this->dispatch('notify', message: 'Gift berhasil dihapus dari katalog.');
     }
 
     private function filteredGiftsQuery()
@@ -335,7 +343,10 @@ class DetailAdmin extends Component
                 },
             ],
             'status' => 'required|in:hide,show',
-            'img' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            // 2048 (2MB) sebelumnya kelewat kecil buat foto HP modern — upload gagal
+            // divalidasi diam-diam (cuma teks error kecil yang gampang kelewat), user
+            // ngira foto-nya tidak terupload sama sekali. Dinaikkan ke 8MB.
+            'img' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:8192',
         ]);
 
         $data = [
@@ -366,6 +377,8 @@ class DetailAdmin extends Component
         $detail->update($data);
 
         $this->closeEdit();
+
+        $this->dispatch('notify', message: 'Kursi berhasil disimpan.');
     }
 
     /**

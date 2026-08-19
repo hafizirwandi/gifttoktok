@@ -10,13 +10,8 @@
         <link rel="icon" href="{{ asset('logo.webp') }}" type="image/webp">
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-        {{-- Background transparan (bukan bg-black seperti layouts.live) — halaman ini
-             dipakai sebagai OBS Browser Source terpisah, cuma buat nampilin frame
-             border-nya; area di luar/di dalam border harus tembus pandang. --}}
-        <style>html, body { background: transparent !important; }</style>
     </head>
-    <body class="font-sans antialiased text-white">
+    <body class="font-sans antialiased text-white bg-black">
         {{ $slot }}
     </body>
 </html>

@@ -58,12 +58,59 @@ class DetailAdmin extends Component
      */
     public const EMPTY_ICON_CHOICES = ['+', '❤️', '⭐', '🎁', '🎤', '🔥', '👍', '❓'];
 
+    /**
+     * Elemen kotak kursi Live yang ukurannya bisa diatur admin (persen, 100 = default),
+     * lihat kolom *_size di project_lives — diterapkan lewat transform:scale di
+     * partials/seat-box.blade.php.
+     */
+    public const SIZE_FIELDS = ['coin', 'name', 'avatar', 'empty_icon', 'empty_label', 'gift_badge'];
+
+    public array $sizes = [];
+
     public function mount(ProjectLive $projectLive): void
     {
         $this->authorize('viewLive', $projectLive);
 
         $this->projectLive = $projectLive;
         $this->tiktokUsername = (string) $projectLive->tiktok_username;
+
+        foreach (self::SIZE_FIELDS as $field) {
+            $this->sizes[$field] = $projectLive->{$field.'_size'};
+        }
+    }
+
+    public function saveSizes(): void
+    {
+        // Beda dari display_mode (superadmin only) — ukuran konten ini boleh diatur
+        // akun role "live" yang di-assign ke project ini juga, sama seperti mereka
+        // boleh edit kursi & katalog gift.
+        $this->authorize('viewLive', $this->projectLive);
+
+        $rules = collect(self::SIZE_FIELDS)
+            ->mapWithKeys(fn ($field) => ["sizes.{$field}" => 'required|integer|min:50|max:200'])
+            ->all();
+
+        $validated = $this->validate($rules);
+
+        $data = [];
+
+        foreach (self::SIZE_FIELDS as $field) {
+            $data["{$field}_size"] = $validated['sizes'][$field];
+        }
+
+        $this->projectLive->update($data);
+        $this->projectLive->refresh();
+    }
+
+    public function resetSizes(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        foreach (self::SIZE_FIELDS as $field) {
+            $this->sizes[$field] = 100;
+        }
+
+        $this->saveSizes();
     }
 
     public function openEdit(int $detailId): void

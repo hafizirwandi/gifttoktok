@@ -18,14 +18,16 @@
              membesar/tidak stabil begitu foto avatar asli (bukan placeholder) dimuat. -->
         <div class="absolute inset-0 flex items-center justify-center">
             @if ($detail['img_url'])
-                <img src="{{ $detail['img_url'] }}" alt="{{ $detail['name'] }}" class="w-[62%] aspect-square rounded-full object-cover ring-2 ring-white/20">
+                <img src="{{ $detail['img_url'] }}" alt="{{ $detail['name'] }}" class="w-[62%] aspect-square rounded-full object-cover ring-2 ring-white/20" style="transform: scale({{ $projectLive->avatar_size / 100 }});">
             @else
-                <div class="w-[62%] aspect-square rounded-full bg-gray-700"></div>
+                <div class="w-[62%] aspect-square rounded-full bg-gray-700" style="transform: scale({{ $projectLive->avatar_size / 100 }});"></div>
             @endif
         </div>
 
-        <!-- Badge follower: bintang biru + angka -->
-        <div class="absolute top-2 left-2 flex items-center gap-1.5 bg-black/60 rounded-full pl-1.5 pr-2.5 py-1">
+        <!-- Badge follower: bintang biru + angka. Skala diterapkan ke SELURUH badge
+             (background+isi) via transform, bukan cuma teksnya, sesuai setting
+             "Ukuran Konten Kotak Live" di admin. -->
+        <div class="absolute top-2 left-2 flex items-center gap-1.5 bg-black/60 rounded-full pl-1.5 pr-2.5 py-1" style="transform: scale({{ $projectLive->coin_size / 100 }}); transform-origin: top left;">
             <span class="w-4 h-4 rounded-full bg-sky-400 border-2 border-white flex items-center justify-center flex-shrink-0">
                 <svg viewBox="0 0 20 20" fill="currentColor" class="w-2.5 h-2.5 text-white">
                     <path fill-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z" clip-rule="evenodd" />
@@ -42,7 +44,7 @@
         </div>
 
         <!-- Badge nama + plus -->
-        <div class="absolute bottom-2 left-2 h-7 flex items-center gap-1.5 bg-black/60 rounded-full py-1 pl-2.5 pr-1">
+        <div class="absolute bottom-2 left-2 h-7 flex items-center gap-1.5 bg-black/60 rounded-full py-1 pl-2.5 pr-1" style="transform: scale({{ $projectLive->name_size / 100 }}); transform-origin: bottom left;">
             <span class="text-xs font-medium text-white truncate max-w-[8ch]">{{ $detail['name'] }}</span>
             <span class="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-white text-xs leading-none flex-shrink-0">+</span>
         </div>
@@ -61,6 +63,13 @@
              (mis. Donat dipetakan ke gift "Lion") atau icon_url gift itu sendiri kalau
              belum dipetakan admin (lihat GiftMapping). -->
         @if ($detail['show_gift_badge'] && $detail['last_gift_icon_url'])
+            @php
+                // Ukuran diatur lewat width/height (bukan transform:scale) supaya tidak
+                // bentrok sama transform:scale yang sudah dipakai x-transition di bawah
+                // buat animasi fade-in/out-nya — inline style="transform" bakal menimpa
+                // total transform dari class Tailwind scale-50/scale-100/scale-75 itu.
+                $giftBadgePx = 48 * $projectLive->gift_badge_size / 100;
+            @endphp
             <img wire:key="giftbadge-{{ $detail['id'] }}-{{ $detail['last_gift_at'] }}"
                 src="{{ $detail['last_gift_icon_url'] }}" alt=""
                 x-transition:enter="transition ease-out duration-500"
@@ -69,15 +78,16 @@
                 x-transition:leave="transition ease-in duration-700"
                 x-transition:leave-start="opacity-100 scale-100"
                 x-transition:leave-end="opacity-0 scale-75"
-                class="absolute top-2 right-2 w-12 h-12 object-contain drop-shadow-lg">
+                class="absolute top-2 right-2 object-contain drop-shadow-lg"
+                style="width: {{ $giftBadgePx }}px; height: {{ $giftBadgePx }}px;">
         @endif
     </div>
 @else
     <div wire:key="seat-{{ $detail['id'] }}" wire:click="toggleClick({{ $detail['id'] }})"
         class="relative w-full h-full rounded-xl bg-black border-4 border-white/10 flex flex-col items-center justify-center gap-2 cursor-pointer">
-        <div class="text-white/70 text-4xl leading-none">
+        <div class="text-white/70 text-4xl leading-none" style="transform: scale({{ $projectLive->empty_icon_size / 100 }});">
             {{ $detail['empty_icon'] ?: '+' }}
         </div>
-        <span class="text-lg text-white/50 font-medium">{{ $detail['empty_label'] ?: 'Request' }}</span>
+        <span class="text-lg text-white/50 font-medium" style="transform: scale({{ $projectLive->empty_label_size / 100 }}); display: inline-block;">{{ $detail['empty_label'] ?: 'Request' }}</span>
     </div>
 @endif

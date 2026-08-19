@@ -18,7 +18,7 @@
                     ada yang kirim Donat, ikon Lion yang muncul sebentar di pojok kotaknya).
                 </p>
                 <p class="text-xs text-gray-400">
-                    Satu gift tujuan cuma bisa dipakai untuk satu pemetaan. Katalog ini dipakai bareng semua project.
+                    Satu gift tujuan boleh dipakai untuk banyak pemetaan sekaligus. Katalog ini dipakai bareng semua project.
                 </p>
             </div>
 

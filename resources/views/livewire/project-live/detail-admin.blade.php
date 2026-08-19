@@ -67,6 +67,48 @@
                 </div>
             @endcan
 
+            <!-- Ukuran Konten Kotak Live: beda dari Tata Letak di atas (superadmin only),
+                 ini boleh diatur akun role "live" juga -->
+            <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-3">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Ukuran Konten Kotak Live</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Persen dari ukuran default (100%). Berlaku untuk semua kotak kursi di halaman Live.</p>
+                    </div>
+                    <button type="button" wire:click="resetSizes"
+                        class="flex-shrink-0 text-xs font-semibold text-gray-400 hover:text-red-500">
+                        Reset ke Default
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    @foreach ([
+                        'coin' => 'Coin (badge)',
+                        'name' => 'Nama (badge)',
+                        'avatar' => 'Foto',
+                        'empty_icon' => 'Icon kotak kosong',
+                        'empty_label' => 'Teks kotak kosong',
+                        'gift_badge' => 'Icon pemetaan gift',
+                    ] as $field => $label)
+                        <div>
+                            <x-input-label :for="'size-'.$field" :value="$label" />
+                            <div class="flex items-center gap-1 mt-1">
+                                <x-text-input :id="'size-'.$field" wire:model="sizes.{{ $field }}" type="number" min="50" max="200" step="5" class="block w-full text-sm" />
+                                <span class="text-xs text-gray-400 flex-shrink-0">%</span>
+                            </div>
+                            <x-input-error :messages="$errors->get('sizes.'.$field)" class="mt-1" />
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="button" wire:click="saveSizes"
+                        class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700">
+                        Simpan Ukuran
+                    </button>
+                </div>
+            </div>
+
             <!-- Auto Gift Mode -->
             <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-4">
                 <div class="flex items-center justify-between gap-3">

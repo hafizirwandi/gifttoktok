@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TikTokGift extends Model
 {
@@ -34,10 +34,11 @@ class TikTokGift extends Model
     }
 
     /**
-     * Gift lain (kalau ada) yang memetakan dirinya ke gift ini.
+     * Gift-gift lain (bisa lebih dari satu — tidak unik lagi) yang memetakan dirinya
+     * ke gift ini.
      */
-    public function mappedFrom(): HasOne
+    public function mappedFrom(): HasMany
     {
-        return $this->hasOne(self::class, 'mapped_to_gift_id');
+        return $this->hasMany(self::class, 'mapped_to_gift_id');
     }
 }

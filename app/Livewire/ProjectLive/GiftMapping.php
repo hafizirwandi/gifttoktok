@@ -111,16 +111,8 @@ class GiftMapping extends Component
             return;
         }
 
-        $taken = TikTokGift::where('mapped_to_gift_id', $this->targetGiftId)
-            ->where('id', '!=', $this->sourceGiftId)
-            ->first();
-
-        if ($taken) {
-            $this->addError('form', "Gift tujuan ini sudah dipakai untuk memetakan \"{$taken->name}\".");
-
-            return;
-        }
-
+        // Satu gift tujuan sekarang BOLEH dipakai berkali-kali oleh gift sumber yang
+        // berbeda-beda (tidak unik lagi) — biarkan saja kalau sudah dipetakan yang lain.
         TikTokGift::whereKey($this->sourceGiftId)->update(['mapped_to_gift_id' => $this->targetGiftId]);
 
         $this->closeModal();

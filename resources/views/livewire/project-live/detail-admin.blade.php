@@ -11,6 +11,8 @@
                 @endcan
                 <a href="{{ route('project-live.gift-mapping', $projectLive) }}" wire:navigate
                     class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Pemetaan Gift</a>
+                <a href="{{ route('project-live.frame-host', $projectLive) }}" wire:navigate
+                    class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Frame Host</a>
                 <a href="{{ route('project-live.live', $projectLive) }}" wire:navigate
                     class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Buka Live &rarr;</a>
             </div>
@@ -265,7 +267,7 @@ WEBHOOK_SECRET="{{ $projectLive->webhook_secret }}"</pre>
                     @if ($projectLive->auto_gift_mode)
                         Kursi diatur otomatis dari gift TikTok LIVE. Edit manual tetap bisa dipakai, tapi kursi bisa ketiban update otomatis berikutnya.
                     @else
-                        Atur 8 kursi tamu untuk project ini. Klik salah satu kotak untuk mengubah foto, nama, follower, hotkey, dan status tampil/sembunyi.
+                        Atur 8 kursi tamu untuk project ini. Klik salah satu kotak untuk mengubah foto, nama, coin, hotkey, dan status tampil/sembunyi.
                     @endif
                 </p>
             </div>
@@ -283,6 +285,10 @@ WEBHOOK_SECRET="{{ $projectLive->webhook_secret }}"</pre>
                                     AUTO
                                 </span>
                             @endif
+                            @php
+                                $previewColor = $detail->status->value === 'show' ? $detail->dominant_color : ($detail->empty_bg_color ?: '#000000');
+                            @endphp
+                            <span class="w-3 h-3 rounded-full border border-white/60 shadow" style="background: {{ $previewColor }};" title="{{ $previewColor }}"></span>
                         </span>
 
                         <!-- Toggle status: klik langsung ubah tanpa buka modal -->
@@ -296,9 +302,9 @@ WEBHOOK_SECRET="{{ $projectLive->webhook_secret }}"</pre>
                         </button>
 
                         @if ($detail->img)
-                            <img src="{{ $detail->imgUrl() }}" class="w-14 h-14 rounded-full object-cover" alt="{{ $detail->name }}">
+                            <img src="{{ $detail->imgUrl() }}" class="w-20 h-20 rounded-full object-cover" alt="{{ $detail->name }}">
                         @else
-                            <div class="w-14 h-14 rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 text-xl">
+                            <div class="w-20 h-20 rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 text-2xl">
                                 +
                             </div>
                         @endif
@@ -308,11 +314,7 @@ WEBHOOK_SECRET="{{ $projectLive->webhook_secret }}"</pre>
                         </span>
 
                         <span class="text-[10px] text-gray-500 dark:text-gray-400">
-                            @if ($detail->gift_total_value > 0)
-                                {{ number_format($detail->gift_total_value) }} gift
-                            @else
-                                {{ $detail->follower ?: '0' }} follower
-                            @endif
+                            {{ number_format($detail->gift_total_value) }} coin
                         </span>
 
                         @if ($detail->hotkey)
@@ -364,18 +366,10 @@ WEBHOOK_SECRET="{{ $projectLive->webhook_secret }}"</pre>
                         <x-input-error :messages="$errors->get('name')" class="mt-2" />
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <x-input-label for="follower" value="Follower" />
-                            <x-text-input wire:model="follower" id="follower" class="block mt-1 w-full" type="text" placeholder="754,7K" />
-                            <x-input-error :messages="$errors->get('follower')" class="mt-2" />
-                        </div>
-
-                        <div>
-                            <x-input-label for="hotkey" value="Hotkey" />
-                            <x-text-input wire:model="hotkey" id="hotkey" maxlength="1" class="block mt-1 w-full" type="text" placeholder="1" />
-                            <x-input-error :messages="$errors->get('hotkey')" class="mt-2" />
-                        </div>
+                    <div>
+                        <x-input-label for="hotkey" value="Hotkey" />
+                        <x-text-input wire:model="hotkey" id="hotkey" maxlength="1" class="block mt-1 w-full" type="text" placeholder="1" />
+                        <x-input-error :messages="$errors->get('hotkey')" class="mt-2" />
                     </div>
 
                     <div>
@@ -405,6 +399,15 @@ WEBHOOK_SECRET="{{ $projectLive->webhook_secret }}"</pre>
                                 @endforeach
                             </div>
                             <x-input-error :messages="$errors->get('emptyIcon')" class="mt-2" />
+                        </div>
+
+                        <div>
+                            <x-input-label for="emptyBgColor" value="Warna latar" />
+                            <div class="flex items-center gap-2 mt-1">
+                                <input type="color" wire:model.live="emptyBgColor" id="emptyBgColor" class="w-10 h-9 rounded border border-gray-300 dark:border-gray-600 bg-transparent p-0.5">
+                                <x-text-input wire:model.live.debounce.300ms="emptyBgColor" type="text" class="block w-full text-sm font-mono" maxlength="7" placeholder="#000000" />
+                            </div>
+                            <x-input-error :messages="$errors->get('emptyBgColor')" class="mt-2" />
                         </div>
                     </div>
 

@@ -23,7 +23,7 @@ class LiveShow extends Component
      * hotkey/klik. Status "hide" dari admin sebaliknya langsung tersinkron otomatis
      * (lihat syncFromDatabase()).
      *
-     * @var array<int, array{id:int, position:int, name:?string, follower:?string, hotkey:?string, status:string, dominant_color:string, img_url:?string, empty_label:?string, empty_icon:?string, last_gift_icon_url:?string, last_gift_at:?int, show_gift_badge:bool}>
+     * @var array<int, array{id:int, position:int, name:?string, hotkey:?string, status:string, dominant_color:string, img_url:?string, empty_label:?string, empty_icon:?string, empty_bg_color:?string, last_gift_icon_url:?string, last_gift_at:?int, show_gift_badge:bool}>
      */
     public array $details = [];
 
@@ -126,7 +126,6 @@ class LiveShow extends Component
             'id' => $detail->id,
             'position' => $detail->position,
             'name' => $detail->name,
-            'follower' => $detail->follower,
             'hotkey' => $detail->hotkey,
             'status' => $detail->status->value,
             'dominant_color' => $detail->dominant_color,
@@ -135,6 +134,7 @@ class LiveShow extends Component
             'gift_total_value' => $detail->gift_total_value,
             'empty_label' => $detail->empty_label,
             'empty_icon' => $detail->empty_icon,
+            'empty_bg_color' => $detail->empty_bg_color,
             'last_gift_icon_url' => $detail->last_gift_icon_url,
             'last_gift_at' => $detail->last_gift_at?->timestamp,
             'show_gift_badge' => $detail->last_gift_at !== null

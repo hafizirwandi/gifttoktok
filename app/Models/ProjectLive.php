@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\DisplayMode;
+use App\Enums\FrameOrientation;
 use App\Enums\ProjectLiveStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -24,6 +25,10 @@ class ProjectLive extends Model
         'empty_icon_size',
         'empty_label_size',
         'gift_badge_size',
+        'frame_orientation',
+        'frame_color',
+        'frame_radius',
+        'frame_visible',
         'nama_akun',
         'desc',
         'user_id',
@@ -42,6 +47,8 @@ class ProjectLive extends Model
         return [
             'status' => ProjectLiveStatus::class,
             'display_mode' => DisplayMode::class,
+            'frame_orientation' => FrameOrientation::class,
+            'frame_visible' => 'boolean',
             'auto_gift_mode' => 'boolean',
             'gift_listener_connected_at' => 'datetime',
         ];

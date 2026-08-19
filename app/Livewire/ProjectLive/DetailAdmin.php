@@ -33,13 +33,13 @@ class DetailAdmin extends Component
 
     public string $name = '';
 
-    public string $follower = '';
-
     public string $coin = '0';
 
     public string $emptyLabel = '';
 
     public string $emptyIcon = '';
+
+    public string $emptyBgColor = '';
 
     public string $hotkey = '';
 
@@ -119,10 +119,10 @@ class DetailAdmin extends Component
 
         $this->editingDetailId = $detail->id;
         $this->name = (string) $detail->name;
-        $this->follower = (string) $detail->follower;
         $this->coin = (string) $detail->gift_total_value;
         $this->emptyLabel = (string) $detail->empty_label;
         $this->emptyIcon = (string) ($detail->empty_icon ?: '+');
+        $this->emptyBgColor = (string) ($detail->empty_bg_color ?: '#000000');
         $this->hotkey = (string) $detail->hotkey;
         $this->status = $detail->status->value;
         $this->img = null;
@@ -130,7 +130,7 @@ class DetailAdmin extends Component
 
     public function closeEdit(): void
     {
-        $this->reset(['editingDetailId', 'img', 'name', 'follower', 'coin', 'emptyLabel', 'emptyIcon', 'hotkey', 'status']);
+        $this->reset(['editingDetailId', 'img', 'name', 'coin', 'emptyLabel', 'emptyIcon', 'emptyBgColor', 'hotkey', 'status']);
     }
 
     public function hideAll(): void
@@ -314,10 +314,10 @@ class DetailAdmin extends Component
 
         $validated = $this->validate([
             'name' => 'nullable|string|max:255',
-            'follower' => 'nullable|string|max:50',
             'coin' => 'required|integer|min:0',
             'emptyLabel' => 'nullable|string|max:30',
             'emptyIcon' => ['nullable', 'string', Rule::in(self::EMPTY_ICON_CHOICES)],
+            'emptyBgColor' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'hotkey' => [
                 'nullable',
                 'string',
@@ -332,10 +332,10 @@ class DetailAdmin extends Component
 
         $data = [
             'name' => $validated['name'],
-            'follower' => $validated['follower'],
             'gift_total_value' => $validated['coin'],
             'empty_label' => $validated['emptyLabel'] !== '' ? $validated['emptyLabel'] : null,
             'empty_icon' => $validated['emptyIcon'] !== '' ? $validated['emptyIcon'] : null,
+            'empty_bg_color' => $validated['emptyBgColor'] !== '' ? $validated['emptyBgColor'] : null,
             'hotkey' => $validated['hotkey'] !== '' ? $validated['hotkey'] : null,
             'status' => $validated['status'],
             // Edit manual selalu mengembalikan kursi ke source "manual", supaya tidak

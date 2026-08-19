@@ -1,6 +1,8 @@
 <?php
 
 use App\Livewire\ProjectLive\DetailAdmin;
+use App\Livewire\ProjectLive\FrameHost;
+use App\Livewire\ProjectLive\FrameHostLive;
 use App\Livewire\ProjectLive\GiftMapping;
 use App\Livewire\ProjectLive\Index as ProjectLiveIndex;
 use App\Livewire\ProjectLive\LiveShow;
@@ -35,6 +37,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/project-live/{projectLive}/admin', DetailAdmin::class)->name('project-live.admin');
     Route::get('/project-live/{projectLive}/live', LiveShow::class)->name('project-live.live');
     Route::get('/project-live/{projectLive}/gift-mapping', GiftMapping::class)->name('project-live.gift-mapping');
+    Route::get('/project-live/{projectLive}/frame-host', FrameHost::class)->name('project-live.frame-host');
+    Route::get('/project-live/{projectLive}/frame-host-live', FrameHostLive::class)->name('project-live.frame-host-live');
 });
 
 require __DIR__.'/auth.php';

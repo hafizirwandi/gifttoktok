@@ -78,7 +78,6 @@ class GiftLeaderboardService
                     'status' => DetailStatus::Hide->value,
                     'name' => null,
                     'img' => null,
-                    'follower' => null,
                     'gift_total_value' => 0,
                     'project_live_gifter_id' => null,
                     'dominant_color' => '#111111',

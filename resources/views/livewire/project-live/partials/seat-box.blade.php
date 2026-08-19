@@ -24,7 +24,7 @@
             @endif
         </div>
 
-        <!-- Badge follower: bintang biru + angka. Skala diterapkan ke SELURUH badge
+        <!-- Badge coin: bintang biru + angka. Skala diterapkan ke SELURUH badge
              (background+isi) via transform, bukan cuma teksnya, sesuai setting
              "Ukuran Konten Kotak Live" di admin. -->
         <div class="absolute top-2 left-2 flex items-center gap-1.5 bg-black/60 rounded-full pl-1.5 pr-2.5 py-1" style="transform: scale({{ $projectLive->coin_size / 100 }}); transform-origin: top left;">
@@ -40,7 +40,7 @@
                 x-transition:leave="transition ease-in duration-150"
                 x-transition:leave-start="opacity-100"
                 x-transition:leave-end="opacity-0"
-                class="text-xs font-semibold text-white leading-none inline-block">{{ $detail['gift_total_value'] > 0 ? $coinDisplay : ($detail['follower'] ?: '0') }}</span>
+                class="text-xs font-semibold text-white leading-none inline-block">{{ $coinDisplay }}</span>
         </div>
 
         <!-- Badge nama + plus -->
@@ -84,7 +84,8 @@
     </div>
 @else
     <div wire:key="seat-{{ $detail['id'] }}" wire:click="toggleClick({{ $detail['id'] }})"
-        class="relative w-full h-full rounded-xl bg-black border-4 border-white/10 flex flex-col items-center justify-center gap-2 cursor-pointer">
+        class="relative w-full h-full rounded-xl border-4 border-white/10 flex flex-col items-center justify-center gap-2 cursor-pointer"
+        style="background: {{ $detail['empty_bg_color'] ?: '#000000' }};">
         <div class="text-white/70 text-4xl leading-none" style="transform: scale({{ $projectLive->empty_icon_size / 100 }});">
             {{ $detail['empty_icon'] ?: '+' }}
         </div>

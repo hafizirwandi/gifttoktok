@@ -88,10 +88,9 @@
         // 1. Hotkey PER-KURSI yang lagi aktif buat kursi ini ($detail['active_hotkey_color'])
         // 2. Hotkey GLOBAL yang lagi aktif ($projectLive->active_hotkey_color) — menang
         //    buat SEMUA kotak kosong sekaligus
-        // 3. Warna kustom statis kursi ini (empty_bg_color)
-        // 4. Hitam (default)
+        // 3. Hitam (default, kalau tidak ada hotkey yang aktif)
         $activeColor = $detail['active_hotkey_color'] ?: $projectLive->active_hotkey_color;
-        $emptyColor = $activeColor ?: ($detail['empty_bg_color'] ?: '#000000');
+        $emptyColor = $activeColor ?: '#000000';
     @endphp
     <div wire:key="seat-{{ $detail['id'] }}" wire:click="toggleClick({{ $detail['id'] }})"
         class="relative w-full h-full rounded-xl border-4 border-white/10 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors duration-500"

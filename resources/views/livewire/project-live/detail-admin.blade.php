@@ -289,7 +289,7 @@ WEBHOOK_SECRET="{{ $projectLive->webhook_secret }}"</pre>
                                 </span>
                             @endif
                             @php
-                                $previewColor = $detail->status->value === 'show' ? $detail->dominant_color : ($detail->empty_bg_color ?: '#000000');
+                                $previewColor = $detail->status->value === 'show' ? $detail->dominant_color : ($detail->active_hotkey_color ?: '#000000');
                             @endphp
                             <span class="w-3 h-3 rounded-full border border-white/60 shadow" style="background: {{ $previewColor }};" title="{{ $previewColor }}"></span>
                         </span>

@@ -16,10 +16,10 @@ class HotkeyColor extends Component
     public ProjectLive $projectLive;
 
     /**
-     * Bagian 1: hotkey warna — pencet hotkey-nya di Live, kotak kursi ganti warna +
-     * bayangan (lihat LiveShow::activateColorHotkey() dan partials/seat-box.blade.php).
-     * targetDetailId null = GLOBAL (semua kotak kosong sekaligus), diisi = cuma satu
-     * kursi itu yang berubah. CRUD lewat modal di bawah.
+     * CRUD hotkey warna — pencet hotkey-nya di Live, kotak kursi ganti warna (lihat
+     * LiveShow::activateColorHotkey() dan partials/seat-box.blade.php). targetDetailId
+     * null = GLOBAL (semua kotak kosong sekaligus), diisi = cuma satu kursi itu yang
+     * berubah. CRUD lewat modal di bawah.
      */
     public bool $showModal = false;
 
@@ -33,16 +33,9 @@ class HotkeyColor extends Component
 
     /**
      * Hotkey khusus buat reset SEMUA override warna (global maupun per-kursi) balik ke
-     * null — kotak kosong balik pakai warna per-kursi statisnya masing-masing.
+     * null — kotak kosong balik ke hitam default.
      */
     public string $defaultHotkey = '';
-
-    /**
-     * Bagian 2: warna per-kursi (dulu ada di modal Edit Kursi, sekarang dipindah ke
-     * sini) — dipakai sebagai FALLBACK saat tidak ada warna hotkey (global/per-kursi)
-     * yang aktif.
-     */
-    public array $seatColors = [];
 
     public function mount(ProjectLive $projectLive): void
     {
@@ -50,10 +43,6 @@ class HotkeyColor extends Component
 
         $this->projectLive = $projectLive;
         $this->defaultHotkey = (string) $projectLive->default_color_hotkey;
-
-        foreach ($projectLive->details as $detail) {
-            $this->seatColors[$detail->id] = $detail->empty_bg_color ?: '#000000';
-        }
     }
 
     public function openCreate(): void
@@ -201,21 +190,6 @@ class HotkeyColor extends Component
         $this->projectLive->details()->update(['active_hotkey_color' => null]);
 
         $this->dispatch('notify', message: 'Warna berhasil direset ke default.');
-    }
-
-    public function saveSeatColor(int $detailId): void
-    {
-        $this->authorize('viewLive', $this->projectLive);
-
-        $color = $this->seatColors[$detailId] ?? '#000000';
-
-        $this->validate([
-            'seatColors.'.$detailId => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
-        ]);
-
-        $this->projectLive->details()->whereKey($detailId)->update(['empty_bg_color' => $color]);
-
-        $this->dispatch('notify', message: 'Warna kursi berhasil disimpan.');
     }
 
     public function render()

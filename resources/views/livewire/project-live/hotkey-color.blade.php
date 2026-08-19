@@ -15,8 +15,7 @@
                 <p class="text-sm text-gray-600 dark:text-gray-300">
                     Pencet hotkey di halaman Live untuk ganti warna kotak kursi yang masih kosong — pilih
                     <strong>Global</strong> (semua kotak kosong sekaligus) atau target ke <strong>satu kursi</strong>
-                    tertentu saat bikin hotkey-nya. Kalau tidak ada hotkey yang aktif, kotak balik pakai warna
-                    kustomnya sendiri-sendiri (atur di bagian "Warna Per Kursi" di bawah).
+                    tertentu saat bikin hotkey-nya. Kalau tidak ada hotkey yang aktif, kotak balik hitam.
                 </p>
             </div>
 
@@ -71,28 +70,6 @@
                 </div>
             </div>
 
-            <!-- Warna Per Kursi -->
-            <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-3">
-                <div>
-                    <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Warna Per Kursi</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Warna default kotak kosong tiap kursi (dipakai kalau tidak ada hotkey warna global yang aktif).</p>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    @foreach ($details as $detail)
-                        <div wire:key="seat-color-{{ $detail->id }}" class="flex items-center gap-2 border border-gray-100 dark:border-gray-700 rounded-md p-2">
-                            <span class="text-xs font-semibold text-gray-500 dark:text-gray-400 w-10 flex-shrink-0">#{{ $detail->position }}</span>
-                            <input type="color" wire:model.live="seatColors.{{ $detail->id }}" class="w-9 h-9 rounded border border-gray-300 dark:border-gray-600 bg-transparent p-0.5 flex-shrink-0">
-                            <x-text-input wire:model.live.debounce.300ms="seatColors.{{ $detail->id }}" type="text" class="block w-full text-xs font-mono" maxlength="7" />
-                            <button type="button" wire:click="saveSeatColor({{ $detail->id }})"
-                                class="flex-shrink-0 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
-                                Simpan
-                            </button>
-                        </div>
-                        <x-input-error :messages="$errors->get('seatColors.'.$detail->id)" class="-mt-2" />
-                    @endforeach
-                </div>
-            </div>
         </div>
     </div>
 

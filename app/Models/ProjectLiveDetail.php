@@ -23,7 +23,6 @@ class ProjectLiveDetail extends Model
         'dominant_color',
         'empty_label',
         'empty_icon',
-        'empty_bg_color',
         'active_hotkey_color',
         'source',
         'gift_total_value',

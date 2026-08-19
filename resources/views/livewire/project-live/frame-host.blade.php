@@ -75,6 +75,70 @@
                         </div>
                     </div>
 
+                    <!-- Efek Pulse (kedap-kedip) -->
+                    <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-4">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Efek Pulse</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Border berkedip gonta-ganti warna, bukan warna diam.</p>
+                            </div>
+                            <button type="button" wire:click="togglePulse"
+                                class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full pl-1 pr-3 py-1 transition {{ $projectLive->frame_pulse ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                <span class="relative inline-flex h-5 w-9 items-center rounded-full bg-black/20">
+                                    <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition {{ $projectLive->frame_pulse ? 'translate-x-[18px]' : 'translate-x-1' }}"></span>
+                                </span>
+                                <span class="text-sm font-semibold text-white">{{ $projectLive->frame_pulse ? 'ON' : 'OFF' }}</span>
+                            </button>
+                        </div>
+
+                        <div>
+                            <x-input-label for="pulseSpeedMs" value="Kecepatan (ms per siklus)" />
+                            <x-text-input wire:model.live.debounce.300ms="pulseSpeedMs" type="number" id="pulseSpeedMs" min="200" max="10000" step="100" class="block mt-1 w-full text-sm" />
+                            <p class="text-xs text-gray-400 mt-1">Makin kecil makin cepat kedap-kedipnya. Mis. 1500 = 1,5 detik per siklus.</p>
+                            <x-input-error :messages="$errors->get('pulseSpeedMs')" class="mt-1" />
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <x-input-label for="pulseColor1" value="Warna 1" />
+                                <div class="flex items-center gap-1 mt-1">
+                                    <input type="color" wire:model.live="pulseColor1" id="pulseColor1" class="w-9 h-9 rounded border border-gray-300 dark:border-gray-600 bg-transparent p-0.5 flex-shrink-0">
+                                    <x-text-input wire:model.live.debounce.300ms="pulseColor1" type="text" class="block w-full text-xs font-mono" maxlength="7" />
+                                </div>
+                                <x-input-error :messages="$errors->get('pulseColor1')" class="mt-1" />
+                            </div>
+                            <div>
+                                <x-input-label for="pulseColor2" value="Warna 2" />
+                                <div class="flex items-center gap-1 mt-1">
+                                    <input type="color" wire:model.live="pulseColor2" id="pulseColor2" class="w-9 h-9 rounded border border-gray-300 dark:border-gray-600 bg-transparent p-0.5 flex-shrink-0">
+                                    <x-text-input wire:model.live.debounce.300ms="pulseColor2" type="text" class="block w-full text-xs font-mono" maxlength="7" />
+                                </div>
+                                <x-input-error :messages="$errors->get('pulseColor2')" class="mt-1" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <x-input-label for="pulseColor3" value="Warna 3 (opsional)" />
+                                @if ($pulseColor3 !== '')
+                                    <button type="button" wire:click="clearPulseColor3" class="text-xs font-semibold text-red-500 hover:underline">Hapus, cuma 2 warna</button>
+                                @endif
+                            </div>
+                            <div class="flex items-center gap-1 mt-1">
+                                <input type="color" wire:model.live="pulseColor3" id="pulseColor3" class="w-9 h-9 rounded border border-gray-300 dark:border-gray-600 bg-transparent p-0.5 flex-shrink-0" value="{{ $pulseColor3 ?: '#000000' }}">
+                                <x-text-input wire:model.live.debounce.300ms="pulseColor3" type="text" class="block w-full text-xs font-mono" maxlength="7" placeholder="Kosongkan buat 2 warna saja" />
+                            </div>
+                            <x-input-error :messages="$errors->get('pulseColor3')" class="mt-1" />
+                        </div>
+
+                        <div class="flex justify-end">
+                            <button type="button" wire:click="saveAppearance"
+                                class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700">
+                                Simpan
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- URL OBS -->
                     <div class="bg-gray-50 dark:bg-gray-900/50 rounded-md p-3 space-y-2 text-xs" x-data="{ copied: false }">
                         <div class="flex items-center justify-between gap-2">
@@ -98,15 +162,34 @@
                             Lihat Frame &nearr;
                         </a>
                     </div>
+                    @php
+                        $previewBorderStyle = $projectLive->frame_visible
+                            ? ($projectLive->frame_pulse
+                                ? 'border: '.$borderWidth.'px solid '.$pulseColor1.'; animation: gtt-frame-pulse-preview '.$pulseSpeedMs.'ms ease-in-out infinite;'
+                                : 'border: '.$borderWidth.'px solid '.$color.';')
+                            : 'border: 2px dashed #9ca3af;';
+                    @endphp
+
+                    @if ($projectLive->frame_visible && $projectLive->frame_pulse)
+                        <style>
+                            @keyframes gtt-frame-pulse-preview {
+                                0% { border-color: {{ $pulseColor1 }}; }
+                                @if ($pulseColor3 !== '')
+                                    33% { border-color: {{ $pulseColor2 }}; }
+                                    66% { border-color: {{ $pulseColor3 }}; }
+                                @else
+                                    50% { border-color: {{ $pulseColor2 }}; }
+                                @endif
+                                100% { border-color: {{ $pulseColor1 }}; }
+                            }
+                        </style>
+                    @endif
+
                     <div class="bg-black rounded-lg p-6 flex items-center justify-center min-h-[320px]">
                         @if ($projectLive->frame_orientation->value === 'landscape')
-                            <div class="w-full max-w-[360px] aspect-[16/9]"
-                                style="border-radius: {{ $radius }}px; {{ $projectLive->frame_visible ? 'border: '.$borderWidth.'px solid '.$color.';' : 'border: 2px dashed #9ca3af;' }}">
-                            </div>
+                            <div class="w-full max-w-[360px] aspect-[16/9]" style="border-radius: {{ $radius }}px; {{ $previewBorderStyle }}"></div>
                         @else
-                            <div class="h-[320px] aspect-[9/16]"
-                                style="border-radius: {{ $radius }}px; {{ $projectLive->frame_visible ? 'border: '.$borderWidth.'px solid '.$color.';' : 'border: 2px dashed #9ca3af;' }}">
-                            </div>
+                            <div class="h-[320px] aspect-[9/16]" style="border-radius: {{ $radius }}px; {{ $previewBorderStyle }}"></div>
                         @endif
                     </div>
                     @unless ($projectLive->frame_visible)

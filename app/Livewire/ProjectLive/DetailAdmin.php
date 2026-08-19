@@ -39,8 +39,6 @@ class DetailAdmin extends Component
 
     public string $emptyIcon = '';
 
-    public string $emptyBgColor = '';
-
     public string $hotkey = '';
 
     public string $status = 'hide';
@@ -122,7 +120,6 @@ class DetailAdmin extends Component
         $this->coin = (string) $detail->gift_total_value;
         $this->emptyLabel = (string) $detail->empty_label;
         $this->emptyIcon = (string) ($detail->empty_icon ?: '+');
-        $this->emptyBgColor = (string) ($detail->empty_bg_color ?: '#000000');
         $this->hotkey = (string) $detail->hotkey;
         $this->status = $detail->status->value;
         $this->img = null;
@@ -130,7 +127,7 @@ class DetailAdmin extends Component
 
     public function closeEdit(): void
     {
-        $this->reset(['editingDetailId', 'img', 'name', 'coin', 'emptyLabel', 'emptyIcon', 'emptyBgColor', 'hotkey', 'status']);
+        $this->reset(['editingDetailId', 'img', 'name', 'coin', 'emptyLabel', 'emptyIcon', 'hotkey', 'status']);
     }
 
     public function hideAll(): void
@@ -317,7 +314,6 @@ class DetailAdmin extends Component
             'coin' => 'required|integer|min:0',
             'emptyLabel' => 'nullable|string|max:30',
             'emptyIcon' => ['nullable', 'string', Rule::in(self::EMPTY_ICON_CHOICES)],
-            'emptyBgColor' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'hotkey' => [
                 'nullable',
                 'string',
@@ -325,6 +321,18 @@ class DetailAdmin extends Component
                 Rule::unique('project_live_details', 'hotkey')
                     ->where('project_live_id', $this->projectLive->id)
                     ->ignore($detail->id),
+                function ($attribute, $value, $fail) {
+                    if (! $value) {
+                        return;
+                    }
+
+                    $value = strtolower($value);
+
+                    if ($this->projectLive->colorHotkeys()->where('hotkey', $value)->exists()
+                        || $this->projectLive->default_color_hotkey === $value) {
+                        $fail('Hotkey ini sudah dipakai sebagai hotkey warna (lihat halaman Hotkey Warna) — pilih huruf/angka lain.');
+                    }
+                },
             ],
             'status' => 'required|in:hide,show',
             'img' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
@@ -335,7 +343,6 @@ class DetailAdmin extends Component
             'gift_total_value' => $validated['coin'],
             'empty_label' => $validated['emptyLabel'] !== '' ? $validated['emptyLabel'] : null,
             'empty_icon' => $validated['emptyIcon'] !== '' ? $validated['emptyIcon'] : null,
-            'empty_bg_color' => $validated['emptyBgColor'] !== '' ? $validated['emptyBgColor'] : null,
             'hotkey' => $validated['hotkey'] !== '' ? $validated['hotkey'] : null,
             'status' => $validated['status'],
             // Edit manual selalu mengembalikan kursi ke source "manual", supaya tidak

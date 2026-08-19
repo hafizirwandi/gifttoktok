@@ -83,9 +83,17 @@
         @endif
     </div>
 @else
+    @php
+        // active_hotkey_color (lihat App\Livewire\ProjectLive\HotkeyColor) adalah
+        // override GLOBAL yang menang buat SEMUA kotak kosong sekaligus saat operator
+        // pencet hotkey warna di Live — kalau tidak ada yang aktif, tiap kotak balik
+        // pakai warna kustomnya sendiri (empty_bg_color), fallback hitam.
+        $emptyColor = $projectLive->active_hotkey_color ?: ($detail['empty_bg_color'] ?: '#000000');
+        $emptyShadow = $projectLive->active_hotkey_color ? 'box-shadow: 0 0 40px '.$projectLive->active_hotkey_color.';' : '';
+    @endphp
     <div wire:key="seat-{{ $detail['id'] }}" wire:click="toggleClick({{ $detail['id'] }})"
-        class="relative w-full h-full rounded-xl border-4 border-white/10 flex flex-col items-center justify-center gap-2 cursor-pointer"
-        style="background: {{ $detail['empty_bg_color'] ?: '#000000' }};">
+        class="relative w-full h-full rounded-xl border-4 border-white/10 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all duration-500"
+        style="background: {{ $emptyColor }}; {{ $emptyShadow }}">
         <div class="text-white/70 text-4xl leading-none" style="transform: scale({{ $projectLive->empty_icon_size / 100 }});">
             {{ $detail['empty_icon'] ?: '+' }}
         </div>

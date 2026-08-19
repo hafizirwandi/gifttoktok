@@ -6,6 +6,19 @@
             if (e.repeat) return;
 
             const key = e.key.toLowerCase();
+
+            // Hotkey warna global: ganti warna+bayangan SEMUA kotak kosong sekaligus.
+            if (($wire.colorHotkeys || []).includes(key)) {
+                $wire.call('activateColorHotkey', key);
+                return;
+            }
+
+            // Hotkey default: matikan override warna global, balik ke warna per-kursi.
+            if ($wire.defaultColorHotkey && key === $wire.defaultColorHotkey) {
+                $wire.call('resetColorHotkey');
+                return;
+            }
+
             const match = ($wire.details || []).find((d) => d.hotkey && d.hotkey.toLowerCase() === key);
 
             if (match) {

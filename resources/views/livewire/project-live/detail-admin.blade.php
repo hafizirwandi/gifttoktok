@@ -13,6 +13,8 @@
                     class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Pemetaan Gift</a>
                 <a href="{{ route('project-live.frame-host', $projectLive) }}" wire:navigate
                     class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Frame Host</a>
+                <a href="{{ route('project-live.hotkey-color', $projectLive) }}" wire:navigate
+                    class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Hotkey Warna</a>
                 <a href="{{ route('project-live.live', $projectLive) }}" wire:navigate
                     class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Buka Live &rarr;</a>
             </div>
@@ -401,14 +403,10 @@ WEBHOOK_SECRET="{{ $projectLive->webhook_secret }}"</pre>
                             <x-input-error :messages="$errors->get('emptyIcon')" class="mt-2" />
                         </div>
 
-                        <div>
-                            <x-input-label for="emptyBgColor" value="Warna latar" />
-                            <div class="flex items-center gap-2 mt-1">
-                                <input type="color" wire:model.live="emptyBgColor" id="emptyBgColor" class="w-10 h-9 rounded border border-gray-300 dark:border-gray-600 bg-transparent p-0.5">
-                                <x-text-input wire:model.live.debounce.300ms="emptyBgColor" type="text" class="block w-full text-sm font-mono" maxlength="7" placeholder="#000000" />
-                            </div>
-                            <x-input-error :messages="$errors->get('emptyBgColor')" class="mt-2" />
-                        </div>
+                        <p class="text-xs text-gray-400">
+                            Warna latar kotak kosong sekarang diatur di halaman
+                            <a href="{{ route('project-live.hotkey-color', $projectLive) }}" wire:navigate class="text-indigo-600 dark:text-indigo-400 hover:underline">Hotkey Warna</a>.
+                        </p>
                     </div>
 
                     <div>

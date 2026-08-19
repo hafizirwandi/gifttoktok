@@ -27,6 +27,18 @@ class LiveShow extends Component
      */
     public array $details = [];
 
+    /**
+     * Daftar hotkey char buat warna global (lihat App\Livewire\ProjectLive\HotkeyColor)
+     * — dipakai Alpine di blade buat tahu tombol mana yang harus di-intercept, warna
+     * aslinya di-resolve ulang di server lewat activateColorHotkey() supaya tidak
+     * percaya begitu saja nilai dari client.
+     *
+     * @var array<int, string>
+     */
+    public array $colorHotkeys = [];
+
+    public ?string $defaultColorHotkey = null;
+
     public function mount(ProjectLive $projectLive): void
     {
         $this->authorize('viewLive', $projectLive);
@@ -37,6 +49,41 @@ class LiveShow extends Component
             ->get()
             ->map(fn (ProjectLiveDetail $detail) => $this->toArray($detail))
             ->all();
+
+        $this->syncColorHotkeys();
+    }
+
+    /**
+     * Dipencet operator di Live — cari warna dari hotkey ini, lalu jadikan warna
+     * override GLOBAL buat semua kotak kursi yang masih kosong (lihat
+     * partials/seat-box.blade.php). Tidak ngefek kalau hotkey-nya tidak terdaftar.
+     */
+    public function activateColorHotkey(string $hotkey): void
+    {
+        $entry = $this->projectLive->colorHotkeys()->where('hotkey', strtolower($hotkey))->first();
+
+        if (! $entry) {
+            return;
+        }
+
+        $this->projectLive->update(['active_hotkey_color' => $entry->color]);
+        $this->projectLive->refresh();
+    }
+
+    /**
+     * Hotkey default (atau tombol "Reset ke Default" di halaman Hotkey Warna) —
+     * matikan override warna global, kotak kosong balik pakai warna per-kursi masing-masing.
+     */
+    public function resetColorHotkey(): void
+    {
+        $this->projectLive->update(['active_hotkey_color' => null]);
+        $this->projectLive->refresh();
+    }
+
+    private function syncColorHotkeys(): void
+    {
+        $this->colorHotkeys = $this->projectLive->colorHotkeys()->pluck('hotkey')->all();
+        $this->defaultColorHotkey = $this->projectLive->default_color_hotkey;
     }
 
     public function toggleByHotkey(int $detailId): void
@@ -82,6 +129,7 @@ class LiveShow extends Component
     public function syncFromDatabase(): void
     {
         $this->projectLive->refresh();
+        $this->syncColorHotkeys();
 
         if ($this->projectLive->auto_gift_mode) {
             // Auto Gift Mode: DB sepenuhnya otoritatif (leaderboard sudah tervalidasi

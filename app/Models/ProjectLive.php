@@ -29,6 +29,8 @@ class ProjectLive extends Model
         'frame_color',
         'frame_radius',
         'frame_visible',
+        'active_hotkey_color',
+        'default_color_hotkey',
         'nama_akun',
         'desc',
         'user_id',
@@ -67,6 +69,14 @@ class ProjectLive extends Model
     public function gifters(): HasMany
     {
         return $this->hasMany(ProjectLiveGifter::class);
+    }
+
+    /**
+     * Daftar hotkey warna global (lihat App\Livewire\ProjectLive\HotkeyColor).
+     */
+    public function colorHotkeys(): HasMany
+    {
+        return $this->hasMany(ProjectLiveColorHotkey::class);
     }
 
     /**

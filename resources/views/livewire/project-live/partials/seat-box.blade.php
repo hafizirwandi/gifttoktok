@@ -62,7 +62,7 @@
              otomatis ~8 detik, lihat LiveShow::toArray()) — icon_url gift TUJUAN pemetaan
              (mis. Donat dipetakan ke gift "Lion") atau icon_url gift itu sendiri kalau
              belum dipetakan admin (lihat GiftMapping). -->
-        @if ($detail['show_gift_badge'] && $detail['last_gift_icon_url'])
+        @if (($detail['show_gift_badge'] ?? false) && ($detail['last_gift_icon_url'] ?? null))
             @php
                 // Ukuran diatur lewat width/height (bukan transform:scale) supaya tidak
                 // bentrok sama transform:scale yang sudah dipakai x-transition di bawah
@@ -70,7 +70,7 @@
                 // total transform dari class Tailwind scale-50/scale-100/scale-75 itu.
                 $giftBadgePx = 48 * $projectLive->gift_badge_size / 100;
             @endphp
-            <img wire:key="giftbadge-{{ $detail['id'] }}-{{ $detail['last_gift_at'] }}"
+            <img wire:key="giftbadge-{{ $detail['id'] }}-{{ $detail['last_gift_at'] ?? 0 }}"
                 src="{{ $detail['last_gift_icon_url'] }}" alt=""
                 x-transition:enter="transition ease-out duration-500"
                 x-transition:enter-start="opacity-0 scale-50"
@@ -89,15 +89,15 @@
         // 2. Hotkey GLOBAL yang lagi aktif ($projectLive->active_hotkey_color) — menang
         //    buat SEMUA kotak kosong sekaligus
         // 3. Hitam (default, kalau tidak ada hotkey yang aktif)
-        $activeColor = $detail['active_hotkey_color'] ?: $projectLive->active_hotkey_color;
+        $activeColor = ($detail['active_hotkey_color'] ?? null) ?: $projectLive->active_hotkey_color;
         $emptyColor = $activeColor ?: '#000000';
     @endphp
     <div wire:key="seat-{{ $detail['id'] }}" wire:click="toggleClick({{ $detail['id'] }})"
         class="relative w-full h-full rounded-xl border-4 border-white/10 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors duration-500"
         style="background: {{ $emptyColor }};">
         <div class="text-white/70 text-4xl leading-none" style="transform: scale({{ $projectLive->empty_icon_size / 100 }});">
-            {{ $detail['empty_icon'] ?: '+' }}
+            {{ $detail['empty_icon'] ?? '' ?: '+' }}
         </div>
-        <span class="text-lg text-white/50 font-medium" style="transform: scale({{ $projectLive->empty_label_size / 100 }}); display: inline-block;">{{ $detail['empty_label'] ?: 'Request' }}</span>
+        <span class="text-lg text-white/50 font-medium" style="transform: scale({{ $projectLive->empty_label_size / 100 }}); display: inline-block;">{{ $detail['empty_label'] ?? '' ?: 'Request' }}</span>
     </div>
 @endif

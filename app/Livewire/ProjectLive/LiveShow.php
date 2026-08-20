@@ -54,6 +54,30 @@ class LiveShow extends Component
     }
 
     /**
+     * Dipanggil Livewire setiap kali komponen di-restore dari snapshot browser (setiap
+     * request SELAIN load pertama/mount). Tab Live yang sudah lama terbuka bisa bawa
+     * snapshot $details versi lama yang bentuk arraynya belum punya key yang baru
+     * ditambahkan ke toArray() (mis. active_hotkey_color) — tanpa ini, seat-box.blade.php
+     * bakal lempar "Undefined array key" begitu ada request (polling/klik) dan bikin
+     * halaman Live error 500 sampai operator refresh manual. Backfill key yang hilang
+     * dengan default supaya tab lama tetap jalan normal sampai halaman di-reload.
+     */
+    public function hydrate(): void
+    {
+        $defaults = [
+            'source' => null,
+            'empty_label' => null,
+            'empty_icon' => null,
+            'active_hotkey_color' => null,
+            'last_gift_icon_url' => null,
+            'last_gift_at' => null,
+            'show_gift_badge' => false,
+        ];
+
+        $this->details = array_map(fn (array $detail) => $detail + $defaults, $this->details);
+    }
+
+    /**
      * Dipencet operator di Live — cari warna dari hotkey ini. Kalau hotkey-nya GLOBAL
      * (project_live_detail_id null), semua kotak kursi yang masih kosong ikut ganti
      * warna. Kalau hotkey-nya PER-KURSI, cuma kursi itu yang ganti warna (lihat

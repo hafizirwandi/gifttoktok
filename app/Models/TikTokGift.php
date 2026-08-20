@@ -18,7 +18,15 @@ class TikTokGift extends Model
         'diamond_count',
         'icon_url',
         'mapped_to_gift_id',
+        'is_custom',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_custom' => 'boolean',
+        ];
+    }
 
     public function projectLives(): BelongsToMany
     {

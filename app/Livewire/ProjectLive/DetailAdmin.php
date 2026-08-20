@@ -51,6 +51,18 @@ class DetailAdmin extends Component
 
     public string $giftDiamondCount = '';
 
+    public bool $showCustomGiftForm = false;
+
+    public string $customGiftName = '';
+
+    public string $customGiftDiamondCount = '0';
+
+    public string $customGiftIconMode = 'upload';
+
+    public $customGiftIcon = null;
+
+    public string $customGiftIconUrl = '';
+
     /**
      * Pilihan ikon (emoji) untuk kotak kursi yang masih kosong di layar Live.
      */
@@ -280,6 +292,58 @@ class DetailAdmin extends Component
         TikTokGift::whereKey($giftId)->delete();
 
         $this->dispatch('notify', message: 'Gift berhasil dihapus dari katalog.');
+    }
+
+    public function openCustomGiftForm(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $this->showCustomGiftForm = true;
+    }
+
+    public function closeCustomGiftForm(): void
+    {
+        $this->reset(['showCustomGiftForm', 'customGiftName', 'customGiftDiamondCount', 'customGiftIconMode', 'customGiftIcon', 'customGiftIconUrl']);
+    }
+
+    /**
+     * Gift buatan user sendiri (bukan dari katalog resmi TikTok) — ikonnya bisa diupload
+     * langsung atau cukup ditaruh link gambarnya. Otomatis diaktifkan buat project ini
+     * juga supaya langsung kepakai tanpa langkah tambahan.
+     */
+    public function saveCustomGift(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $validated = $this->validate([
+            'customGiftName' => 'required|string|max:255',
+            'customGiftDiamondCount' => 'required|integer|min:0',
+            'customGiftIcon' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:8192',
+            'customGiftIconUrl' => 'nullable|url|max:2048',
+        ]);
+
+        $iconUrl = null;
+
+        if ($this->customGiftIcon) {
+            $path = $this->customGiftIcon->store('tiktok-gifts/custom', 'public');
+            $iconUrl = Storage::disk('public')->url($path);
+        } elseif ($validated['customGiftIconUrl'] !== '') {
+            $iconUrl = $validated['customGiftIconUrl'];
+        }
+
+        $gift = TikTokGift::create([
+            'tiktok_gift_id' => 'custom-'.Str::uuid(),
+            'name' => $validated['customGiftName'],
+            'diamond_count' => $validated['customGiftDiamondCount'],
+            'icon_url' => $iconUrl,
+            'is_custom' => true,
+        ]);
+
+        $this->projectLive->enabledGifts()->attach($gift->id);
+
+        $this->closeCustomGiftForm();
+
+        $this->dispatch('notify', message: 'Gift custom berhasil ditambahkan & langsung aktif buat project ini.');
     }
 
     private function filteredGiftsQuery()

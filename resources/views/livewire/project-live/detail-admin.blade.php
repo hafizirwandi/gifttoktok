@@ -177,6 +177,58 @@ WEBHOOK_SECRET="{{ $projectLive->webhook_secret }}"</pre>
                                 </p>
                             </div>
 
+                            @if (! $showCustomGiftForm)
+                                <button type="button" wire:click="openCustomGiftForm"
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400 text-xs font-semibold rounded-md hover:bg-indigo-100 dark:hover:bg-indigo-900/40">
+                                    + Tambah Gift Custom
+                                </button>
+                            @else
+                                <div class="space-y-2 border border-indigo-200 dark:border-indigo-800 rounded-md p-3 bg-indigo-50/50 dark:bg-indigo-900/10">
+                                    <p class="text-xs font-semibold text-indigo-700 dark:text-indigo-400">Gift Custom Baru</p>
+
+                                    <div>
+                                        <x-text-input wire:model="customGiftName" type="text" placeholder="Nama gift" class="block w-full text-sm" />
+                                        @error('customGiftName') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                                    </div>
+
+                                    <div>
+                                        <input type="number" min="0" wire:model="customGiftDiamondCount" placeholder="Nilai coin"
+                                            class="block w-full text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200">
+                                        @error('customGiftDiamondCount') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                                    </div>
+
+                                    <div class="flex items-center gap-3 text-xs">
+                                        <label class="flex items-center gap-1 cursor-pointer">
+                                            <input type="radio" wire:model.live="customGiftIconMode" value="upload"> Upload ikon
+                                        </label>
+                                        <label class="flex items-center gap-1 cursor-pointer">
+                                            <input type="radio" wire:model.live="customGiftIconMode" value="url"> Link gambar
+                                        </label>
+                                    </div>
+
+                                    @if ($customGiftIconMode === 'upload')
+                                        <div>
+                                            <input type="file" wire:model="customGiftIcon" accept="image/png,image/jpeg,image/webp"
+                                                class="block w-full text-xs text-gray-600 dark:text-gray-300 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-indigo-100 file:text-indigo-700 dark:file:bg-indigo-900/40 dark:file:text-indigo-300">
+                                            <p class="text-[10px] text-gray-400 mt-0.5">JPG, PNG, atau WEBP, maksimal 8MB.</p>
+                                            @error('customGiftIcon') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                                        </div>
+                                    @else
+                                        <div>
+                                            <x-text-input wire:model="customGiftIconUrl" type="text" placeholder="https://.../ikon.png" class="block w-full text-sm" />
+                                            @error('customGiftIconUrl') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                                        </div>
+                                    @endif
+
+                                    <div class="flex items-center gap-3 pt-1">
+                                        <button type="button" wire:click="saveCustomGift"
+                                            class="text-xs font-semibold text-green-600 dark:text-green-400 hover:underline">Simpan</button>
+                                        <button type="button" wire:click="closeCustomGiftForm"
+                                            class="text-xs font-semibold text-gray-400 hover:underline">Batal</button>
+                                    </div>
+                                </div>
+                            @endif
+
                             @if ($giftCatalogCount === 0)
                                 <p class="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-md p-2">
                                     Katalog masih kosong. Jalankan <code class="font-mono">php artisan db:seed --class=TikTokGiftSeeder</code> untuk mengisi daftar gift.
@@ -215,7 +267,12 @@ WEBHOOK_SECRET="{{ $projectLive->webhook_secret }}"</pre>
                                                     <div class="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700 flex-shrink-0"></div>
                                                 @endif
                                                 <div class="flex-1 min-w-0">
-                                                    <p class="text-sm text-gray-800 dark:text-gray-200 truncate">{{ $gift->name }}</p>
+                                                    <p class="text-sm text-gray-800 dark:text-gray-200 truncate">
+                                                        {{ $gift->name }}
+                                                        @if ($gift->is_custom)
+                                                            <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400">Custom</span>
+                                                        @endif
+                                                    </p>
                                                     @if ($editingGiftId !== $gift->id)
                                                         <p class="text-xs text-gray-400">{{ number_format($gift->diamond_count) }} diamond</p>
                                                     @endif

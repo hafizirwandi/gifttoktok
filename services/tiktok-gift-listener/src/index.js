@@ -82,6 +82,23 @@ async function sendWebhook(payload, attempt = 1) {
     }
 }
 
+// Backoff koneksi (lihat penjelasan di catch() connect() di bawah).
+const BASE_RETRY_MS = 10000;
+const MAX_RETRY_MS = 300000; // 5 menit
+let consecutiveConnectFailures = 0;
+
+/**
+ * tiktok-live-connector 2.4.x (masih ada juga di 2.4.4) punya bug: kalau signing
+ * server TikTok membalas rate-limit, konstruktor SignatureRateLimitError-nya sendiri
+ * salah kirim argumen (`response.data` alih-alih `response`) sehingga error asli
+ * ketiban TypeError "Cannot read properties of undefined (reading 'retry-after')"
+ * sebelum sempat dibentuk. Ini bukan masalah kredensial/koneksi kita — deteksi lewat
+ * pesan errornya supaya log-nya jelas, bukan cuma stack trace membingungkan.
+ */
+function isSignatureRateLimitBug(err) {
+    return typeof err?.message === 'string' && err.message.includes("reading 'retry-after'");
+}
+
 function start() {
     // Argumen kedua (options) WAJIB ada walau kosong — versi 2.4.3 membaca
     // options.processInitialData dkk langsung tanpa fallback kalau options undefined.
@@ -131,12 +148,21 @@ function start() {
     connection.connect()
         .then((state) => {
             console.log(`Terhubung ke room TikTok LIVE @${TIKTOK_USERNAME} (roomId: ${state.roomId})`);
+            consecutiveConnectFailures = 0;
             startHeartbeat();
         })
         .catch((err) => {
-            console.error('Gagal connect ke room TikTok LIVE:', err.message);
-            console.log('Coba lagi dalam 10 detik...');
-            setTimeout(start, 10000);
+            consecutiveConnectFailures += 1;
+            const retryMs = Math.min(BASE_RETRY_MS * 2 ** (consecutiveConnectFailures - 1), MAX_RETRY_MS);
+
+            if (isSignatureRateLimitBug(err)) {
+                console.error('Gagal connect: signing server TikTok sedang rate-limit percobaan connect kita (bukan masalah username/kredensial). Backoff otomatis diperpanjang supaya tidak makin kena limit.');
+            } else {
+                console.error('Gagal connect ke room TikTok LIVE:', err.message);
+            }
+
+            console.log(`Coba lagi dalam ${Math.round(retryMs / 1000)} detik...`);
+            setTimeout(start, retryMs);
         });
 
     connection.on('disconnected', () => {

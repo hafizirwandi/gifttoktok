@@ -188,7 +188,9 @@ function start() {
     // FOLLOW/SHARE/SUB_NOTIFY user-nya sama persis bentuknya spt gift.
     connection.on(WebcastEvent.MEMBER, (data) => {
         try {
-            sendEventWebhook('join', extractUserPayload(data));
+            const user = extractUserPayload(data);
+            sendEventWebhook('join', user);
+            console.log(`Join: ${user.nickname ?? user.userId} masuk room`);
         } catch (err) {
             console.error('Gagal memproses event join:', err.message);
         }
@@ -196,7 +198,9 @@ function start() {
 
     connection.on(WebcastEvent.FOLLOW, (data) => {
         try {
-            sendEventWebhook('follow', extractUserPayload(data));
+            const user = extractUserPayload(data);
+            sendEventWebhook('follow', user);
+            console.log(`Follow: ${user.nickname ?? user.userId}`);
         } catch (err) {
             console.error('Gagal memproses event follow:', err.message);
         }
@@ -204,7 +208,9 @@ function start() {
 
     connection.on(WebcastEvent.SHARE, (data) => {
         try {
-            sendEventWebhook('share', extractUserPayload(data));
+            const user = extractUserPayload(data);
+            sendEventWebhook('share', user);
+            console.log(`Share: ${user.nickname ?? user.userId}`);
         } catch (err) {
             console.error('Gagal memproses event share:', err.message);
         }
@@ -212,7 +218,9 @@ function start() {
 
     connection.on(WebcastEvent.SUB_NOTIFY, (data) => {
         try {
-            sendEventWebhook('subscribe', extractUserPayload(data));
+            const user = extractUserPayload(data);
+            sendEventWebhook('subscribe', user);
+            console.log(`Subscribe: ${user.nickname ?? user.userId}`);
         } catch (err) {
             console.error('Gagal memproses event subscribe:', err.message);
         }
@@ -220,9 +228,15 @@ function start() {
 
     connection.on(WebcastEvent.LIKE, (data) => {
         try {
+            const user = extractUserPayload(data);
             // data.count = jumlah tap like DALAM 1 event ini (bukan total kumulatif room),
-            // dicocokkan ke ambang minimal trigger like di Laravel.
-            sendEventWebhook('like', extractUserPayload(data), { like_count: data.count ?? 1 });
+            // dicocokkan ke ambang minimal trigger like di Laravel. data.total = akumulasi
+            // like di seluruh room sejak live mulai — dua-duanya sengaja di-log biar
+            // kelihatan langsung apakah combo tap datang sbg banyak event count=1 atau
+            // 1 event count=N (tergantung seberapa cepat orangnya tap & batching TikTok).
+            const count = data.count ?? 1;
+            sendEventWebhook('like', user, { like_count: count });
+            console.log(`Like: ${user.nickname ?? user.userId} tap x${count} (total room: ${data.total ?? '?'})`);
         } catch (err) {
             console.error('Gagal memproses event like:', err.message);
         }
@@ -230,7 +244,10 @@ function start() {
 
     connection.on(WebcastEvent.CHAT, (data) => {
         try {
-            sendEventWebhook('chat', extractUserPayload(data), { chat_content: data.content ?? '' });
+            const user = extractUserPayload(data);
+            const content = data.content ?? '';
+            sendEventWebhook('chat', user, { chat_content: content });
+            console.log(`Chat: ${user.nickname ?? user.userId}: "${content}"`);
         } catch (err) {
             console.error('Gagal memproses event chat:', err.message);
         }

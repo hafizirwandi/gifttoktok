@@ -25,6 +25,7 @@ npm start
 
 ## Catatan
 
+- **Habis `git pull` kode Laravel yang baru? Selalu `stop.bat` lalu `start.bat` lagi.** Queue worker (`php artisan queue:work`) memuat semua kode PHP cuma SEKALI saat pertama kali dijalankan dan terus memakainya selama proses itu hidup — kalau ada kode baru di-pull sementara queue worker masih jalan dari SEBELUM pull, dia tetap menjalankan kode LAMA sampai proses itu di-restart. Ini penyebab paling umum kalau suatu perbaikan "sudah di-push tapi kok masih kelakuan lama" — restart start.bat/stop.bat dulu sebelum lapor bug.
 - Kalau Laravel/hosting-nya sedang tidak bisa diakses saat gift masuk, event itu akan di-log dan dilewati (dicoba ulang 3x dulu) — tidak bikin service ini crash.
 - Indikator "Terhubung" di halaman Admin berdasarkan heartbeat yang dikirim tiap 20 detik selama service ini nyambung ke TikTok LIVE — kalau service dimatikan atau koneksi putus, indikatornya otomatis balik ke "Belum terhubung" dalam ~45 detik.
 - Field pada event gift TikTok bisa sedikit berbeda tergantung versi `tiktok-live-connector` yang ter-install. Kalau data yang masuk ke GiftTokTok tidak sesuai (nama/avatar kosong terus), tambahkan `console.log(JSON.stringify(data, null, 2))` di `src/index.js` pada handler gift untuk lihat struktur data asli, lalu sesuaikan `extractGiftPayload()`.

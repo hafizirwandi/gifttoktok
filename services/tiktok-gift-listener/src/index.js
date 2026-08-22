@@ -7,6 +7,9 @@ const PROJECT_LIVE_ID = Number(process.env.PROJECT_LIVE_ID);
 const WEBHOOK_URL = process.env.WEBHOOK_URL;
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
 const HEARTBEAT_URL = WEBHOOK_URL ? WEBHOOK_URL.replace(/\/?$/, '') + '/heartbeat' : null;
+// Event non-gift (join/share/follow/subscribe/like/chat) — lihat App\Enums\EventTriggerType
+// & App\Http\Controllers\Webhooks\TikTokEventWebhookController di sisi Laravel.
+const EVENT_URL = WEBHOOK_URL ? WEBHOOK_URL.replace(/\/?$/, '') + '/event' : null;
 const HEARTBEAT_INTERVAL_MS = 20000;
 
 if (!TIKTOK_USERNAME || !PROJECT_LIVE_ID || !WEBHOOK_URL || !WEBHOOK_SECRET) {
@@ -66,20 +69,55 @@ function extractGiftPayload(data) {
     return { userId, nickname, avatarUrl, giftId, giftType, diamondCount, repeatCount, repeatEnd, groupId };
 }
 
-async function sendWebhook(payload, attempt = 1) {
+// Dipakai semua event NON-gift (join/share/follow/subscribe/like/chat) — field `user`
+// bentuknya sama di semua WebcastXxxMessage terkait (lihat tiktok-live-proto/dist/node/v3.d.ts).
+function extractUserPayload(data) {
+    const userId = data.user?.id;
+    const nickname = data.user?.nickname;
+    const avatarUrl =
+        data.user?.avatarLarge?.urlList?.[0] ??
+        data.user?.avatarMedium?.urlList?.[0] ??
+        data.user?.avatarThumb?.urlList?.[0] ??
+        null;
+
+    return { userId, nickname, avatarUrl };
+}
+
+async function sendWebhook(url, payload, attempt = 1) {
     try {
-        await axios.post(WEBHOOK_URL, payload, {
+        await axios.post(url, payload, {
             headers: { Authorization: `Bearer ${WEBHOOK_SECRET}` },
             timeout: 5000,
         });
     } catch (err) {
         if (attempt < 3) {
             console.warn(`Webhook gagal (percobaan ${attempt}), coba lagi...`, err.message);
-            setTimeout(() => sendWebhook(payload, attempt + 1), 1000 * attempt);
+            setTimeout(() => sendWebhook(url, payload, attempt + 1), 1000 * attempt);
         } else {
             console.error('Webhook gagal terkirim setelah 3 percobaan, event ini dilewati:', err.message);
         }
     }
+}
+
+// event_type: 'join'|'share'|'follow'|'subscribe'|'like'|'chat' — lihat
+// App\Http\Controllers\Webhooks\TikTokEventWebhookController.
+function sendEventWebhook(eventType, user, extra = {}) {
+    if (!user.userId) {
+        return;
+    }
+
+    sendWebhook(EVENT_URL, {
+        project_live_id: PROJECT_LIVE_ID,
+        tiktok_username: TIKTOK_USERNAME,
+        event_type: eventType,
+        user: {
+            tiktok_user_id: String(user.userId),
+            unique_id: null,
+            nickname: user.nickname ?? null,
+            avatar_url: user.avatarUrl,
+        },
+        ...extra,
+    });
 }
 
 // Backoff koneksi (lihat penjelasan di catch() connect() di bawah).
@@ -123,7 +161,7 @@ function start() {
             // Nilai poin/coin dihitung di sisi Laravel dari katalog gift kita sendiri
             // (bisa diedit admin), BUKAN dari diamondCount asli TikTok — di sini cuma
             // kirim berapa kali gift ini di-kirim (repeat_count), bukan nilainya.
-            sendWebhook({
+            sendWebhook(WEBHOOK_URL, {
                 project_live_id: PROJECT_LIVE_ID,
                 tiktok_username: TIKTOK_USERNAME,
                 gifter: {
@@ -142,6 +180,59 @@ function start() {
             console.log(`Gift: ${gift.nickname ?? gift.userId} -> giftId ${gift.giftId} x${gift.repeatCount}`);
         } catch (err) {
             console.error('Gagal memproses event gift:', err.message);
+        }
+    });
+
+    // Event non-gift — dipetakan ke Event Trigger di admin (lihat
+    // App\Livewire\ProjectLive\EventTrigger). MEMBER = orang masuk room ("join"),
+    // FOLLOW/SHARE/SUB_NOTIFY user-nya sama persis bentuknya spt gift.
+    connection.on(WebcastEvent.MEMBER, (data) => {
+        try {
+            sendEventWebhook('join', extractUserPayload(data));
+        } catch (err) {
+            console.error('Gagal memproses event join:', err.message);
+        }
+    });
+
+    connection.on(WebcastEvent.FOLLOW, (data) => {
+        try {
+            sendEventWebhook('follow', extractUserPayload(data));
+        } catch (err) {
+            console.error('Gagal memproses event follow:', err.message);
+        }
+    });
+
+    connection.on(WebcastEvent.SHARE, (data) => {
+        try {
+            sendEventWebhook('share', extractUserPayload(data));
+        } catch (err) {
+            console.error('Gagal memproses event share:', err.message);
+        }
+    });
+
+    connection.on(WebcastEvent.SUB_NOTIFY, (data) => {
+        try {
+            sendEventWebhook('subscribe', extractUserPayload(data));
+        } catch (err) {
+            console.error('Gagal memproses event subscribe:', err.message);
+        }
+    });
+
+    connection.on(WebcastEvent.LIKE, (data) => {
+        try {
+            // data.count = jumlah tap like DALAM 1 event ini (bukan total kumulatif room),
+            // dicocokkan ke ambang minimal trigger like di Laravel.
+            sendEventWebhook('like', extractUserPayload(data), { like_count: data.count ?? 1 });
+        } catch (err) {
+            console.error('Gagal memproses event like:', err.message);
+        }
+    });
+
+    connection.on(WebcastEvent.CHAT, (data) => {
+        try {
+            sendEventWebhook('chat', extractUserPayload(data), { chat_content: data.content ?? '' });
+        } catch (err) {
+            console.error('Gagal memproses event chat:', err.message);
         }
     });
 

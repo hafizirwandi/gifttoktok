@@ -6,10 +6,10 @@ Service kecil yang jalan lokal di PC/laptop streamer (bareng TikTok LIVE Studio)
 
 1. Buka halaman **Admin** project di GiftTokTok, aktifkan **Auto Gift Mode**, isi **Username TikTok LIVE**, lalu salin 4 nilai dari panel info di bawahnya.
 2. Copy `.env.example` jadi `.env` (di folder ini), isi 4 nilai tadi.
-3. Double-click **`start.bat`** — otomatis `npm install` kalau belum pernah, lalu membuka **jendela baru** yang menampilkan log live service ini (persis seperti menjalankan `npm start` manual). **Biarkan jendela itu tetap terbuka** selama live berlangsung — menutupnya = mematikan service.
+3. Double-click **`start.bat`** — otomatis `npm install` kalau belum pernah, lalu membuka **jendela baru** yang menampilkan log live service ini (persis seperti menjalankan `npm start` manual). **Biarkan jendela itu tetap terbuka** selama live berlangsung — menutupnya = mematikan service. `start.bat` juga otomatis menjalankan **queue worker Laravel** (`php artisan queue:work`) di background tersembunyi — ini yang memproses trigger Event Trigger tipe **like/chat** (lihat menu Event Trigger di Admin project); butuh `php` ada di PATH Windows (cek: `php -v`), kalau belum ada akan muncul pesan gagal tapi listener gift tetap jalan normal.
 4. Mulai live di TikTok LIVE Studio (boleh sebelum atau sesudah `start.bat`, service otomatis coba lagi tiap 10 detik sampai room-nya aktif).
 5. Cek halaman Admin GiftTokTok — kalau sudah terhubung, muncul indikator hijau **"Terhubung ke TikTok LIVE"**.
-6. Selesai live: double-click **`stop.bat`** untuk menghentikan service (atau tutup langsung jendela log-nya).
+6. Selesai live: double-click **`stop.bat`** untuk menghentikan service dan queue worker-nya sekaligus (atau tutup langsung jendela log listener-nya — tapi queue worker tetap perlu dihentikan lewat `stop.bat` karena jalan tersembunyi tanpa jendela).
 
 Kalau gift tidak masuk, cek langsung di jendela log itu — error TikTok/koneksi/webhook langsung kelihatan real-time di sana, tidak perlu buka file log terpisah lagi.
 

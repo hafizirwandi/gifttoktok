@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\ProjectLive\DetailAdmin;
+use App\Livewire\ProjectLive\EventTrigger;
 use App\Livewire\ProjectLive\FrameHost;
 use App\Livewire\ProjectLive\FrameHostLive;
 use App\Livewire\ProjectLive\GiftMapping;
@@ -41,6 +42,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/project-live/{projectLive}/frame-host', FrameHost::class)->name('project-live.frame-host');
     Route::get('/project-live/{projectLive}/frame-host-live', FrameHostLive::class)->name('project-live.frame-host-live');
     Route::get('/project-live/{projectLive}/hotkey-color', HotkeyColor::class)->name('project-live.hotkey-color');
+    Route::get('/project-live/{projectLive}/event-trigger', EventTrigger::class)->name('project-live.event-trigger');
 });
 
 require __DIR__.'/auth.php';

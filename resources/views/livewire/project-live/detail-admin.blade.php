@@ -15,6 +15,8 @@
                     class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Frame Host</a>
                 <a href="{{ route('project-live.hotkey-color', $projectLive) }}" wire:navigate
                     class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Hotkey Warna</a>
+                <a href="{{ route('project-live.event-trigger', $projectLive) }}" wire:navigate
+                    class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Event Trigger</a>
                 <a href="{{ route('project-live.live', $projectLive) }}" target="_blank" rel="noopener"
                     class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Buka Live &rarr;</a>
             </div>
@@ -40,6 +42,10 @@
                 @endcan
 
                 <div class="flex items-center gap-2">
+                    <button wire:click="resetCoins" wire:confirm="Reset semua coin ke 0? Nama & kursi yang sedang tampil tidak berubah." type="button"
+                        class="flex-shrink-0 inline-flex items-center px-3 py-1.5 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-semibold rounded-md hover:bg-amber-100 dark:hover:bg-amber-900/50">
+                        Reset Coin
+                    </button>
                     @if ($projectLive->auto_gift_mode)
                         <button wire:click="resetLeaderboard" wire:confirm="Reset leaderboard? Semua kursi auto akan dikosongkan." type="button"
                             class="flex-shrink-0 inline-flex items-center px-3 py-1.5 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-semibold rounded-md hover:bg-red-100 dark:hover:bg-red-900/50">

@@ -216,6 +216,17 @@ class DetailAdmin extends Component
         $this->authorize('viewLive', $this->projectLive);
 
         app(GiftLeaderboardService::class)->reset($this->projectLive);
+
+        $this->dispatch('notify', message: 'Leaderboard berhasil direset.');
+    }
+
+    public function resetCoins(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        app(GiftLeaderboardService::class)->resetCoins($this->projectLive);
+
+        $this->dispatch('notify', message: 'Semua coin berhasil direset ke 0.');
     }
 
     public function toggleGiftRule(int $tiktokGiftId): void

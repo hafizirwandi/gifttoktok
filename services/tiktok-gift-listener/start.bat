@@ -51,6 +51,41 @@ if not exist listener.pid (
     exit /b 1
 )
 
+REM Queue worker Laravel (php artisan queue:work) - proses "Event Trigger" tipe
+REM like/chat yang diqueue (lihat App\Jobs\ProcessTikTokEventTrigger), supaya user
+REM tidak perlu buka terminal terpisah utk itu. Pola PID-nya sama persis dgn
+REM listener.pid di atas, cuma file & IMAGENAME beda (php.exe, bukan node.exe).
+REM Pakai flag variable (bukan goto) buat lompat keluar blok if bersarang - goto
+REM dari dalam if(...) yang nested rawan bikin cmd.exe error "was unexpected at
+REM this time" begitu keluar dari beberapa level tanda kurung sekaligus.
+set "QUEUE_ALREADY_RUNNING=0"
+
+if exist queue-worker.pid (
+    set "OLD_QUEUE_PID="
+    set /p OLD_QUEUE_PID=<queue-worker.pid
+    if not "!OLD_QUEUE_PID!"=="" (
+        tasklist /FI "PID eq !OLD_QUEUE_PID!" /FI "IMAGENAME eq php.exe" 2>nul | findstr /I "php.exe" >nul
+        if not errorlevel 1 (
+            echo Queue worker sudah jalan ^(PID !OLD_QUEUE_PID!^), tidak dijalankan ulang.
+            set "QUEUE_ALREADY_RUNNING=1"
+        ) else (
+            echo queue-worker.pid lama ditemukan tapi PID !OLD_QUEUE_PID! sudah tidak jalan ^(basi^), dibersihkan otomatis.
+        )
+    )
+    if "!QUEUE_ALREADY_RUNNING!"=="0" del queue-worker.pid
+)
+
+if "!QUEUE_ALREADY_RUNNING!"=="0" (
+    echo Menjalankan queue worker Laravel ^(proses Event Trigger like/chat^) di background...
+    powershell -NoProfile -Command "$p = Start-Process -FilePath 'php' -ArgumentList 'artisan queue:work --queue=default --sleep=1 --tries=3' -WorkingDirectory '%~dp0..\..\' -WindowStyle Hidden -PassThru; $p.Id | Out-File -Encoding ascii 'queue-worker.pid'"
+
+    if not exist queue-worker.pid (
+        echo Gagal menjalankan queue worker. Pastikan PHP ada di PATH ^(cek: php -v^) - fitur Event Trigger like/chat tidak akan berjalan tanpa ini.
+    ) else (
+        echo Queue worker jalan di background ^(tersembunyi, tanpa jendela - errornya masuk storage\logs\laravel.log^).
+    )
+)
+
 echo.
 echo Service jalan di jendela baru - log live tampil di situ, sama seperti npm start.
 echo JANGAN tutup jendela log itu selama live berlangsung.

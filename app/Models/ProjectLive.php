@@ -88,6 +88,15 @@ class ProjectLive extends Model
     }
 
     /**
+     * Trigger event non-gift (join/share/follow/subscribe/like/chat) + saklar on-off
+     * utk pipeline gift asli — lihat App\Services\EventTriggerProcessor.
+     */
+    public function eventTriggers(): HasMany
+    {
+        return $this->hasMany(ProjectLiveEventTrigger::class);
+    }
+
+    /**
      * Gift yang diaktifkan ("opt-in") untuk dihitung di leaderboard project ini.
      */
     public function enabledGifts(): BelongsToMany

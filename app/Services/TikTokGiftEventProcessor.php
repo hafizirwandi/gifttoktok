@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\EventTriggerType;
 use App\Models\ProjectLive;
 use App\Models\ProjectLiveGifter;
 use App\Models\TikTokGift;
@@ -32,6 +33,20 @@ class TikTokGiftEventProcessor
 
     public function handle(ProjectLive $projectLive, array $event): void
     {
+        // Trigger tipe "gift" (lihat App\Enums\EventTriggerType::Gift) adalah saklar
+        // on/off khusus utk pipeline gift ASLI ini — kalau admin sengaja menonaktifkannya
+        // lewat halaman Event Trigger, gift yang masuk diabaikan total (nama tidak naik,
+        // coin tidak nambah). Defaultnya AKTIF kalau belum pernah dibuat sama sekali
+        // (backward compatible, gift tetap jalan spt sebelum fitur Event Trigger ada).
+        $giftTriggerDisabled = $projectLive->eventTriggers()
+            ->where('type', EventTriggerType::Gift->value)
+            ->where('active', false)
+            ->exists();
+
+        if ($giftTriggerDisabled) {
+            return;
+        }
+
         $tiktokGiftId = (string) $event['gift']['tiktok_gift_id'];
 
         // Katalog gift (tiktok_gifts) diisi lewat seeder statis (TikTokGiftSeeder), BUKAN
@@ -54,13 +69,26 @@ class TikTokGiftEventProcessor
         // tergantung harga diamond aslinya. repeat_count tetap dari TikTok apa adanya
         // (combo gift beruntun, mis. kirim Rose x5).
         $repeatCount = max(1, (int) $event['gift']['repeat_count']);
-        $value = $gift->diamond_count * $repeatCount;
-
         $groupId = (string) $event['gift']['group_id'];
+
+        $this->applyGift($projectLive, $gift, $event['gifter'], $repeatCount, $groupId);
+    }
+
+    /**
+     * Inti pemrosesan "terima 1 gift" (upsert gifter + recalculate leaderboard + stamp
+     * ikon) — dipakai ulang oleh handle() (gift TikTok asli, sudah lolos cek opt-in
+     * enabledGifts() di atas) dan oleh App\Services\EventTriggerProcessor (gift yang
+     * "disintesis" dari trigger non-gift seperti follow/like/chat — utk kasus itu,
+     * gift-mapping di trigger-nya sendiri SUDAH merupakan bentuk opt-in, jadi tidak
+     * perlu dicek ulang ke enabledGifts()).
+     */
+    public function applyGift(ProjectLive $projectLive, TikTokGift $gift, array $gifterData, int $repeatCount, string $groupId): void
+    {
+        $value = $gift->diamond_count * max(1, $repeatCount);
 
         $lock = Cache::lock("leaderboard-{$projectLive->id}", 5);
 
-        $lock->block(3, function () use ($projectLive, $event, $groupId, $value, $gift) {
+        $lock->block(3, function () use ($projectLive, $gifterData, $groupId, $value, $gift) {
             $dedupeKey = "gift-dedupe:{$projectLive->id}:{$groupId}";
 
             if (Cache::has($dedupeKey)) {
@@ -71,7 +99,7 @@ class TikTokGiftEventProcessor
 
             // Papan yang sudah penuh TIDAK otomatis dikosongkan di sini — itu murni
             // keputusan admin lewat tombol "Reset Leaderboard" (GiftLeaderboardService::reset()).
-            $gifter = $this->upsertGifter($projectLive, $event, $value);
+            $gifter = $this->upsertGifter($projectLive, $gifterData, $value);
             $this->leaderboard->recalculate($projectLive);
             $this->stampGiftIcon($projectLive, $gifter, $gift);
         });
@@ -105,15 +133,15 @@ class TikTokGiftEventProcessor
         ]);
     }
 
-    private function upsertGifter(ProjectLive $projectLive, array $event, int $value): ProjectLiveGifter
+    private function upsertGifter(ProjectLive $projectLive, array $gifterData, int $value): ProjectLiveGifter
     {
         $gifter = ProjectLiveGifter::firstOrNew([
             'project_live_id' => $projectLive->id,
-            'tiktok_user_id' => (string) $event['gifter']['tiktok_user_id'],
+            'tiktok_user_id' => (string) $gifterData['tiktok_user_id'],
         ]);
 
-        $gifter->tiktok_unique_id = $event['gifter']['unique_id'] ?? $gifter->tiktok_unique_id;
-        $gifter->nickname = $event['gifter']['nickname'] ?? $gifter->nickname;
+        $gifter->tiktok_unique_id = $gifterData['unique_id'] ?? $gifter->tiktok_unique_id;
+        $gifter->nickname = $gifterData['nickname'] ?? $gifter->nickname;
         // total_value = akumulasi lifetime, TIDAK PERNAH direset (tetap jalan terus).
         // round_value = akumulasi putaran berjalan, dipakai untuk ranking kursi.
         $gifter->total_value = ($gifter->total_value ?? 0) + $value;
@@ -122,7 +150,7 @@ class TikTokGiftEventProcessor
         $gifter->last_gift_at = now();
         $gifter->save();
 
-        $avatarUrl = $event['gifter']['avatar_url'] ?? null;
+        $avatarUrl = $gifterData['avatar_url'] ?? null;
 
         if ($avatarUrl && ! $gifter->avatar_path) {
             $this->downloadAvatar($gifter, $avatarUrl);

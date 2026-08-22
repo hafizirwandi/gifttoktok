@@ -87,6 +87,21 @@ class GiftLeaderboardService
         });
     }
 
+    /**
+     * Reset RINGAN (beda dari reset() di atas): cuma nolkan angka coin yang lagi
+     * tampil (round_value di gifter + gift_total_value di kursi, termasuk kursi
+     * manual), TIDAK menghapus gifter/kursi. Nama & siapa yang lagi duduk di kursi
+     * tetap sama, coin-nya aja balik ke 0. total_value (lifetime) tetap tidak
+     * disentuh, sama seperti TikTokGiftEventProcessor.
+     */
+    public function resetCoins(ProjectLive $projectLive): void
+    {
+        DB::transaction(function () use ($projectLive) {
+            $projectLive->gifters()->update(['round_value' => 0]);
+            $projectLive->details()->update(['gift_total_value' => 0]);
+        });
+    }
+
     private function fillSeat(ProjectLiveDetail $seat, ProjectLiveGifter $gifter): void
     {
         $seat->update([

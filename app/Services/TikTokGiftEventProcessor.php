@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Enums\EventTriggerType;
 use App\Models\ProjectLive;
 use App\Models\ProjectLiveGifter;
 use App\Models\TikTokGift;
@@ -33,20 +32,6 @@ class TikTokGiftEventProcessor
 
     public function handle(ProjectLive $projectLive, array $event): void
     {
-        // Trigger tipe "gift" (lihat App\Enums\EventTriggerType::Gift) adalah saklar
-        // on/off khusus utk pipeline gift ASLI ini — kalau admin sengaja menonaktifkannya
-        // lewat halaman Event Trigger, gift yang masuk diabaikan total (nama tidak naik,
-        // coin tidak nambah). Defaultnya AKTIF kalau belum pernah dibuat sama sekali
-        // (backward compatible, gift tetap jalan spt sebelum fitur Event Trigger ada).
-        $giftTriggerDisabled = $projectLive->eventTriggers()
-            ->where('type', EventTriggerType::Gift->value)
-            ->where('active', false)
-            ->exists();
-
-        if ($giftTriggerDisabled) {
-            return;
-        }
-
         $tiktokGiftId = (string) $event['gift']['tiktok_gift_id'];
 
         // Katalog gift (tiktok_gifts) diisi lewat seeder statis (TikTokGiftSeeder), BUKAN

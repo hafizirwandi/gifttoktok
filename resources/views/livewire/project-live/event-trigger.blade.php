@@ -19,8 +19,7 @@
                     mengirim gift itu.
                 </p>
                 <p class="text-xs text-gray-400">
-                    Trigger "Gift" cuma saklar on/off untuk fitur gift utama — nonaktifkan kalau sementara tidak
-                    mau gift asli ikut dihitung.
+                    Gift asli (fitur utama) selalu aktif secara otomatis, tidak perlu diatur di sini.
                 </p>
             </div>
 

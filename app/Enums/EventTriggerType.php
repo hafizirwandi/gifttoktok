@@ -11,7 +11,6 @@ enum EventTriggerType: string
     case Like = 'like';
     case ChatAny = 'chat_any';
     case ChatCommand = 'chat_command';
-    case Gift = 'gift';
 
     public function label(): string
     {
@@ -23,17 +22,17 @@ enum EventTriggerType: string
             self::Like => 'Like (tap layar)',
             self::ChatAny => 'Chat (command apa saja)',
             self::ChatCommand => 'Chat (command tertentu)',
-            self::Gift => 'Gift (fitur utama)',
         };
     }
 
     /**
-     * Type yang butuh field "pemetaan gift" — semua KECUALI Gift (itu cuma saklar
-     * on/off buat pipeline gift asli, bukan trigger yang men-sintesis gift baru).
+     * Semua type di sini butuh field "pemetaan gift" (beda dari versi sebelumnya yang
+     * punya type Gift khusus sbg saklar on/off pipeline gift asli — sudah dihapus,
+     * gift asli sekarang selalu aktif, tidak bisa dinonaktifkan lewat Event Trigger).
      */
     public function needsMappedGift(): bool
     {
-        return $this !== self::Gift;
+        return true;
     }
 
     public function needsCommandText(): bool

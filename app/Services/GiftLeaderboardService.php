@@ -25,8 +25,13 @@ class GiftLeaderboardService
     public function recalculate(ProjectLive $projectLive): void
     {
         DB::transaction(function () use ($projectLive) {
+            // round_value > 0 wajib - tanpa ini, gifter yang coin-nya sudah dinolkan
+            // (lihat reset()/resetCoins()) tapi barisnya belum dihapus akan tetap ikut
+            // "ranking" (menang lawan kursi kosong) dan menempati kursi meski nilainya
+            // nol, bikin papan yang seharusnya kosong keisi lagi tanpa gift baru sama sekali.
             $topGifters = ProjectLiveGifter::query()
                 ->where('project_live_id', $projectLive->id)
+                ->where('round_value', '>', 0)
                 ->orderByDesc('round_value')
                 ->orderBy('id')
                 ->limit(self::SEAT_COUNT)
@@ -64,26 +69,35 @@ class GiftLeaderboardService
     }
 
     /**
-     * Reset leaderboard: cuma LEPAS orang dari kursi — kosongkan SEMUA kursi TANPA
-     * terkecuali (termasuk yang source-nya manual — beda dari emptySeat() di
-     * recalculate() yang sengaja tidak menyentuh kursi manual selama proses
-     * OTOMATIS berjalan; tombol ini keputusan eksplisit admin, jadi semua kursi
-     * ikut dikosongkan). Data gifter (round_value/total_value) SENGAJA TIDAK
-     * disentuh/dihapus di sini — cuma Reset Coin (resetCoins() di bawah) yang
-     * boleh menolkan angka coin. Konsekuensinya: begitu ada gift baru masuk lagi,
-     * gifter lama (dengan coin lama mereka) bisa balik lagi menempati kursi lewat
-     * recalculate() — ini disengaja, bukan bug.
+     * Reset leaderboard: kosongkan SEMUA kursi TANPA terkecuali (termasuk yang
+     * source-nya manual — beda dari emptySeat() di recalculate() yang sengaja tidak
+     * menyentuh kursi manual selama proses OTOMATIS berjalan; tombol ini keputusan
+     * eksplisit admin, jadi semua kursi ikut dikosongkan) DAN nolkan round_value
+     * semua gifter (coin ronde berjalan yang dipakai buat ranking) — supaya papan
+     * BENAR-BENAR kosong sampai ada gift baru yang bikin seseorang py round_value
+     * lagi, bukan cuma kedip sebentar lalu orang lama balik ke posisi yang sama
+     * (round_value lama masih ada = recalculate() langsung nge-restore ranking
+     * persis seperti sebelumnya begitu ada gift apa pun masuk).
+     *
+     * total_value (akumulasi LIFETIME, beda dari round_value) sengaja TETAP TIDAK
+     * disentuh — baris gifter sendiri juga TIDAK dihapus (beda dari versi paling
+     * awal fitur ini), cuma round_value-nya yang dinolkan.
      */
     public function reset(ProjectLive $projectLive): void
     {
-        $projectLive->details()->update([
-            'status' => DetailStatus::Hide->value,
-            'name' => null,
-            'img' => null,
-            'project_live_gifter_id' => null,
-            'dominant_color' => '#111111',
-            'source' => DetailSource::Auto->value,
-        ]);
+        DB::transaction(function () use ($projectLive) {
+            $projectLive->details()->update([
+                'status' => DetailStatus::Hide->value,
+                'name' => null,
+                'img' => null,
+                'gift_total_value' => 0,
+                'project_live_gifter_id' => null,
+                'dominant_color' => '#111111',
+                'source' => DetailSource::Auto->value,
+            ]);
+
+            $projectLive->gifters()->update(['round_value' => 0]);
+        });
     }
 
     /**

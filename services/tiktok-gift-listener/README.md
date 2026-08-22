@@ -25,6 +25,7 @@ npm start
 
 ## Catatan
 
+- **Sering muncul "signing server rate-limit" / `SignatureRateLimitError` / retry-after di log?** Tanpa API key, SEMUA pengguna `tiktok-live-connector` di seluruh dunia berbagi satu jatah rate-limit anonim yang sama di signing server TikTok (dioperasikan pihak ketiga, Euler Stream) — gampang penuh, apalagi kalau lagi jam ramai. Solusinya: daftar API key GRATIS di [eulerstream.com](https://www.eulerstream.com), lalu isi `TIKTOK_SIGN_API_KEY` di `.env` (lihat `.env.example`) — dapat jatah rate-limit sendiri, terpisah dari pengguna lain. Restart `start.bat` setelah mengisinya.
 - **Habis `git pull` kode Laravel yang baru? Selalu `stop.bat` lalu `start.bat` lagi.** Queue worker (`php artisan queue:work`) memuat semua kode PHP cuma SEKALI saat pertama kali dijalankan dan terus memakainya selama proses itu hidup — kalau ada kode baru di-pull sementara queue worker masih jalan dari SEBELUM pull, dia tetap menjalankan kode LAMA sampai proses itu di-restart. Ini penyebab paling umum kalau suatu perbaikan "sudah di-push tapi kok masih kelakuan lama" — restart start.bat/stop.bat dulu sebelum lapor bug.
 - Kalau Laravel/hosting-nya sedang tidak bisa diakses saat gift masuk, event itu akan di-log dan dilewati (dicoba ulang 3x dulu) — tidak bikin service ini crash.
 - Indikator "Terhubung" di halaman Admin berdasarkan heartbeat yang dikirim tiap 20 detik selama service ini nyambung ke TikTok LIVE — kalau service dimatikan atau koneksi putus, indikatornya otomatis balik ke "Belum terhubung" dalam ~45 detik.

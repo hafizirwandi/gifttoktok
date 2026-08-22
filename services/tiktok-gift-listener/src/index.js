@@ -6,6 +6,10 @@ const TIKTOK_USERNAME = process.env.TIKTOK_USERNAME;
 const PROJECT_LIVE_ID = Number(process.env.PROJECT_LIVE_ID);
 const WEBHOOK_URL = process.env.WEBHOOK_URL;
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
+// Opsional - tanpa ini, semua pengguna tiktok-live-connector berbagi SATU jatah
+// rate-limit anonim yang sama di signing server TikTok (lihat isSignatureRateLimitBug()
+// di bawah). Daftar gratis di eulerstream.com kalau sering kena rate-limit.
+const SIGN_API_KEY = process.env.TIKTOK_SIGN_API_KEY || undefined;
 const HEARTBEAT_URL = WEBHOOK_URL ? WEBHOOK_URL.replace(/\/?$/, '') + '/heartbeat' : null;
 // Event non-gift (join/share/follow/subscribe/like/chat) — lihat App\Enums\EventTriggerType
 // & App\Http\Controllers\Webhooks\TikTokEventWebhookController di sisi Laravel.
@@ -140,7 +144,9 @@ function isSignatureRateLimitBug(err) {
 function start() {
     // Argumen kedua (options) WAJIB ada walau kosong — versi 2.4.3 membaca
     // options.processInitialData dkk langsung tanpa fallback kalau options undefined.
-    const connection = new TikTokLiveConnection(TIKTOK_USERNAME, {});
+    // signApiKey: undefined kalau TIKTOK_SIGN_API_KEY tidak diisi - tetap jalan spt
+    // biasa (jatah rate-limit anonim bersama), cuma lebih rawan kena limit.
+    const connection = new TikTokLiveConnection(TIKTOK_USERNAME, { signApiKey: SIGN_API_KEY });
 
     connection.on(WebcastEvent.GIFT, (data) => {
         try {

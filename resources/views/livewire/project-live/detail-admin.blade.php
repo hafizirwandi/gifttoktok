@@ -59,6 +59,37 @@
                 </div>
             </div>
 
+            <!-- Hotkey Reset Leaderboard/Coin: dipencet di halaman LIVE (bukan di sini)
+                 supaya operator tidak perlu pindah tab saat siaran, langsung eksekusi
+                 tanpa konfirmasi (sama seperti hotkey warna/reveal kursi lainnya). -->
+            <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-3">
+                <div>
+                    <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Hotkey Reset (di halaman Live)</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                        Pencet huruf/angka ini saat membuka halaman Live buat langsung Reset Leaderboard/Reset Coin —
+                        tanpa konfirmasi, jadi langsung jalan begitu ditekan. Kosongkan kalau tidak mau dipakai.
+                    </p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <x-input-label value="Hotkey Reset Leaderboard" />
+                        <x-text-input wire:model="resetLeaderboardHotkey" type="text" maxlength="1" placeholder="mis. l" class="block w-full text-sm mt-1 uppercase" />
+                        @error('resetLeaderboardHotkey') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <x-input-label value="Hotkey Reset Coin" />
+                        <x-text-input wire:model="resetCoinHotkey" type="text" maxlength="1" placeholder="mis. k" class="block w-full text-sm mt-1 uppercase" />
+                        @error('resetCoinHotkey') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+                <div class="flex justify-end">
+                    <button type="button" wire:click="saveResetHotkeys"
+                        class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700">
+                        Simpan Hotkey
+                    </button>
+                </div>
+            </div>
+
             @can('manage', \App\Models\ProjectLive::class)
                 <!-- Tata Letak Halaman Live -->
                 <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-3">

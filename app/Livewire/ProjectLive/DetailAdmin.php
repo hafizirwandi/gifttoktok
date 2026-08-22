@@ -77,12 +77,23 @@ class DetailAdmin extends Component
 
     public array $sizes = [];
 
+    /**
+     * Hotkey yang dipencet di halaman LIVE (bukan di sini) buat langsung memicu Reset
+     * Leaderboard/Reset Coin tanpa pindah tab — lihat LiveShow::triggerResetLeaderboard()/
+     * triggerResetCoins() dan live-show.blade.php.
+     */
+    public string $resetLeaderboardHotkey = '';
+
+    public string $resetCoinHotkey = '';
+
     public function mount(ProjectLive $projectLive): void
     {
         $this->authorize('viewLive', $projectLive);
 
         $this->projectLive = $projectLive;
         $this->tiktokUsername = (string) $projectLive->tiktok_username;
+        $this->resetLeaderboardHotkey = (string) $projectLive->reset_leaderboard_hotkey;
+        $this->resetCoinHotkey = (string) $projectLive->reset_coin_hotkey;
 
         foreach (self::SIZE_FIELDS as $field) {
             $this->sizes[$field] = $projectLive->{$field.'_size'};
@@ -227,6 +238,55 @@ class DetailAdmin extends Component
         app(GiftLeaderboardService::class)->resetCoins($this->projectLive);
 
         $this->dispatch('notify', message: 'Semua coin berhasil direset ke 0.');
+    }
+
+    public function saveResetHotkeys(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $validated = $this->validate([
+            'resetLeaderboardHotkey' => [
+                'nullable',
+                'string',
+                'size:1',
+                // "different" (bukan Rule::notIn) sengaja dibandingkan case-insensitive di
+                // closure di bawah, supaya "R" vs "r" tetap dianggap tabrakan.
+                function ($attribute, $value, $fail) {
+                    if ($value !== '' && $this->resetCoinHotkey !== '' && strtolower($value) === strtolower($this->resetCoinHotkey)) {
+                        $fail('Hotkey ini sudah dipakai sebagai hotkey Reset Coin di bawah — pilih huruf/angka lain.');
+
+                        return;
+                    }
+
+                    $conflict = $this->projectLive->findHotkeyConflict($value, 'reset_leaderboard');
+
+                    if ($conflict) {
+                        $fail("Hotkey ini sudah dipakai sebagai {$conflict} — pilih huruf/angka lain.");
+                    }
+                },
+            ],
+            'resetCoinHotkey' => [
+                'nullable',
+                'string',
+                'size:1',
+                function ($attribute, $value, $fail) {
+                    $conflict = $this->projectLive->findHotkeyConflict($value, 'reset_coin');
+
+                    if ($conflict) {
+                        $fail("Hotkey ini sudah dipakai sebagai {$conflict} — pilih huruf/angka lain.");
+                    }
+                },
+            ],
+        ]);
+
+        $this->projectLive->update([
+            'reset_leaderboard_hotkey' => $validated['resetLeaderboardHotkey'] !== '' ? strtolower($validated['resetLeaderboardHotkey']) : null,
+            'reset_coin_hotkey' => $validated['resetCoinHotkey'] !== '' ? strtolower($validated['resetCoinHotkey']) : null,
+        ]);
+
+        $this->projectLive->refresh();
+
+        $this->dispatch('notify', message: 'Hotkey reset berhasil disimpan.');
     }
 
     public function toggleGiftRule(int $tiktokGiftId): void
@@ -404,16 +464,15 @@ class DetailAdmin extends Component
                 Rule::unique('project_live_details', 'hotkey')
                     ->where('project_live_id', $this->projectLive->id)
                     ->ignore($detail->id),
-                function ($attribute, $value, $fail) {
+                function ($attribute, $value, $fail) use ($detail) {
                     if (! $value) {
                         return;
                     }
 
-                    $value = strtolower($value);
+                    $conflict = $this->projectLive->findHotkeyConflict($value, "seat:{$detail->id}");
 
-                    if ($this->projectLive->colorHotkeys()->where('hotkey', $value)->exists()
-                        || $this->projectLive->default_color_hotkey === $value) {
-                        $fail('Hotkey ini sudah dipakai sebagai hotkey warna (lihat halaman Hotkey Warna) — pilih huruf/angka lain.');
+                    if ($conflict) {
+                        $fail("Hotkey ini sudah dipakai sebagai {$conflict} — pilih huruf/angka lain.");
                     }
                 },
             ],

@@ -86,8 +86,10 @@ class HotkeyColor extends Component
                     ->where('project_live_id', $this->projectLive->id)
                     ->ignore($this->editingId),
                 function ($attribute, $value, $fail) {
-                    if (in_array(strtolower($value), $this->seatHotkeys(), true)) {
-                        $fail('Hotkey ini sudah dipakai buat munculin salah satu kursi (1-8) — pilih huruf/angka lain.');
+                    $conflict = $this->projectLive->findHotkeyConflict($value, $this->editingId ? "color:{$this->editingId}" : null);
+
+                    if ($conflict) {
+                        $fail("Hotkey ini sudah dipakai sebagai {$conflict} — pilih huruf/angka lain.");
                     }
                 },
             ],
@@ -136,16 +138,10 @@ class HotkeyColor extends Component
                         return;
                     }
 
-                    $value = strtolower($value);
+                    $conflict = $this->projectLive->findHotkeyConflict($value, 'default');
 
-                    if (in_array($value, $this->seatHotkeys(), true)) {
-                        $fail('Hotkey ini sudah dipakai buat munculin salah satu kursi (1-8) — pilih huruf/angka lain.');
-
-                        return;
-                    }
-
-                    if ($this->projectLive->colorHotkeys()->where('hotkey', $value)->exists()) {
-                        $fail('Hotkey ini sudah dipakai sebagai salah satu hotkey warna di atas — pilih huruf/angka lain.');
+                    if ($conflict) {
+                        $fail("Hotkey ini sudah dipakai sebagai {$conflict} — pilih huruf/angka lain.");
                     }
                 },
             ],
@@ -158,22 +154,6 @@ class HotkeyColor extends Component
         $this->projectLive->refresh();
 
         $this->dispatch('notify', message: 'Hotkey default berhasil disimpan.');
-    }
-
-    /**
-     * Hotkey reveal-kursi (1-8) yang sudah dipakai di project ini (huruf kecil semua)
-     * — dicek supaya hotkey warna tidak diam-diam bentrok dan "menang" atas hotkey
-     * reveal kursi yang sudah ada.
-     *
-     * @return array<int, string>
-     */
-    private function seatHotkeys(): array
-    {
-        return $this->projectLive->details()
-            ->whereNotNull('hotkey')
-            ->pluck('hotkey')
-            ->map(fn ($hotkey) => strtolower($hotkey))
-            ->all();
     }
 
     /**

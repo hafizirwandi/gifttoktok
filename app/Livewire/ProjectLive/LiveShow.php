@@ -5,6 +5,7 @@ namespace App\Livewire\ProjectLive;
 use App\Enums\DetailStatus;
 use App\Models\ProjectLive;
 use App\Models\ProjectLiveDetail;
+use App\Services\GiftLeaderboardService;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -38,6 +39,16 @@ class LiveShow extends Component
     public array $colorHotkeys = [];
 
     public ?string $defaultColorHotkey = null;
+
+    /**
+     * Hotkey Reset Leaderboard/Reset Coin (diatur admin di halaman Admin) — dipencet
+     * langsung di sini, TANPA konfirmasi (beda dari tombolnya di Admin yang pakai
+     * wire:confirm), supaya operator tidak perlu pindah tab saat siaran. Lihat
+     * triggerResetLeaderboard()/triggerResetCoins() & live-show.blade.php.
+     */
+    public ?string $resetLeaderboardHotkey = null;
+
+    public ?string $resetCoinHotkey = null;
 
     public function mount(ProjectLive $projectLive): void
     {
@@ -132,6 +143,39 @@ class LiveShow extends Component
     {
         $this->colorHotkeys = $this->projectLive->colorHotkeys()->pluck('hotkey')->all();
         $this->defaultColorHotkey = $this->projectLive->default_color_hotkey;
+        $this->resetLeaderboardHotkey = $this->projectLive->reset_leaderboard_hotkey;
+        $this->resetCoinHotkey = $this->projectLive->reset_coin_hotkey;
+    }
+
+    /**
+     * Hotkey Reset Leaderboard — langsung jalan begitu ditekan (tanpa konfirmasi, lihat
+     * penjelasan di properti resetLeaderboardHotkey di atas). $this->details di-refetch
+     * penuh sesudahnya supaya operator langsung lihat kursi kosong, tidak perlu nunggu
+     * poll berikutnya.
+     */
+    public function triggerResetLeaderboard(): void
+    {
+        app(GiftLeaderboardService::class)->reset($this->projectLive);
+
+        $this->details = $this->projectLive->details()
+            ->orderBy('position')
+            ->get()
+            ->map(fn (ProjectLiveDetail $detail) => $this->toArray($detail))
+            ->all();
+    }
+
+    /**
+     * Hotkey Reset Coin — sama seperti di atas, langsung jalan tanpa konfirmasi.
+     */
+    public function triggerResetCoins(): void
+    {
+        app(GiftLeaderboardService::class)->resetCoins($this->projectLive);
+
+        $this->details = $this->projectLive->details()
+            ->orderBy('position')
+            ->get()
+            ->map(fn (ProjectLiveDetail $detail) => $this->toArray($detail))
+            ->all();
     }
 
     public function toggleByHotkey(int $detailId): void

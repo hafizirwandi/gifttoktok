@@ -38,6 +38,8 @@ class ProjectLive extends Model
         'frame_pulse_color_3',
         'active_hotkey_color',
         'default_color_hotkey',
+        'reset_leaderboard_hotkey',
+        'reset_coin_hotkey',
         'nama_akun',
         'desc',
         'user_id',
@@ -119,5 +121,61 @@ class ProjectLive extends Model
     {
         return $this->gift_listener_connected_at !== null
             && $this->gift_listener_connected_at->gt(now()->subSeconds(45));
+    }
+
+    /**
+     * Semua hotkey char di project ini berbagi SATU keydown handler di halaman Live
+     * (lihat live-show.blade.php) — hotkey reveal-kursi, hotkey warna (global/per-kursi),
+     * hotkey default warna, hotkey Reset Leaderboard, dan hotkey Reset Coin. Dipakai
+     * SATU tempat ini oleh semua fitur yang punya field hotkey (DetailAdmin::save(),
+     * HotkeyColor::saveHotkey()/saveDefaultHotkey(), reset hotkey di DetailAdmin) supaya
+     * validasi tabrakan konsisten & tidak diam-diam menang begitu ada 2 fitur pakai
+     * huruf yang sama.
+     *
+     * @param  string  $hotkey  Huruf/angka yang mau dicek (case-insensitive).
+     * @param  string|null  $exclude  Sumber yang boleh diabaikan (dirinya sendiri saat
+     *                                sedang di-edit): "seat:{id}"|"color:{id}"|"default"|
+     *                                "reset_leaderboard"|"reset_coin".
+     * @return string|null  Label fitur yang sudah pakai hotkey ini, null kalau bebas.
+     */
+    public function findHotkeyConflict(string $hotkey, ?string $exclude = null): ?string
+    {
+        $hotkey = strtolower($hotkey);
+
+        if ($exclude !== 'default' && $this->default_color_hotkey === $hotkey) {
+            return 'hotkey default warna';
+        }
+
+        if ($exclude !== 'reset_leaderboard' && $this->reset_leaderboard_hotkey === $hotkey) {
+            return 'hotkey Reset Leaderboard';
+        }
+
+        if ($exclude !== 'reset_coin' && $this->reset_coin_hotkey === $hotkey) {
+            return 'hotkey Reset Coin';
+        }
+
+        $colorHotkeyQuery = $this->colorHotkeys()->where('hotkey', $hotkey);
+
+        if (str_starts_with((string) $exclude, 'color:')) {
+            $colorHotkeyQuery->whereKeyNot((int) substr($exclude, 6));
+        }
+
+        if ($colorHotkeyQuery->exists()) {
+            return 'hotkey warna';
+        }
+
+        $seatQuery = $this->details()->where('hotkey', $hotkey);
+
+        if (str_starts_with((string) $exclude, 'seat:')) {
+            $seatQuery->whereKeyNot((int) substr($exclude, 5));
+        }
+
+        $seat = $seatQuery->first();
+
+        if ($seat) {
+            return 'hotkey kursi'.($seat->name ? " \"{$seat->name}\"" : '');
+        }
+
+        return null;
     }
 }

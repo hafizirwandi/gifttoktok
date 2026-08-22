@@ -19,6 +19,18 @@
                 return;
             }
 
+            // Hotkey Reset Leaderboard/Reset Coin (diatur di halaman Admin) - langsung
+            // jalan begitu ditekan, tanpa konfirmasi (lihat LiveShow::triggerResetLeaderboard()).
+            if ($wire.resetLeaderboardHotkey && key === $wire.resetLeaderboardHotkey) {
+                $wire.call('triggerResetLeaderboard');
+                return;
+            }
+
+            if ($wire.resetCoinHotkey && key === $wire.resetCoinHotkey) {
+                $wire.call('triggerResetCoins');
+                return;
+            }
+
             const match = ($wire.details || []).find((d) => d.hotkey && d.hotkey.toLowerCase() === key);
 
             if (match) {

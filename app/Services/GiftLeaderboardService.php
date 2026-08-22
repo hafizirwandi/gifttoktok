@@ -65,23 +65,25 @@ class GiftLeaderboardService
 
     /**
      * Reset leaderboard: hapus seluruh ledger gifter project ini (total_value ikut
-     * hilang, ini reset penuh yang disengaja lewat tombol admin), kosongkan
-     * kursi yang source-nya auto (kursi manual tidak disentuh). Begitu kursi
-     * kosong, layar Live otomatis ikut kosong di poll berikutnya.
+     * hilang, ini reset penuh yang disengaja lewat tombol admin), kosongkan SEMUA
+     * kursi TANPA terkecuali (termasuk yang source-nya manual — beda dari
+     * emptySeat() di recalculate() yang sengaja tidak menyentuh kursi manual
+     * selama proses OTOMATIS berjalan; tombol "Reset Leaderboard" ini keputusan
+     * eksplisit admin, jadi semua kursi ikut dikosongkan). Begitu kursi kosong,
+     * layar Live otomatis ikut kosong di poll berikutnya.
      */
     public function reset(ProjectLive $projectLive): void
     {
         DB::transaction(function () use ($projectLive) {
-            $projectLive->details()
-                ->where('source', DetailSource::Auto->value)
-                ->update([
-                    'status' => DetailStatus::Hide->value,
-                    'name' => null,
-                    'img' => null,
-                    'gift_total_value' => 0,
-                    'project_live_gifter_id' => null,
-                    'dominant_color' => '#111111',
-                ]);
+            $projectLive->details()->update([
+                'status' => DetailStatus::Hide->value,
+                'name' => null,
+                'img' => null,
+                'gift_total_value' => 0,
+                'project_live_gifter_id' => null,
+                'dominant_color' => '#111111',
+                'source' => DetailSource::Auto->value,
+            ]);
 
             $projectLive->gifters()->delete();
         });

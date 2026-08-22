@@ -45,6 +45,7 @@ class ProjectLive extends Model
         'tiktok_username',
         'webhook_secret',
         'gift_listener_connected_at',
+        'round_reset_at',
     ];
 
     protected $hidden = [
@@ -61,6 +62,7 @@ class ProjectLive extends Model
             'frame_pulse' => 'boolean',
             'auto_gift_mode' => 'boolean',
             'gift_listener_connected_at' => 'datetime',
+            'round_reset_at' => 'datetime',
         ];
     }
 
@@ -88,8 +90,8 @@ class ProjectLive extends Model
     }
 
     /**
-     * Trigger event non-gift (join/share/follow/subscribe/like/chat) + saklar on-off
-     * utk pipeline gift asli — lihat App\Services\EventTriggerProcessor.
+     * Trigger event non-gift (join/share/follow/subscribe/like/chat) — lihat
+     * App\Services\EventTriggerProcessor.
      */
     public function eventTriggers(): HasMany
     {

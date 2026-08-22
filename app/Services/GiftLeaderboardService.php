@@ -25,13 +25,20 @@ class GiftLeaderboardService
     public function recalculate(ProjectLive $projectLive): void
     {
         DB::transaction(function () use ($projectLive) {
-            // round_value > 0 wajib - tanpa ini, gifter yang coin-nya sudah dinolkan
-            // (lihat reset()/resetCoins()) tapi barisnya belum dihapus akan tetap ikut
-            // "ranking" (menang lawan kursi kosong) dan menempati kursi meski nilainya
-            // nol, bikin papan yang seharusnya kosong keisi lagi tanpa gift baru sama sekali.
+            // round_value > 0 - gifter yang belum kontribusi apa pun tidak usah ikut ranking.
+            //
+            // last_gift_at > round_reset_at (kalau project ini pernah di-reset) - INI yang
+            // mencegah gifter LAMA (round_value-nya sengaja TIDAK disentuh oleh reset(),
+            // lihat komentar di sana) otomatis balik menempati kursi begitu ada gift APA PUN
+            // masuk dari SIAPA PUN. Cuma gifter yang BENERAN kirim gift baru SETELAH reset
+            // terakhir yang dianggap "ronde berjalan" dan boleh direbut kursi.
             $topGifters = ProjectLiveGifter::query()
                 ->where('project_live_id', $projectLive->id)
                 ->where('round_value', '>', 0)
+                // >= (bukan >) - kolom timestamp MySQL presisi detik, gift yang masuk
+                // di detik yang SAMA PERSIS dengan klik reset harus tetap dihitung
+                // "ronde baru", bukan malah terbuang gara-gara technically "tidak lebih besar".
+                ->when($projectLive->round_reset_at, fn ($q) => $q->where('last_gift_at', '>=', $projectLive->round_reset_at))
                 ->orderByDesc('round_value')
                 ->orderBy('id')
                 ->limit(self::SEAT_COUNT)
@@ -69,34 +76,29 @@ class GiftLeaderboardService
     }
 
     /**
-     * Reset leaderboard: kosongkan SEMUA kursi TANPA terkecuali (termasuk yang
-     * source-nya manual — beda dari emptySeat() di recalculate() yang sengaja tidak
-     * menyentuh kursi manual selama proses OTOMATIS berjalan; tombol ini keputusan
-     * eksplisit admin, jadi semua kursi ikut dikosongkan) DAN nolkan round_value
-     * semua gifter (coin ronde berjalan yang dipakai buat ranking) — supaya papan
-     * BENAR-BENAR kosong sampai ada gift baru yang bikin seseorang py round_value
-     * lagi, bukan cuma kedip sebentar lalu orang lama balik ke posisi yang sama
-     * (round_value lama masih ada = recalculate() langsung nge-restore ranking
-     * persis seperti sebelumnya begitu ada gift apa pun masuk).
-     *
-     * total_value (akumulasi LIFETIME, beda dari round_value) sengaja TETAP TIDAK
-     * disentuh — baris gifter sendiri juga TIDAK dihapus (beda dari versi paling
-     * awal fitur ini), cuma round_value-nya yang dinolkan.
+     * Reset leaderboard: BUKAN reset coin — TIDAK menyentuh round_value/total_value/
+     * gift_total_value siapa pun sama sekali. Cuma dua hal: (1) kosongkan SEMUA kursi
+     * TANPA terkecuali (termasuk yang source-nya manual — beda dari emptySeat() di
+     * recalculate() yang sengaja tidak menyentuh kursi manual selama proses OTOMATIS
+     * berjalan; tombol ini keputusan eksplisit admin), dan (2) catat waktu reset ini
+     * (round_reset_at) supaya recalculate() tahu gifter LAMA (yang kirim gift SEBELUM
+     * waktu ini) tidak boleh otomatis balik menempati kursi lagi cuma karena ada gift
+     * dari orang lain masuk — mereka baru dianggap "ronde berjalan" lagi kalau BENERAN
+     * kirim gift baru setelah titik reset ini.
      */
     public function reset(ProjectLive $projectLive): void
     {
         DB::transaction(function () use ($projectLive) {
+            $projectLive->update(['round_reset_at' => now()]);
+
             $projectLive->details()->update([
                 'status' => DetailStatus::Hide->value,
                 'name' => null,
                 'img' => null,
-                'gift_total_value' => 0,
                 'project_live_gifter_id' => null,
                 'dominant_color' => '#111111',
                 'source' => DetailSource::Auto->value,
             ]);
-
-            $projectLive->gifters()->update(['round_value' => 0]);
         });
     }
 

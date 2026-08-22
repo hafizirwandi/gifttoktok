@@ -127,10 +127,19 @@ class TikTokGiftEventProcessor
 
         $gifter->tiktok_unique_id = $gifterData['unique_id'] ?? $gifter->tiktok_unique_id;
         $gifter->nickname = $gifterData['nickname'] ?? $gifter->nickname;
-        // total_value = akumulasi lifetime, TIDAK PERNAH direset (tetap jalan terus).
-        // round_value = akumulasi putaran berjalan, dipakai untuk ranking kursi.
+
+        // Gift terakhir gifter ini dari SEBELUM "Reset Leaderboard" terakhir (atau dia
+        // belum pernah kirim gift sama sekali) -> ini kontribusi pertamanya di ronde
+        // BARU, round_value mulai fresh dari nilai gift ini saja, bukan menumpuk ke
+        // angka lama (reset() sendiri sengaja TIDAK menolkan round_value, lihat
+        // GiftLeaderboardService::reset() — makanya harus di-handle di sini).
+        $isNewRound = ! $gifter->last_gift_at
+            || ($projectLive->round_reset_at && $gifter->last_gift_at->lt($projectLive->round_reset_at));
+
+        // total_value = akumulasi lifetime, TIDAK PERNAH direset (tetap jalan terus,
+        // tidak terpengaruh ronde sama sekali).
         $gifter->total_value = ($gifter->total_value ?? 0) + $value;
-        $gifter->round_value = ($gifter->round_value ?? 0) + $value;
+        $gifter->round_value = $isNewRound ? $value : ($gifter->round_value ?? 0) + $value;
         $gifter->gift_count = ($gifter->gift_count ?? 0) + 1;
         $gifter->last_gift_at = now();
         $gifter->save();

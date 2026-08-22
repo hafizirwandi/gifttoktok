@@ -64,29 +64,26 @@ class GiftLeaderboardService
     }
 
     /**
-     * Reset leaderboard: hapus seluruh ledger gifter project ini (total_value ikut
-     * hilang, ini reset penuh yang disengaja lewat tombol admin), kosongkan SEMUA
-     * kursi TANPA terkecuali (termasuk yang source-nya manual — beda dari
-     * emptySeat() di recalculate() yang sengaja tidak menyentuh kursi manual
-     * selama proses OTOMATIS berjalan; tombol "Reset Leaderboard" ini keputusan
-     * eksplisit admin, jadi semua kursi ikut dikosongkan). Begitu kursi kosong,
-     * layar Live otomatis ikut kosong di poll berikutnya.
+     * Reset leaderboard: cuma LEPAS orang dari kursi — kosongkan SEMUA kursi TANPA
+     * terkecuali (termasuk yang source-nya manual — beda dari emptySeat() di
+     * recalculate() yang sengaja tidak menyentuh kursi manual selama proses
+     * OTOMATIS berjalan; tombol ini keputusan eksplisit admin, jadi semua kursi
+     * ikut dikosongkan). Data gifter (round_value/total_value) SENGAJA TIDAK
+     * disentuh/dihapus di sini — cuma Reset Coin (resetCoins() di bawah) yang
+     * boleh menolkan angka coin. Konsekuensinya: begitu ada gift baru masuk lagi,
+     * gifter lama (dengan coin lama mereka) bisa balik lagi menempati kursi lewat
+     * recalculate() — ini disengaja, bukan bug.
      */
     public function reset(ProjectLive $projectLive): void
     {
-        DB::transaction(function () use ($projectLive) {
-            $projectLive->details()->update([
-                'status' => DetailStatus::Hide->value,
-                'name' => null,
-                'img' => null,
-                'gift_total_value' => 0,
-                'project_live_gifter_id' => null,
-                'dominant_color' => '#111111',
-                'source' => DetailSource::Auto->value,
-            ]);
-
-            $projectLive->gifters()->delete();
-        });
+        $projectLive->details()->update([
+            'status' => DetailStatus::Hide->value,
+            'name' => null,
+            'img' => null,
+            'project_live_gifter_id' => null,
+            'dominant_color' => '#111111',
+            'source' => DetailSource::Auto->value,
+        ]);
     }
 
     /**

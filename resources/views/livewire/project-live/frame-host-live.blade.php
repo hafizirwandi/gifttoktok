@@ -1,6 +1,9 @@
 {{-- Overlay bersih buat OBS Browser Source — cuma nampilin border frame, tanpa kontrol
-     apa pun. Dimensi kotaknya SENGAJA disamakan persis dengan live-show.blade.php
-     (mode Vertical/Horizontal) supaya kalau dipasang berdampingan, ukurannya klop. --}}
+     apa pun. Rasio kotak SELALU dari project_lives.frame_ratio_w/frame_ratio_h (bukan
+     cabang per orientasi lagi) - admin bisa custom rasio apa pun lewat FrameHost,
+     bukan cuma preset Portrait/Landscape/Persegi. Tidak dipatok max-width spt di
+     live-show.blade.php (overlay ini murni utk OBS, bukan HP) - dibiarkan sebesar
+     mungkin ngikutin viewport OBS-nya. --}}
 <div wire:poll.5s="poll">
     @php
         $borderRadius = 'border-radius: '.$projectLive->frame_radius.'px;';
@@ -30,13 +33,11 @@
         </style>
     @endif
 
-    @if ($projectLive->frame_orientation->value === 'landscape')
-        <div class="min-h-screen w-screen flex items-center justify-center p-3">
-            <div class="h-[50vh] aspect-[2/1]" style="{{ $borderRadius }} {{ $borderStyle }}"></div>
-        </div>
-    @else
-        <div class="h-screen w-screen flex items-center justify-center p-3">
-            <div class="h-full aspect-[1/2]" style="{{ $borderRadius }} {{ $borderStyle }}"></div>
-        </div>
-    @endif
+    <div class="min-h-screen w-screen flex items-center justify-center p-3">
+        <div style="
+            width: min(100vw, 100vh * {{ $projectLive->frame_ratio_w }} / {{ $projectLive->frame_ratio_h }});
+            aspect-ratio: {{ $projectLive->frame_ratio_w }} / {{ $projectLive->frame_ratio_h }};
+            {{ $borderRadius }} {{ $borderStyle }}
+        "></div>
+    </div>
 </div>

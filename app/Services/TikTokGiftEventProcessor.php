@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\ProjectLive;
 use App\Models\ProjectLiveGifter;
+use App\Models\ProjectLiveGiftEvent;
 use App\Models\TikTokGift;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -73,7 +74,7 @@ class TikTokGiftEventProcessor
 
         $lock = Cache::lock("leaderboard-{$projectLive->id}", 5);
 
-        $lock->block(3, function () use ($projectLive, $gifterData, $groupId, $value, $gift) {
+        $lock->block(3, function () use ($projectLive, $gifterData, $groupId, $value, $gift, $repeatCount) {
             $dedupeKey = "gift-dedupe:{$projectLive->id}:{$groupId}";
 
             if (Cache::has($dedupeKey)) {
@@ -87,6 +88,7 @@ class TikTokGiftEventProcessor
             $gifter = $this->upsertGifter($projectLive, $gifterData, $value);
             $this->leaderboard->recalculate($projectLive);
             $this->stampGiftIcon($projectLive, $gifter, $gift);
+            $this->logGiftEvent($projectLive, $gifter, $gift, $repeatCount, $value);
         });
     }
 
@@ -115,6 +117,24 @@ class TikTokGiftEventProcessor
         $seat->update([
             'last_gift_icon_url' => $displayIconUrl,
             'last_gift_at' => now(),
+        ]);
+    }
+
+    /**
+     * Catat 1 baris histori "user X kirim gift Y sebanyak Z" - dipakai halaman admin
+     * "Pengirim Gift" (App\Livewire\GiftSenders\Index) buat filter per-tanggal &
+     * rekap per (user, gift). Beda dari upsertGifter() yg cuma nyimpen TOTAL
+     * ter-akumulasi (tidak tahu gift APA yg dikirim), tabel ini SATU BARIS PER
+     * KEJADIAN gift (jadi bisa di-agregasi ulang per periode kapan saja).
+     */
+    private function logGiftEvent(ProjectLive $projectLive, ProjectLiveGifter $gifter, TikTokGift $gift, int $repeatCount, int $value): void
+    {
+        ProjectLiveGiftEvent::create([
+            'project_live_id' => $projectLive->id,
+            'tiktok_user_id' => $gifter->tiktok_user_id,
+            'tiktok_gift_id' => $gift->id,
+            'repeat_count' => $repeatCount,
+            'diamond_value' => $value,
         ]);
     }
 

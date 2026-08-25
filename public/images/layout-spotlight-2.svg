@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 160" fill="none">
+    <style>
+        .gtt-bg { fill: #f1f5f9; }
+        .gtt-border { stroke: #94a3b8; }
+        .gtt-box { fill: #94a3b8; }
+        @media (prefers-color-scheme: dark) {
+            .gtt-bg { fill: #1e293b; }
+            .gtt-border { stroke: #64748b; }
+            .gtt-box { fill: #64748b; }
+        }
+    </style>
+    <!-- Bingkai seperti HP, 9:16, SAMA PERSIS dgn ikon layout lain (konsisten). Isinya
+         "Sorotan II": mirip layout-spotlight.svg, TAPI kotak sorotannya lebih tinggi
+         (2x kotak kecil, bukan 1x) + grid kecilnya 4x2 (bukan 3x3), lihat
+         DisplayMode::SorotanDua. -->
+    <rect class="gtt-bg gtt-border" x="3" y="3" width="84" height="154" rx="16" stroke-width="3"/>
+    <rect class="gtt-box" x="10" y="25" width="69" height="33" rx="4"/>
+    <rect class="gtt-box" x="10" y="61" width="15" height="15" rx="3"/>
+    <rect class="gtt-box" x="28" y="61" width="15" height="15" rx="3"/>
+    <rect class="gtt-box" x="46" y="61" width="15" height="15" rx="3"/>
+    <rect class="gtt-box" x="64" y="61" width="15" height="15" rx="3"/>
+    <rect class="gtt-box" x="10" y="79" width="15" height="15" rx="3"/>
+    <rect class="gtt-box" x="28" y="79" width="15" height="15" rx="3"/>
+    <rect class="gtt-box" x="46" y="79" width="15" height="15" rx="3"/>
+    <rect class="gtt-box" x="64" y="79" width="15" height="15" rx="3"/>
+</svg>

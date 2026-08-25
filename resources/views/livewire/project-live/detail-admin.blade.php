@@ -96,15 +96,17 @@
                     <!-- Kartu ikon (bukan cuma teks) - klik langsung simpan spt sebelumnya. Preview
                          kursinya sendiri ada di menu "Preview Live" terpisah. Ganti tata letak SELALU
                          minta konfirmasi (bukan cuma pas kursi berkurang) krn updateDisplayMode() juga
-                         reset leaderboard sekalian - lihat App\Livewire\ProjectLive\DetailAdmin. Lebar
-                         kartu DIPATOK (w-28) + label boleh wrap 2 baris, supaya rapi rata kiri-kanan
-                         walau panjang labelnya beda-beda ("Vertical" vs "Layar Penuh (Lanskap)"). -->
-                    <div class="flex flex-wrap gap-2">
+                         reset leaderboard sekalian - lihat App\Livewire\ProjectLive\DetailAdmin. Pakai
+                         CSS grid dgn JUMLAH KOLOM TETAP per breakpoint (bukan flex-wrap/auto-fill) -
+                         semua kartu jadi otomatis SAMA PERSIS ukurannya & sejajar rapi (lebar kartu =
+                         lebar track grid, seragam), beda dari flex-1 sebelumnya yg bisa melebar beda2
+                         tiap baris. -->
+                    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                         @foreach (\App\Enums\DisplayMode::cases() as $mode)
                             <button type="button" wire:click="updateDisplayMode('{{ $mode->value }}')"
                                 title="{{ $mode->description() }}"
                                 wire:confirm="Ganti ke &quot;{{ $mode->label() }}&quot;? Leaderboard akan direset (papan dikosongkan), dan kalau kursi jadi lebih sedikit dari sekarang, kursi yang hilang beserta hotkey &amp; warna kustom di kotak itu akan terhapus permanen. Lanjutkan?"
-                                class="w-28 flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-md border transition {{ $projectLive->display_mode === $mode ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30' : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                                class="flex flex-col items-center gap-1 p-2 rounded-md border transition {{ $projectLive->display_mode === $mode ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30' : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
                                 <img src="{{ asset($mode->iconPath()) }}" alt="{{ $mode->label() }}" class="w-8 h-14 object-contain">
                                 <span class="text-[10px] font-medium text-center leading-tight {{ $projectLive->display_mode === $mode ? 'text-indigo-700 dark:text-indigo-300' : 'text-gray-500 dark:text-gray-400' }}">{{ $mode->label() }}</span>
                             </button>
@@ -152,6 +154,116 @@
                     <button type="button" wire:click="saveSizes"
                         class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700">
                         Simpan Ukuran
+                    </button>
+                </div>
+
+                <!-- Padding, tebal border, & rounded border kotak - beda dari grid ukuran di
+                     atas (persen skala), ini nilai PIXEL literal, lihat
+                     App\Livewire\ProjectLive\DetailAdmin::BOX_STYLE_FIELDS. -->
+                <div class="border-t border-gray-100 dark:border-gray-700 pt-3 space-y-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <p class="text-xs font-semibold text-gray-600 dark:text-gray-300">Padding &amp; Border Kotak</p>
+                        <button type="button" wire:click="resetBoxStyle"
+                            class="flex-shrink-0 text-xs font-semibold text-gray-400 hover:text-red-500">
+                            Reset ke Default
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        @foreach (\App\Livewire\ProjectLive\DetailAdmin::BOX_STYLE_FIELDS as $field => $config)
+                            <div>
+                                <x-input-label :for="'box-style-'.$field" :value="$config['label']" />
+                                <div class="flex items-center gap-1 mt-1">
+                                    <x-text-input :id="'box-style-'.$field" wire:model="boxStyle.{{ $field }}" type="number" :min="$config['min']" :max="$config['max']" step="1" class="block w-full text-sm" />
+                                    <span class="text-xs text-gray-400 flex-shrink-0">px</span>
+                                </div>
+                                <x-input-error :messages="$errors->get('boxStyle.'.$field)" class="mt-1" />
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button type="button" wire:click="saveBoxStyle"
+                            class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700">
+                            Simpan Padding &amp; Border
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Efek Pulse Kursi: border SATU kotak kursi tertentu di halaman Live
+                 berkedip gonta-ganti warna - beda dari efek pulse Frame Host (border
+                 overlay OBS terpisah, lihat App\Livewire\ProjectLive\FrameHost) krn
+                 ini nempel di kotak kursi itu sendiri. -->
+            <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-4">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Efek Pulse Kursi</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Border 1 kotak kursi tertentu berkedip gonta-ganti warna di halaman Live.</p>
+                    </div>
+                    <button type="button" wire:click="toggleSeatPulse"
+                        class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full pl-1 pr-3 py-1 transition {{ $projectLive->seat_pulse_enabled ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                        <span class="relative inline-flex h-5 w-9 items-center rounded-full bg-black/20">
+                            <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition {{ $projectLive->seat_pulse_enabled ? 'translate-x-[18px]' : 'translate-x-1' }}"></span>
+                        </span>
+                        <span class="text-sm font-semibold text-white">{{ $projectLive->seat_pulse_enabled ? 'ON' : 'OFF' }}</span>
+                    </button>
+                </div>
+
+                <div>
+                    <x-input-label for="seatPulsePosition" value="Kursi Nomor" />
+                    <select wire:model.live="seatPulsePosition" id="seatPulsePosition"
+                        class="mt-1 block w-full text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                        @for ($i = 1; $i <= $projectLive->display_mode->seatCount(); $i++)
+                            <option value="{{ $i }}">Kursi #{{ $i }}</option>
+                        @endfor
+                    </select>
+                    <x-input-error :messages="$errors->get('seatPulsePosition')" class="mt-1" />
+                </div>
+
+                <div>
+                    <x-input-label for="seatPulseSpeedMs" value="Kecepatan (ms per siklus)" />
+                    <x-text-input wire:model.live.debounce.300ms="seatPulseSpeedMs" type="number" id="seatPulseSpeedMs" min="200" max="10000" step="100" class="block mt-1 w-full text-sm" />
+                    <x-input-error :messages="$errors->get('seatPulseSpeedMs')" class="mt-1" />
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <x-input-label for="seatPulseColor1" value="Warna 1" />
+                        <div class="flex items-center gap-1 mt-1">
+                            <input type="color" wire:model.live="seatPulseColor1" id="seatPulseColor1" class="w-9 h-9 rounded border border-gray-300 dark:border-gray-600 bg-transparent p-0.5 flex-shrink-0">
+                            <x-text-input wire:model.live.debounce.300ms="seatPulseColor1" type="text" class="block w-full text-xs font-mono" maxlength="7" />
+                        </div>
+                        <x-input-error :messages="$errors->get('seatPulseColor1')" class="mt-1" />
+                    </div>
+                    <div>
+                        <x-input-label for="seatPulseColor2" value="Warna 2" />
+                        <div class="flex items-center gap-1 mt-1">
+                            <input type="color" wire:model.live="seatPulseColor2" id="seatPulseColor2" class="w-9 h-9 rounded border border-gray-300 dark:border-gray-600 bg-transparent p-0.5 flex-shrink-0">
+                            <x-text-input wire:model.live.debounce.300ms="seatPulseColor2" type="text" class="block w-full text-xs font-mono" maxlength="7" />
+                        </div>
+                        <x-input-error :messages="$errors->get('seatPulseColor2')" class="mt-1" />
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between">
+                        <x-input-label for="seatPulseColor3" value="Warna 3 (opsional)" />
+                        @if ($seatPulseColor3 !== '')
+                            <button type="button" wire:click="clearSeatPulseColor3" class="text-xs font-semibold text-red-500 hover:underline">Hapus, cuma 2 warna</button>
+                        @endif
+                    </div>
+                    <div class="flex items-center gap-1 mt-1">
+                        <input type="color" wire:model.live="seatPulseColor3" id="seatPulseColor3" class="w-9 h-9 rounded border border-gray-300 dark:border-gray-600 bg-transparent p-0.5 flex-shrink-0" value="{{ $seatPulseColor3 ?: '#000000' }}">
+                        <x-text-input wire:model.live.debounce.300ms="seatPulseColor3" type="text" class="block w-full text-xs font-mono" maxlength="7" placeholder="Kosongkan buat 2 warna saja" />
+                    </div>
+                    <x-input-error :messages="$errors->get('seatPulseColor3')" class="mt-1" />
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="button" wire:click="saveSeatPulse"
+                        class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700">
+                        Simpan Efek Pulse
                     </button>
                 </div>
             </div>

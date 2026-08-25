@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 160" fill="none">
+    <style>
+        .gtt-bg { fill: #f1f5f9; }
+        .gtt-border { stroke: #94a3b8; }
+        .gtt-box { fill: #94a3b8; }
+        @media (prefers-color-scheme: dark) {
+            .gtt-bg { fill: #1e293b; }
+            .gtt-border { stroke: #64748b; }
+            .gtt-box { fill: #64748b; }
+        }
+    </style>
+    <!-- Bingkai seperti HP, 9:16, SAMA PERSIS dgn layout-vertical.svg - cuma susunan
+         kotak di dalamnya yang beda (pita 4 kolom x 2 baris di tengah, bukan penuh
+         satu bingkai) supaya tetap kebayang ini "susunan lebar" di dalam kanvas potret. -->
+    <rect class="gtt-bg gtt-border" x="3" y="3" width="84" height="154" rx="16" stroke-width="3"/>
+    <rect class="gtt-box" x="10" y="63" width="16" height="16" rx="3"/>
+    <rect class="gtt-box" x="28" y="63" width="16" height="16" rx="3"/>
+    <rect class="gtt-box" x="46" y="63" width="16" height="16" rx="3"/>
+    <rect class="gtt-box" x="64" y="63" width="16" height="16" rx="3"/>
+    <rect class="gtt-box" x="10" y="81" width="16" height="16" rx="3"/>
+    <rect class="gtt-box" x="28" y="81" width="16" height="16" rx="3"/>
+    <rect class="gtt-box" x="46" y="81" width="16" height="16" rx="3"/>
+    <rect class="gtt-box" x="64" y="81" width="16" height="16" rx="3"/>
+</svg>

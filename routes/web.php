@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\GiftSenders\Index as GiftSendersIndex;
 use App\Livewire\ProjectLive\DetailAdmin;
 use App\Livewire\ProjectLive\EventTrigger;
 use App\Livewire\ProjectLive\FrameHost;
@@ -34,6 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:superadmin')->group(function () {
         Route::get('/project-live', ProjectLiveIndex::class)->name('project-live.index');
         Route::get('/users', UserIndex::class)->name('users.index');
+        Route::get('/gift-senders', GiftSendersIndex::class)->name('gift-senders.index');
     });
 
     // Superadmin (project apa pun) atau akun live (project miliknya sendiri) — dicek via Policy di mount().

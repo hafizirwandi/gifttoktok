@@ -53,6 +53,45 @@ class DetailAdmin extends Component
     public array $sizes = [];
 
     /**
+     * Padding, tebal border, & rounded border kotak kursi - beda dari SIZE_FIELDS
+     * (persen skala 50-200%, transform:scale) krn ini nilai PIXEL literal (bukan
+     * skala relatif), makanya dipisah jadi konstanta + properti sendiri. Kunci
+     * array = nama kolom project_lives PERSIS (bukan disingkat spt SIZE_FIELDS),
+     * value = [min, max, default dalam px] - dipakai bareng buat validasi &
+     * reset (lihat saveBoxStyle()/resetBoxStyle()), diterapkan lewat inline
+     * style padding/border-width/border-radius di partials/seat-box.blade.php.
+     */
+    public const BOX_STYLE_FIELDS = [
+        'seat_padding' => ['label' => 'Padding Kotak', 'min' => 0, 'max' => 40, 'default' => 0],
+        'seat_border_width' => ['label' => 'Tebal Border', 'min' => 0, 'max' => 20, 'default' => 4],
+        'seat_border_radius' => ['label' => 'Rounded Border', 'min' => 0, 'max' => 40, 'default' => 12],
+        'seat_gap' => ['label' => 'Jarak Antar Kotak', 'min' => 0, 'max' => 40, 'default' => 12],
+    ];
+
+    public array $boxStyle = [];
+
+    /**
+     * Efek pulse (border kotak berkedip gonta-ganti warna) buat SATU kursi tertentu
+     * di halaman Live - beda dari efek pulse Frame Host (App\Livewire\ProjectLive\
+     * FrameHost, overlay OBS terpisah) krn ini nempel di kotak KURSI itu sendiri
+     * (lihat partials/seat-box.blade.php & live-show.blade.php). seatPulseEnabled
+     * toggle LANGSUNG tersimpan (sama pola spt toggleVisible()/togglePulse() di
+     * FrameHost), sisanya (posisi/kecepatan/warna) di-stage dulu, baru tersimpan
+     * lewat saveSeatPulse().
+     */
+    public bool $seatPulseEnabled = false;
+
+    public string $seatPulsePosition = '1';
+
+    public int $seatPulseSpeedMs = 1500;
+
+    public string $seatPulseColor1 = '#1e3a8a';
+
+    public string $seatPulseColor2 = '#38bdf8';
+
+    public string $seatPulseColor3 = '';
+
+    /**
      * Hotkey yang dipencet di halaman LIVE (bukan di sini) buat langsung memicu Reset
      * Leaderboard/Reset Coin tanpa pindah tab — lihat LiveShow::triggerResetLeaderboard()/
      * triggerResetCoins() dan live-show.blade.php.
@@ -73,6 +112,17 @@ class DetailAdmin extends Component
         foreach (self::SIZE_FIELDS as $field) {
             $this->sizes[$field] = $projectLive->{$field.'_size'};
         }
+
+        foreach (self::BOX_STYLE_FIELDS as $field => $config) {
+            $this->boxStyle[$field] = $projectLive->{$field};
+        }
+
+        $this->seatPulseEnabled = $projectLive->seat_pulse_enabled;
+        $this->seatPulsePosition = (string) ($projectLive->seat_pulse_position ?: 1);
+        $this->seatPulseSpeedMs = $projectLive->seat_pulse_speed_ms;
+        $this->seatPulseColor1 = $projectLive->seat_pulse_color_1;
+        $this->seatPulseColor2 = $projectLive->seat_pulse_color_2;
+        $this->seatPulseColor3 = (string) $projectLive->seat_pulse_color_3;
     }
 
     public function saveSizes(): void
@@ -109,6 +159,75 @@ class DetailAdmin extends Component
         }
 
         $this->saveSizes();
+    }
+
+    public function saveBoxStyle(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $rules = collect(self::BOX_STYLE_FIELDS)
+            ->mapWithKeys(fn ($config, $field) => ["boxStyle.{$field}" => "required|integer|min:{$config['min']}|max:{$config['max']}"])
+            ->all();
+
+        $validated = $this->validate($rules);
+
+        $this->projectLive->update($validated['boxStyle']);
+        $this->projectLive->refresh();
+
+        $this->dispatch('notify', message: 'Padding & border kotak berhasil disimpan.');
+    }
+
+    public function resetBoxStyle(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        foreach (self::BOX_STYLE_FIELDS as $field => $config) {
+            $this->boxStyle[$field] = $config['default'];
+        }
+
+        $this->saveBoxStyle();
+    }
+
+    public function toggleSeatPulse(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $this->projectLive->update(['seat_pulse_enabled' => ! $this->projectLive->seat_pulse_enabled]);
+        $this->projectLive->refresh();
+
+        $this->seatPulseEnabled = $this->projectLive->seat_pulse_enabled;
+    }
+
+    public function clearSeatPulseColor3(): void
+    {
+        $this->seatPulseColor3 = '';
+    }
+
+    public function saveSeatPulse(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $maxPosition = $this->projectLive->display_mode->seatCount();
+
+        $validated = $this->validate([
+            'seatPulsePosition' => ['required', 'integer', 'min:1', "max:{$maxPosition}"],
+            'seatPulseSpeedMs' => ['required', 'integer', 'min:200', 'max:10000'],
+            'seatPulseColor1' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'seatPulseColor2' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'seatPulseColor3' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+        ]);
+
+        $this->projectLive->update([
+            'seat_pulse_position' => $validated['seatPulsePosition'],
+            'seat_pulse_speed_ms' => $validated['seatPulseSpeedMs'],
+            'seat_pulse_color_1' => $validated['seatPulseColor1'],
+            'seat_pulse_color_2' => $validated['seatPulseColor2'],
+            'seat_pulse_color_3' => $validated['seatPulseColor3'] !== '' ? $validated['seatPulseColor3'] : null,
+        ]);
+
+        $this->projectLive->refresh();
+
+        $this->dispatch('notify', message: 'Efek pulse kursi berhasil disimpan.');
     }
 
     public function toggleProjectLiveStatus(): void

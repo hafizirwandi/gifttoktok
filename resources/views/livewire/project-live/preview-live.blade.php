@@ -19,45 +19,54 @@
                         Atur {{ $details->count() }} kursi tamu untuk project ini. Klik salah satu kotak untuk mengubah foto, nama, coin, hotkey, dan status tampil/sembunyi.
                     @endif
                 </p>
-                <button wire:click="hideAll" wire:confirm="Sembunyikan semua kursi?" type="button"
-                    class="flex-shrink-0 inline-flex items-center px-3 py-1.5 bg-gray-800 dark:bg-gray-700 text-white text-xs font-semibold rounded-md hover:bg-gray-700 dark:hover:bg-gray-600">
-                    Hide All
-                </button>
+                <div class="flex-shrink-0 flex items-center gap-2">
+                    <button wire:click="showAll" wire:confirm="Tampilkan semua kursi?" type="button"
+                        class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded-md hover:bg-green-700">
+                        Show All
+                    </button>
+                    <button wire:click="hideAll" wire:confirm="Sembunyikan semua kursi?" type="button"
+                        class="inline-flex items-center px-3 py-1.5 bg-gray-800 dark:bg-gray-700 text-white text-xs font-semibold rounded-md hover:bg-gray-700 dark:hover:bg-gray-600">
+                        Hide All
+                    </button>
+                </div>
             </div>
 
             <!-- Kontainer ini SENGAJA meniru persis bentuk halaman Live asli (rasio +
-                 grid-cols/rows sama dgn live-show.blade.php) - jadi bentuknya (potret/
-                 lanskap/kotak) beneran berubah sesuai tata letak yang dipilih, bukan
-                 cuma grid kotak generik. Lebar dipatok maksimal 480px ("mobile-first",
-                 sama spt live-show.blade.php) - custom property --seat-w dihitung dari
-                 basis 92vh DAN batas 480px, tinggi diturunkan darinya lewat calc() biar
-                 rasionya selalu konsisten. Class Tailwind SENGAJA cuma yang statis
-                 (grid/gap) - ukurannya lewat style inline, bukan class dinamis (lihat
-                 komentar di App\Enums\DisplayMode kenapa class dinamis di PHP tidak
-                 pernah ke-generate Tailwind-nya). -->
+                 grid columns/rows/areas sama dgn live-show.blade.php) - jadi bentuknya
+                 (potret/lanskap/kotak/mosaik) beneran berubah sesuai tata letak yang
+                 dipilih, bukan cuma grid kotak generik. Lebar dipatok maksimal 480px
+                 ("mobile-first", sama spt live-show.blade.php) - custom property
+                 --seat-w dihitung dari basis 92vh DAN batas 480px. Tinggi NORMALNYA
+                 diturunkan dari --seat-w lewat calc() - KECUALI mode intrinsicHeight()
+                 (Kisi Dinamis): dibiarkan `auto`, sama spt live-show.blade.php. Class
+                 Tailwind SENGAJA cuma yang statis (grid/gap) - ukurannya lewat style
+                 inline, bukan class dinamis (lihat komentar di App\Enums\DisplayMode
+                 kenapa class dinamis di PHP tidak pernah ke-generate Tailwind-nya). -->
             <div class="flex justify-center">
                 @php
                     $mode = $projectLive->display_mode;
                 @endphp
-                <div class="grid gap-3" style="
+                <div class="grid" style="
                     --seat-w: min(92vh * {{ $mode->ratioW() }} / {{ $mode->ratioH() }}, 480px);
                     width: var(--seat-w);
-                    height: calc(var(--seat-w) * {{ $mode->ratioH() }} / {{ $mode->ratioW() }});
-                    grid-template-columns: repeat({{ $mode->cols() }}, 1fr);
-                    grid-template-rows: repeat({{ $mode->rows() }}, 1fr);
+                    height: {{ $mode->intrinsicHeight() ? 'auto' : 'calc(var(--seat-w) * '.$mode->ratioH().' / '.$mode->ratioW().')' }};
+                    grid-template-columns: {{ $mode->gridTemplateColumns() }};
+                    grid-template-rows: {{ $mode->gridTemplateRows() }};
+                    gap: {{ $projectLive->seat_gap }}px;
+                    @if ($mode->gridTemplateAreas()) grid-template-areas: {{ $mode->gridTemplateAreas() }}; @endif
                 ">
                     @foreach ($details as $detail)
+                        @php
+                            $seatStyle = ($mode->gridTemplateAreas() ? 'grid-area: s'.$detail->position.';' : '')
+                                .($mode->seatStyleOverrides()[$detail->position] ?? '');
+                        @endphp
                         <div wire:click="openEdit({{ $detail->id }})" role="button" tabindex="0"
+                            style="{{ $seatStyle }}"
                             class="relative w-full h-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center gap-1 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer">
                         <span class="absolute top-1.5 left-1.5 flex items-center gap-1">
                             <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/60 text-white">
                                 #{{ $detail->position }}
                             </span>
-                            @if ($detail->source->value === 'auto')
-                                <span class="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-indigo-600 text-white">
-                                    AUTO
-                                </span>
-                            @endif
                             @php
                                 $previewColor = $detail->status->value === 'show' ? $detail->dominant_color : ($detail->active_hotkey_color ?: '#000000');
                             @endphp

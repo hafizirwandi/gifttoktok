@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 160" fill="none">
+    <style>
+        .gtt-bg { fill: #f1f5f9; }
+        .gtt-border { stroke: #94a3b8; }
+        .gtt-box { fill: #94a3b8; }
+        @media (prefers-color-scheme: dark) {
+            .gtt-bg { fill: #1e293b; }
+            .gtt-border { stroke: #64748b; }
+            .gtt-box { fill: #64748b; }
+        }
+    </style>
+    <!-- Bingkai seperti HP, 9:16, SAMA PERSIS dgn ikon layout lain (konsisten). Isinya
+         grid 3x2 dipusatkan, kolom pakai irama yg sama dgn layout-grid-3x3.svg
+         (x=15,36,57) - cuma 2 baris, bukan 3. -->
+    <rect class="gtt-bg gtt-border" x="3" y="3" width="84" height="154" rx="16" stroke-width="3"/>
+    <rect class="gtt-box" x="15" y="60" width="18" height="18" rx="3"/>
+    <rect class="gtt-box" x="36" y="60" width="18" height="18" rx="3"/>
+    <rect class="gtt-box" x="57" y="60" width="18" height="18" rx="3"/>
+    <rect class="gtt-box" x="15" y="81" width="18" height="18" rx="3"/>
+    <rect class="gtt-box" x="36" y="81" width="18" height="18" rx="3"/>
+    <rect class="gtt-box" x="57" y="81" width="18" height="18" rx="3"/>
+</svg>

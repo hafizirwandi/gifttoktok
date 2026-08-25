@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 160" fill="none">
+    <style>
+        .gtt-bg { fill: #f1f5f9; }
+        .gtt-border { stroke: #94a3b8; }
+        .gtt-box { fill: #94a3b8; }
+        @media (prefers-color-scheme: dark) {
+            .gtt-bg { fill: #1e293b; }
+            .gtt-border { stroke: #64748b; }
+            .gtt-box { fill: #64748b; }
+        }
+    </style>
+    <!-- Bingkai seperti HP, 9:16, SAMA PERSIS dgn ikon layout lain (konsisten). Isinya
+         "Bersebelahan": grid unit 4x4 SERAGAM (semua kotak persegi) - 2 kotak besar
+         berdampingan di atas (masing2 span 2x2 unit, jadi 2x ukuran kotak kecil) + 8
+         kotak kecil (4 kolom x 2 baris) di bawah, lihat DisplayMode::Bersebelahan. -->
+    <rect class="gtt-bg gtt-border" x="3" y="3" width="84" height="154" rx="16" stroke-width="3"/>
+    <rect class="gtt-box" x="10" y="20" width="33" height="33" rx="4"/>
+    <rect class="gtt-box" x="46" y="20" width="33" height="33" rx="4"/>
+    <rect class="gtt-box" x="10" y="63" width="15" height="15" rx="3"/>
+    <rect class="gtt-box" x="28" y="63" width="15" height="15" rx="3"/>
+    <rect class="gtt-box" x="46" y="63" width="15" height="15" rx="3"/>
+    <rect class="gtt-box" x="64" y="63" width="15" height="15" rx="3"/>
+    <rect class="gtt-box" x="10" y="81" width="15" height="15" rx="3"/>
+    <rect class="gtt-box" x="28" y="81" width="15" height="15" rx="3"/>
+    <rect class="gtt-box" x="46" y="81" width="15" height="15" rx="3"/>
+    <rect class="gtt-box" x="64" y="81" width="15" height="15" rx="3"/>
+</svg>

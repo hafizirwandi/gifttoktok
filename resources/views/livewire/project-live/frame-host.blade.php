@@ -67,6 +67,23 @@
                             <x-input-error :messages="$errors->get('borderWidth')" class="mt-1" />
                         </div>
 
+                        <!-- Custom width/height: tombol Orientasi di atas cuma ISI dua angka
+                             ini ke preset bawaannya (lihat FrameOrientation::ratioW()/ratioH())
+                             - rasio SEBENARNYA yg dipakai render selalu dari sini, jadi admin
+                             bebas ubah manual ke rasio apa pun. -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <x-input-label for="ratioW" value="Lebar (rasio)" />
+                                <x-text-input wire:model.live.debounce.300ms="ratioW" type="number" id="ratioW" min="1" max="100" class="block mt-1 w-full text-sm" />
+                                <x-input-error :messages="$errors->get('ratioW')" class="mt-1" />
+                            </div>
+                            <div>
+                                <x-input-label for="ratioH" value="Tinggi (rasio)" />
+                                <x-text-input wire:model.live.debounce.300ms="ratioH" type="number" id="ratioH" min="1" max="100" class="block mt-1 w-full text-sm" />
+                                <x-input-error :messages="$errors->get('ratioH')" class="mt-1" />
+                            </div>
+                        </div>
+
                         <div class="flex justify-end">
                             <button type="button" wire:click="saveAppearance"
                                 class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700">
@@ -185,12 +202,17 @@
                         </style>
                     @endif
 
+                    <!-- Kotak preview: rasio SELALU dari $ratioW/$ratioH (bukan cabang per
+                         orientasi lagi) - formula "contain" yg sama dgn DisplayMode (lihat
+                         App\Enums\DisplayMode), biar otomatis pas apa pun rasionya (potret/
+                         lanskap/persegi/custom) di dalam kotak preview 300x280. -->
                     <div class="bg-black rounded-lg p-6 flex items-center justify-center min-h-[320px]">
-                        @if ($projectLive->frame_orientation->value === 'landscape')
-                            <div class="w-full max-w-[360px] aspect-[16/9]" style="border-radius: {{ $radius }}px; {{ $previewBorderStyle }}"></div>
-                        @else
-                            <div class="h-[320px] aspect-[9/16]" style="border-radius: {{ $radius }}px; {{ $previewBorderStyle }}"></div>
-                        @endif
+                        <div style="
+                            width: min(300px, 280px * {{ $ratioW }} / {{ $ratioH }});
+                            aspect-ratio: {{ $ratioW }} / {{ $ratioH }};
+                            border-radius: {{ $radius }}px;
+                            {{ $previewBorderStyle }}
+                        "></div>
                     </div>
                     @unless ($projectLive->frame_visible)
                         <p class="text-xs text-amber-600 dark:text-amber-400 mt-2">Border sedang di-hide (garis putus-putus cuma penanda area, tidak ikut tampil di OBS).</p>

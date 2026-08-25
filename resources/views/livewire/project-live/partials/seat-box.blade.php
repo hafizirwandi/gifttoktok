@@ -1,10 +1,35 @@
-{{-- Satu kotak kursi (dipakai berulang di semua mode tampilan) — butuh $detail (array). --}}
+{{--
+    Satu kotak kursi (dipakai berulang di semua mode tampilan) — butuh $detail (array)
+    dan $mode (App\Enums\DisplayMode). grid-area cuma perlu ditulis kalau mode-nya
+    "mosaik" (gridTemplateAreas() != null, lihat App\Enums\DisplayMode) - mode grid
+    seragam otomatis urut ikut DOM tanpa perlu grid-area sama sekali. seatStyleOverrides()
+    nambahin CSS ekstra per POSISI kursi tertentu (mis. aspect-ratio:1 biar persegi
+    asli di Kisi Dinamis/Meja Bundar II) - lihat komentar method itu.
+--}}
+@php
+    $seatAreaStyle = ($mode->gridTemplateAreas() ? 'grid-area: s'.$detail['position'].';' : '')
+        .($mode->seatStyleOverrides()[$detail['position']] ?? '');
+    // Padding/tebal border/rounded border diatur admin (px literal, bukan skala persen
+    // spt SIZE_FIELDS) - lihat App\Livewire\ProjectLive\DetailAdmin::BOX_STYLE_FIELDS.
+    // Dulu hardcode "border-4 rounded-xl" via class Tailwind - sekarang inline style
+    // krn nilainya dinamis per-project (sama alasannya dgn class Tailwind dinamis di
+    // App\Enums\DisplayMode: class yg cuma ada di PHP tidak pernah ke-generate).
+    $boxStyle = 'padding: '.$projectLive->seat_padding.'px; border-width: '.$projectLive->seat_border_width.'px; border-radius: '.$projectLive->seat_border_radius.'px;';
+
+    // Efek pulse kursi: cuma kotak yg POSISI-nya cocok yg dapat animasi (keyframe-nya
+    // didefinisikan sekali di live-show.blade.php, bukan di sini) - lihat
+    // App\Livewire\ProjectLive\DetailAdmin::saveSeatPulse().
+    if ($projectLive->seat_pulse_enabled && (int) $detail['position'] === (int) $projectLive->seat_pulse_position) {
+        $boxStyle .= ' animation: gtt-seat-pulse '.$projectLive->seat_pulse_speed_ms.'ms ease-in-out infinite;';
+    }
+@endphp
 @if ($detail['status'] === 'show' && $detail['name'])
     @php
         $coinDisplay = \App\Support\CoinFormatter::format($detail['gift_total_value']);
     @endphp
     <div wire:key="seat-{{ $detail['id'] }}" wire:click="toggleClick({{ $detail['id'] }})"
-        class="relative w-full h-full rounded-xl overflow-hidden border-4 border-white/15 cursor-pointer">
+        style="{{ $seatAreaStyle }} {{ $boxStyle }}"
+        class="relative w-full h-full overflow-hidden border-white/15 cursor-pointer">
         <!-- Background: foto yang sama, diblur & digelapkan sedikit -->
         @if ($detail['img_url'])
             <img src="{{ $detail['img_url'] }}" alt="" aria-hidden="true"
@@ -93,11 +118,18 @@
         $emptyColor = $activeColor ?: '#000000';
     @endphp
     <div wire:key="seat-{{ $detail['id'] }}" wire:click="toggleClick({{ $detail['id'] }})"
-        class="relative w-full h-full rounded-xl border-4 border-white/10 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors duration-500"
-        style="background: {{ $emptyColor }};">
-        <div class="text-white/70 text-4xl leading-none" style="transform: scale({{ $projectLive->empty_icon_size / 100 }});">
-            {{ $detail['empty_icon'] ?? '' ?: '+' }}
-        </div>
-        <span class="text-lg text-white/50 font-medium" style="transform: scale({{ $projectLive->empty_label_size / 100 }}); display: inline-block;">{{ $detail['empty_label'] ?? '' ?: 'Request' }}</span>
+        class="relative w-full h-full border-white/10 flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors duration-500"
+        style="background: {{ $emptyColor }}; {{ $seatAreaStyle }} {{ $boxStyle }}">
+        {{-- Status "hide" = admin belum approve kursi ini sama sekali (beda dari status
+             "show" tanpa nama yg cuma nunggu trigger operator/gift) - icon DAN teks label
+             kotak kosong ("Request" dst) SENGAJA tidak muncul kalau statusnya hide (cuma
+             warna latarnya yg tetap tampil), biar kelihatan beda dari kursi yg memang
+             sedang menunggu. --}}
+        @if ($detail['status'] !== 'hide')
+            <div class="text-white/70 text-4xl leading-none" style="transform: scale({{ $projectLive->empty_icon_size / 100 }});">
+                {{ $detail['empty_icon'] ?? '' ?: '+' }}
+            </div>
+            <span class="text-lg text-white/50 font-medium" style="transform: scale({{ $projectLive->empty_label_size / 100 }}); display: inline-block;">{{ $detail['empty_label'] ?? '' ?: 'Request' }}</span>
+        @endif
     </div>
 @endif

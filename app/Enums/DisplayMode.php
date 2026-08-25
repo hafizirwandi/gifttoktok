@@ -39,17 +39,19 @@ enum DisplayMode: string
 
     /**
      * Rasio + tinggi kontainer preview kursi (lihat preview-live.blade.php) — SAMA
-     * PERSIS dgn aspect-[...] yang dipakai kontainer asli di live-show.blade.php, jadi
-     * preview-nya benar-benar mirip bentuk halaman Live sungguhan (potret 1:2 utk
-     * Vertical, lanskap 2:1 utk Horizontal), bukan cuma grid kotak generik. Tinggi
-     * dipatok beda per mode (bukan h-full/h-screen spt aslinya, krn ini di dalam
-     * halaman admin, bukan fullscreen) supaya luas visualnya sebanding.
+     * PERSIS dgn aspect-[...] yang dipakai kontainer asli di live-show.blade.php, DAN
+     * tingginya pakai satuan vh (bukan rem tetap) dgn proporsi yang SAMA PERSIS dgn
+     * live-show.blade.php (Horizontal = separuh tinggi Vertical, sama seperti aslinya
+     * h-screen/100vh vs h-[50vh]/50vh) — cuma di-skala 80% dari layar penuh (bukan
+     * 100vh/50vh) krn ini nampil di dalam halaman admin, bukan fullscreen. Hasilnya
+     * kotak kursi di preview ukurannya jadi sungguh-sungguh sebanding dgn kotak asli
+     * di halaman Live pada layar yang sama, bukan cuma thumbnail kecil.
      */
     public function previewContainerClass(): string
     {
         return match ($this) {
-            self::Vertical => 'h-[32rem] aspect-[1/2]',
-            self::Horizontal => 'h-[16rem] aspect-[2/1]',
+            self::Vertical => 'h-[80vh] aspect-[1/2]',
+            self::Horizontal => 'h-[40vh] aspect-[2/1]',
         };
     }
 

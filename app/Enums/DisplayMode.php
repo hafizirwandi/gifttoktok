@@ -38,20 +38,20 @@ enum DisplayMode: string
     }
 
     /**
-     * Rasio + tinggi kontainer preview kursi (lihat preview-live.blade.php) — SAMA
-     * PERSIS dgn aspect-[...] yang dipakai kontainer asli di live-show.blade.php, DAN
-     * tingginya pakai satuan vh dgn proporsi yang SAMA PERSIS dgn live-show.blade.php
-     * (Horizontal = separuh tinggi Vertical, sama seperti aslinya h-screen/100vh vs
-     * h-[50vh]/50vh) — halaman "Preview Live" ini sudah jadi halaman tersendiri
-     * (bukan disisipkan di tengah halaman Admin yang panjang), jadi cukup ruang buat
-     * mendekati ukuran ASLI 100vh/50vh Live sungguhan, cuma disisakan sedikit (92vh)
-     * biar tidak mepet ke header halaman.
+     * Tinggi+lebar kontainer preview kursi (lihat preview-live.blade.php), EKSPLISIT
+     * dua-duanya (bukan h-[Xvh] aspect-[...]) — class aspect-[...] kombinasi dgn
+     * elemen di dalam flex container ternyata bikin tingginya diam-diam menyusut
+     * ngikutin konten (bukan beneran 92vh/46vh spt yang di-set), jadi kotak & tulisan
+     * di dalamnya kepotong. Rasionya SAMA PERSIS dgn live-show.blade.php (1:2 potret
+     * utk Vertical, 2:1 lanskap utk Horizontal, Horizontal = separuh tinggi Vertical
+     * spt aslinya h-screen/100vh vs h-[50vh]/50vh), cuma disisakan sedikit dari 100vh
+     * penuh (92vh) biar tidak mepet ke header halaman.
      */
     public function previewContainerClass(): string
     {
         return match ($this) {
-            self::Vertical => 'h-[92vh] aspect-[1/2]',
-            self::Horizontal => 'h-[46vh] aspect-[2/1]',
+            self::Vertical => 'h-[92vh] w-[46vh]',
+            self::Horizontal => 'h-[46vh] w-[92vh]',
         };
     }
 

@@ -9,6 +9,9 @@ enum DisplayMode: string
     case FullPortrait = 'full_portrait';
     case FullSquare = 'full_square';
     case FullLandscape = 'full_landscape';
+    case Grid2x2 = 'grid_2x2';
+    case Grid3x3 = 'grid_3x3';
+    case Grid4x4 = 'grid_4x4';
 
     public function label(): string
     {
@@ -18,6 +21,9 @@ enum DisplayMode: string
             self::FullPortrait => 'Layar Penuh (Potret)',
             self::FullSquare => 'Layar Penuh (Kotak)',
             self::FullLandscape => 'Layar Penuh (Lanskap)',
+            self::Grid2x2 => '2x2',
+            self::Grid3x3 => '3x3',
+            self::Grid4x4 => '4x4',
         };
     }
 
@@ -29,6 +35,9 @@ enum DisplayMode: string
             self::FullPortrait => '1 kursi memenuhi layar, rasio potret 9:16',
             self::FullSquare => '1 kursi memenuhi layar, rasio kotak 1:1',
             self::FullLandscape => '1 kursi memenuhi layar, rasio lanskap 16:9',
+            self::Grid2x2 => '4 kursi, grid 2 kolom x 2 baris',
+            self::Grid3x3 => '9 kursi, grid 3 kolom x 3 baris',
+            self::Grid4x4 => '16 kursi, grid 4 kolom x 4 baris',
         };
     }
 
@@ -46,6 +55,9 @@ enum DisplayMode: string
             self::FullPortrait => 'images/layout-full-portrait.svg',
             self::FullSquare => 'images/layout-full-square.svg',
             self::FullLandscape => 'images/layout-full-landscape.svg',
+            self::Grid2x2 => 'images/layout-grid-2x2.svg',
+            self::Grid3x3 => 'images/layout-grid-3x3.svg',
+            self::Grid4x4 => 'images/layout-grid-4x4.svg',
         };
     }
 
@@ -63,6 +75,9 @@ enum DisplayMode: string
             self::Vertical => 2,
             self::Horizontal => 4,
             self::FullPortrait, self::FullSquare, self::FullLandscape => 1,
+            self::Grid2x2 => 2,
+            self::Grid3x3 => 3,
+            self::Grid4x4 => 4,
         };
     }
 
@@ -72,6 +87,9 @@ enum DisplayMode: string
             self::Vertical => 4,
             self::Horizontal => 2,
             self::FullPortrait, self::FullSquare, self::FullLandscape => 1,
+            self::Grid2x2 => 2,
+            self::Grid3x3 => 3,
+            self::Grid4x4 => 4,
         };
     }
 
@@ -84,7 +102,8 @@ enum DisplayMode: string
      * Rasio lebar:tinggi kontainer kursi — dipakai bareng ratioH() lewat
      * formula "contain" generik di blade (lihat live-show.blade.php),
      * otomatis pas di viewport apa pun tanpa perlu tahu ini potret/lanskap/
-     * kotak.
+     * kotak. Grid2x2/3x3/4x4 sengaja 1:1 (kotak) — cols selalu = rows,
+     * jadi tiap kursi otomatis persegi juga.
      */
     public function ratioW(): int
     {
@@ -94,6 +113,7 @@ enum DisplayMode: string
             self::FullPortrait => 9,
             self::FullSquare => 1,
             self::FullLandscape => 16,
+            self::Grid2x2, self::Grid3x3, self::Grid4x4 => 1,
         };
     }
 
@@ -105,6 +125,7 @@ enum DisplayMode: string
             self::FullPortrait => 16,
             self::FullSquare => 1,
             self::FullLandscape => 9,
+            self::Grid2x2, self::Grid3x3, self::Grid4x4 => 1,
         };
     }
 }

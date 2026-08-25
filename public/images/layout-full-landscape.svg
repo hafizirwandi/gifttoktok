@@ -1,14 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 90" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 160" fill="none">
     <style>
-        .gtt-frame { fill: #e2e8f0; }
+        .gtt-bg { fill: #f1f5f9; }
+        .gtt-border { stroke: #94a3b8; }
         .gtt-box { fill: #94a3b8; }
         @media (prefers-color-scheme: dark) {
-            .gtt-frame { fill: #334155; }
+            .gtt-bg { fill: #1e293b; }
+            .gtt-border { stroke: #64748b; }
             .gtt-box { fill: #64748b; }
         }
     </style>
-    <!-- Rasio bingkai INI SENDIRI = 16:9 (lanskap) - 1 kotak besar mengisi hampir
-         seluruh bingkai, merepresentasikan "1 kursi memenuhi layar". -->
-    <rect class="gtt-frame" x="1" y="1" width="158" height="88" rx="14"/>
-    <rect class="gtt-box" x="8" y="8" width="144" height="74" rx="8"/>
+    <!-- Bingkai seperti HP, 9:16, SAMA PERSIS dgn layout-vertical.svg/layout-horizontal.svg
+         (konsisten). Isinya 1 kotak LEBAR (16:9) dipusatkan vertikal, merepresentasikan
+         "1 kursi rasio 16:9" di dalam kanvas potret. -->
+    <rect class="gtt-bg gtt-border" x="3" y="3" width="84" height="154" rx="16" stroke-width="3"/>
+    <rect class="gtt-box" x="8" y="59" width="74" height="42" rx="6"/>
 </svg>

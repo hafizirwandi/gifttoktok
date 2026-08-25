@@ -1,14 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 160" fill="none">
     <style>
-        .gtt-frame { fill: #e2e8f0; }
+        .gtt-bg { fill: #f1f5f9; }
+        .gtt-border { stroke: #94a3b8; }
         .gtt-box { fill: #94a3b8; }
         @media (prefers-color-scheme: dark) {
-            .gtt-frame { fill: #334155; }
+            .gtt-bg { fill: #1e293b; }
+            .gtt-border { stroke: #64748b; }
             .gtt-box { fill: #64748b; }
         }
     </style>
-    <!-- Rasio bingkai INI SENDIRI = 1:1 (kotak) - 1 kotak besar mengisi hampir seluruh
-         bingkai, merepresentasikan "1 kursi memenuhi layar". -->
-    <rect class="gtt-frame" x="1" y="1" width="118" height="118" rx="14"/>
-    <rect class="gtt-box" x="8" y="8" width="104" height="104" rx="8"/>
+    <!-- Bingkai seperti HP, 9:16, SAMA PERSIS dgn layout-vertical.svg/layout-horizontal.svg
+         (konsisten, bukan bingkai per-rasio lagi - itu bikin ikon Kotak/Lanskap kelihatan
+         kurang rapi krn bezel-nya jadi kecil sekali pas di-object-contain ke ukuran tombol).
+         Isinya 1 kotak KOTAK (1:1) dipusatkan, merepresentasikan "1 kursi rasio 1:1". -->
+    <rect class="gtt-bg gtt-border" x="3" y="3" width="84" height="154" rx="16" stroke-width="3"/>
+    <rect class="gtt-box" x="15" y="50" width="60" height="60" rx="6"/>
 </svg>

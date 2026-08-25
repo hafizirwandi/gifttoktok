@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 160" fill="none">
+    <style>
+        .gtt-bg { fill: #f1f5f9; }
+        .gtt-border { stroke: #94a3b8; }
+        .gtt-box { fill: #94a3b8; }
+        @media (prefers-color-scheme: dark) {
+            .gtt-bg { fill: #1e293b; }
+            .gtt-border { stroke: #64748b; }
+            .gtt-box { fill: #64748b; }
+        }
+    </style>
+    <!-- Bingkai seperti HP, 9:16, SAMA PERSIS dgn ikon layout lain (konsisten). Isinya
+         "Sorotan VIII": 1 kotak besar di kiri (4x lebar, 6x tinggi kotak kecil) + 6
+         kotak persegi kecil bertumpuk 1 kolom x 6 baris di kanan, lihat
+         DisplayMode::SorotanDelapan. -->
+    <rect class="gtt-bg gtt-border" x="3" y="3" width="84" height="154" rx="16" stroke-width="3"/>
+    <rect class="gtt-box" x="10" y="37" width="57" height="87" rx="4"/>
+    <rect class="gtt-box" x="70" y="37" width="12" height="12" rx="2"/>
+    <rect class="gtt-box" x="70" y="52" width="12" height="12" rx="2"/>
+    <rect class="gtt-box" x="70" y="67" width="12" height="12" rx="2"/>
+    <rect class="gtt-box" x="70" y="82" width="12" height="12" rx="2"/>
+    <rect class="gtt-box" x="70" y="97" width="12" height="12" rx="2"/>
+    <rect class="gtt-box" x="70" y="112" width="12" height="12" rx="2"/>
+</svg>

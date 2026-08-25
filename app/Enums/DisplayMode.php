@@ -28,6 +28,7 @@ enum DisplayMode: string
     case SorotanEnam = 'spotlight_6';
     case SorotanTujuh = 'spotlight_7';
     case SorotanTujuhRect = 'spotlight_7_rect';
+    case SorotanDelapan = 'spotlight_8';
     case MejaBundarSatu = 'round_table_1';
     case MejaBundarDua = 'round_table_2';
 
@@ -58,6 +59,7 @@ enum DisplayMode: string
             self::SorotanEnam => 'Sorotan VI',
             self::SorotanTujuh => 'Sorotan VII',
             self::SorotanTujuhRect => 'Sorotan VII (Persegi Panjang)',
+            self::SorotanDelapan => 'Sorotan VIII',
             self::MejaBundarSatu => 'Meja Bundar I',
             self::MejaBundarDua => 'Meja Bundar II',
         };
@@ -90,6 +92,7 @@ enum DisplayMode: string
             self::SorotanEnam => '4 kursi: 1 kursi besar di kiri (2x lebar, 3x tinggi kotak) + 3 kursi persegi bertumpuk (1x3) di kanan',
             self::SorotanTujuh => '5 kursi: 1 kursi besar di kiri (3x lebar, 4x tinggi kotak) + 4 kursi persegi bertumpuk (1x4) di kanan',
             self::SorotanTujuhRect => '5 kursi: sama spt Sorotan VII, tapi kursi kecilnya persegi panjang (kontainer lebih tinggi, bukan rasio kotak)',
+            self::SorotanDelapan => '7 kursi: 1 kursi besar di kiri (4x lebar, 6x tinggi kotak) + 6 kursi persegi bertumpuk (1x6) di kanan',
             self::MejaBundarSatu => '8 kursi, grid unit 4x4: 4 kursi persegi kiri + 4 kursi persegi kanan, celah kosong 2x4 di tengah',
             self::MejaBundarDua => '9 kursi, grid unit 4x4: sama spt Meja Bundar I, tapi celah tengahnya diisi 1 kursi persegi panjang (2x lebar, 4x tinggi kotak)',
         };
@@ -128,6 +131,7 @@ enum DisplayMode: string
             self::SorotanEnam => 'images/layout-spotlight-6.svg',
             self::SorotanTujuh => 'images/layout-spotlight-7.svg',
             self::SorotanTujuhRect => 'images/layout-spotlight-7-rect.svg',
+            self::SorotanDelapan => 'images/layout-spotlight-8.svg',
             self::MejaBundarSatu => 'images/layout-round-table-1.svg',
             self::MejaBundarDua => 'images/layout-round-table-2.svg',
         };
@@ -159,7 +163,7 @@ enum DisplayMode: string
             self::Bersebelahan, self::BersebelahanDua, self::SorotanDua, self::SorotanTiga, self::MejaBundarSatu, self::MejaBundarDua => 4,
             self::Sorotan => 3,
             self::SorotanEnam => 3,
-            self::SorotanEmpat => 5,
+            self::SorotanEmpat, self::SorotanDelapan => 5,
             self::SorotanTujuh, self::SorotanTujuhRect => 4,
         };
     }
@@ -178,6 +182,7 @@ enum DisplayMode: string
             self::SorotanEnam => 3,
             self::Bersebelahan, self::BersebelahanDua, self::Sorotan, self::SorotanDua, self::SorotanTiga, self::MejaBundarSatu, self::MejaBundarDua, self::SorotanTujuh, self::SorotanTujuhRect => 4,
             self::SorotanEmpat => 8,
+            self::SorotanDelapan => 6,
         };
     }
 
@@ -199,6 +204,7 @@ enum DisplayMode: string
             self::SorotanEmpat => 9,
             self::SorotanEnam => 4,
             self::SorotanTujuh, self::SorotanTujuhRect => 5,
+            self::SorotanDelapan => 7,
             self::MejaBundarSatu => 8,
             self::MejaBundarDua => 9,
             default => $this->cols() * $this->rows(),
@@ -247,6 +253,7 @@ enum DisplayMode: string
             self::SorotanEmpat => 5,
             self::Grid3x3Rect, self::Grid3x2Rect, self::SorotanTujuhRect => 4,
             self::HorizontalRect => 8,
+            self::SorotanDelapan => 5,
         };
     }
 
@@ -266,6 +273,7 @@ enum DisplayMode: string
             self::SorotanEmpat => 8,
             self::Grid3x3Rect, self::Grid3x2Rect, self::SorotanTujuhRect => 5,
             self::HorizontalRect => 5,
+            self::SorotanDelapan => 6,
         };
     }
 
@@ -295,7 +303,7 @@ enum DisplayMode: string
         return match ($this) {
             self::KisiDinamis => '3fr 2fr',
             self::Sorotan, self::SorotanEnam => 'repeat(3, 1fr)',
-            self::SorotanEmpat => 'repeat(5, 1fr)',
+            self::SorotanEmpat, self::SorotanDelapan => 'repeat(5, 1fr)',
             default => 'repeat('.$this->cols().', 1fr)',
         };
     }
@@ -353,6 +361,7 @@ enum DisplayMode: string
             self::SorotanEmpat => '"s1 s1 s1 s1 s2" "s1 s1 s1 s1 s3" "s1 s1 s1 s1 s4" "s1 s1 s1 s1 s5" "s1 s1 s1 s1 s6" "s1 s1 s1 s1 s7" "s1 s1 s1 s1 s8" "s1 s1 s1 s1 s9"',
             self::SorotanEnam => '"s1 s1 s2" "s1 s1 s3" "s1 s1 s4"',
             self::SorotanTujuh, self::SorotanTujuhRect => '"s1 s1 s1 s2" "s1 s1 s1 s3" "s1 s1 s1 s4" "s1 s1 s1 s5"',
+            self::SorotanDelapan => '"s1 s1 s1 s1 s2" "s1 s1 s1 s1 s3" "s1 s1 s1 s1 s4" "s1 s1 s1 s1 s5" "s1 s1 s1 s1 s6" "s1 s1 s1 s1 s7"',
             self::MejaBundarSatu => '"s1 . . s5" "s2 . . s6" "s3 . . s7" "s4 . . s8"',
             self::MejaBundarDua => '"s1 s5 s5 s6" "s2 s5 s5 s7" "s3 s5 s5 s8" "s4 s5 s5 s9"',
             default => null,

@@ -46,12 +46,10 @@
                         class="flex-shrink-0 inline-flex items-center px-3 py-1.5 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-semibold rounded-md hover:bg-amber-100 dark:hover:bg-amber-900/50">
                         Reset Coin
                     </button>
-                    @if ($projectLive->auto_gift_mode)
-                        <button wire:click="resetLeaderboard" wire:confirm="Reset leaderboard? Semua kursi auto akan dikosongkan." type="button"
-                            class="flex-shrink-0 inline-flex items-center px-3 py-1.5 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-semibold rounded-md hover:bg-red-100 dark:hover:bg-red-900/50">
-                            Reset Leaderboard
-                        </button>
-                    @endif
+                    <button wire:click="resetLeaderboard" wire:confirm="Reset leaderboard? Semua kursi akan dikosongkan (coin & data gifter tidak ikut terhapus)." type="button"
+                        class="flex-shrink-0 inline-flex items-center px-3 py-1.5 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-semibold rounded-md hover:bg-red-100 dark:hover:bg-red-900/50">
+                        Reset Leaderboard
+                    </button>
                     <button wire:click="hideAll" wire:confirm="Sembunyikan semua kursi?" type="button"
                         class="flex-shrink-0 inline-flex items-center px-3 py-1.5 bg-gray-800 dark:bg-gray-700 text-white text-xs font-semibold rounded-md hover:bg-gray-700 dark:hover:bg-gray-600">
                         Hide All
@@ -382,7 +380,7 @@ WEBHOOK_SECRET="{{ $projectLive->webhook_secret }}"</pre>
                 </p>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="grid {{ $projectLive->display_mode->adminGridClass() }} gap-3">
                 @foreach ($details as $detail)
                     <div wire:click="openEdit({{ $detail->id }})" role="button" tabindex="0"
                         class="relative aspect-square rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center gap-1 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer">

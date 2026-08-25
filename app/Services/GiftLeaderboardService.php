@@ -11,20 +11,22 @@ use Illuminate\Support\Facades\DB;
 
 class GiftLeaderboardService
 {
-    private const SEAT_COUNT = 8;
-
     /**
-     * Hitung ulang top 8 gifter (berdasarkan round_value putaran berjalan) dan
-     * sinkronkan ke 8 kursi (project_live_details). "Sticky": kursi yang gifter-nya
-     * masih di top-8 tidak pindah posisi, hanya di-refresh datanya — supaya kotak
-     * tidak lompat-lompat tiap ada gift kecil masuk.
+     * Hitung ulang top-N gifter (N = jumlah kursi project ini, ikut
+     * display_mode->seatCount() — TIDAK selalu 8 lagi, lihat App\Models\
+     * ProjectLive::syncDetailsToDisplayMode()) berdasarkan round_value putaran
+     * berjalan, sinkronkan ke kursi (project_live_details). "Sticky": kursi
+     * yang gifter-nya masih di top-N tidak pindah posisi, hanya di-refresh
+     * datanya — supaya kotak tidak lompat-lompat tiap ada gift kecil masuk.
      *
-     * Papan yang penuh (8/8 show) TIDAK otomatis dikosongkan lagi — itu sepenuhnya
+     * Papan yang penuh TIDAK otomatis dikosongkan lagi — itu sepenuhnya
      * keputusan admin lewat tombol "Reset Leaderboard" (lihat reset() di bawah).
      */
     public function recalculate(ProjectLive $projectLive): void
     {
         DB::transaction(function () use ($projectLive) {
+            $seats = $projectLive->details()->lockForUpdate()->get();
+
             // round_value > 0 - gifter yang belum kontribusi apa pun tidak usah ikut ranking.
             //
             // last_gift_at > round_reset_at (kalau project ini pernah di-reset) - INI yang
@@ -41,11 +43,9 @@ class GiftLeaderboardService
                 ->when($projectLive->round_reset_at, fn ($q) => $q->where('last_gift_at', '>=', $projectLive->round_reset_at))
                 ->orderByDesc('round_value')
                 ->orderBy('id')
-                ->limit(self::SEAT_COUNT)
+                ->limit($seats->count())
                 ->get()
                 ->keyBy('id');
-
-            $seats = $projectLive->details()->lockForUpdate()->get();
 
             $stillTopSeats = $seats->filter(
                 fn ($seat) => $seat->project_live_gifter_id && $topGifters->has($seat->project_live_gifter_id)

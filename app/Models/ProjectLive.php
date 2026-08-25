@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DetailStatus;
 use App\Enums\DisplayMode;
 use App\Enums\FrameOrientation;
 use App\Enums\ProjectLiveStatus;
@@ -14,6 +15,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ProjectLive extends Model
 {
     use HasFactory;
+
+    /**
+     * Default DI MEMORI (bukan cuma di kolom DB) - tanpa ini, ProjectLiveObserver::
+     * created() baca $projectLive->display_mode SEBELUM model di-refresh dari DB,
+     * jadi masih null (default di migration cuma berlaku di level DB, tidak
+     * otomatis kebawa ke instance model yang baru di-create() sampai di-refresh).
+     * Nilainya SAMA PERSIS dgn default kolom di migration.
+     */
+    protected $attributes = [
+        'display_mode' => 'vertical',
+    ];
 
     protected $fillable = [
         'name',
@@ -177,5 +189,34 @@ class ProjectLive extends Model
         }
 
         return null;
+    }
+
+    /**
+     * Samakan jumlah baris `project_live_details` dengan `display_mode->seatCount()`
+     * project ini — dipanggil saat project baru dibuat (lihat App\Observers\
+     * ProjectLiveObserver) DAN setiap kali admin ganti tata letak (lihat
+     * App\Livewire\ProjectLive\DetailAdmin::updateDisplayMode()). Kursi yang
+     * posisinya di luar target baru DIHAPUS (destruktif — caller wajib konfirmasi
+     * dulu ke user kalau ini mengecilkan jumlah kursi), tapi App\Models\
+     * ProjectLiveGifter (ledger coin) SENGAJA TIDAK ikut dihapus, cuma
+     * kehilangan kursi — sama seperti prinsip Reset Leaderboard.
+     */
+    public function syncDetailsToDisplayMode(): void
+    {
+        $target = $this->display_mode->seatCount();
+
+        for ($position = 1; $position <= $target; $position++) {
+            ProjectLiveDetail::firstOrCreate(
+                [
+                    'project_live_id' => $this->id,
+                    'position' => $position,
+                ],
+                [
+                    'status' => DetailStatus::Hide,
+                ]
+            );
+        }
+
+        $this->details()->where('position', '>', $target)->delete();
     }
 }

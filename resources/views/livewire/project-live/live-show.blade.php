@@ -48,22 +48,22 @@
             <p class="text-gray-300 font-medium">Live belum dimulai</p>
             <p class="text-gray-500 text-sm">Hubungi superadmin untuk mengaktifkan status project ini.</p>
         </div>
-    @elseif ($projectLive->display_mode === \App\Enums\DisplayMode::Horizontal)
-        <!-- Horizontal: grid 8 kursi (4 kolom x 2 baris) di tengah layar. Tinggi dipatok
-             50vh (2 baris) supaya ukuran tiap kotak senada dengan mode Vertical (4 baris
-             dalam 100vh = ~25vh per baris juga) — bukan lagi 100vw yang kegedean. -->
-        <div class="min-h-screen w-screen flex items-center justify-center p-3">
-            <div class="h-[50vh] aspect-[2/1] grid grid-cols-4 grid-rows-2 gap-3">
-                @foreach ($details as $detail)
-                    @include('livewire.project-live.partials.seat-box', ['detail' => $detail])
-                @endforeach
-            </div>
-        </div>
     @else
-        <!-- Vertical (default): cuma grid 8 kursi (2 kolom x 4 baris), memenuhi tinggi layar
-             (100vh), diletakkan di tengah. -->
-        <div class="h-screen w-screen flex items-center justify-center p-3">
-            <div class="h-full aspect-[1/2] grid grid-cols-2 grid-rows-4 gap-3">
+        <!-- Generik utk SEMUA tata letak (bukan percabangan per mode lagi) - cols/rows/rasio
+             datang dari App\Enums\DisplayMode (angka murni, bukan class Tailwind, lihat
+             komentar di enum itu kenapa). Tinggi+lebar kontainer dihitung lewat rumus
+             "contain" (min()) yg otomatis pas di viewport utk rasio APA PUN (potret,
+             lanskap, ATAU kotak) tanpa perlu tahu ini mode "tinggi" atau "lebar". -->
+        @php
+            $mode = $projectLive->display_mode;
+        @endphp
+        <div class="w-screen h-screen flex items-center justify-center p-3">
+            <div class="grid gap-3" style="
+                grid-template-columns: repeat({{ $mode->cols() }}, 1fr);
+                grid-template-rows: repeat({{ $mode->rows() }}, 1fr);
+                height: min(100vh, 100vw * {{ $mode->ratioH() }} / {{ $mode->ratioW() }});
+                width: min(100vw, 100vh * {{ $mode->ratioW() }} / {{ $mode->ratioH() }});
+            ">
                 @foreach ($details as $detail)
                     @include('livewire.project-live.partials.seat-box', ['detail' => $detail])
                 @endforeach

@@ -136,6 +136,16 @@ class DetailAdmin extends Component
         ]);
 
         $this->projectLive->refresh();
+
+        // Ganti tata letak = reset leaderboard sekalian (kursi dikosongkan,
+        // round_reset_at dicatat — lihat GiftLeaderboardService::reset()) DAN
+        // jumlah kursi disamakan dgn tata letak baru (bisa beda, mis. Layar
+        // Penuh cuma 1 kursi — kursi yg posisinya di luar jumlah baru DIHAPUS
+        // permanen beserta hotkey/warna kustomnya, ikut kehapus lewat FK
+        // cascade). Peringatan destruktifnya sudah muncul di blade lewat
+        // wire:confirm SEBELUM method ini dipanggil.
+        app(GiftLeaderboardService::class)->reset($this->projectLive);
+        $this->projectLive->syncDetailsToDisplayMode();
     }
 
     public function toggleAutoGiftMode(): void

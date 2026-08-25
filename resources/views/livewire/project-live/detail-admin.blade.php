@@ -94,14 +94,19 @@
                         <p class="text-xs text-gray-500 dark:text-gray-400">Menentukan susunan kursi di halaman Live (yang dibuka lewat "Buka Live").</p>
                     </div>
                     <!-- Kartu ikon (bukan cuma teks) - klik langsung simpan spt sebelumnya. Preview
-                         kursinya sendiri ada di menu "Preview Live" terpisah. -->
-                    <div class="flex gap-2">
+                         kursinya sendiri ada di menu "Preview Live" terpisah. Ganti tata letak SELALU
+                         minta konfirmasi (bukan cuma pas kursi berkurang) krn updateDisplayMode() juga
+                         reset leaderboard sekalian - lihat App\Livewire\ProjectLive\DetailAdmin. Lebar
+                         kartu DIPATOK (w-28) + label boleh wrap 2 baris, supaya rapi rata kiri-kanan
+                         walau panjang labelnya beda-beda ("Vertical" vs "Layar Penuh (Lanskap)"). -->
+                    <div class="flex flex-wrap gap-2">
                         @foreach (\App\Enums\DisplayMode::cases() as $mode)
                             <button type="button" wire:click="updateDisplayMode('{{ $mode->value }}')"
                                 title="{{ $mode->description() }}"
-                                class="flex flex-col items-center gap-1 p-2 rounded-md border transition {{ $projectLive->display_mode === $mode ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30' : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                                wire:confirm="Ganti ke &quot;{{ $mode->label() }}&quot;? Leaderboard akan direset (papan dikosongkan), dan kalau kursi jadi lebih sedikit dari sekarang, kursi yang hilang beserta hotkey &amp; warna kustom di kotak itu akan terhapus permanen. Lanjutkan?"
+                                class="w-28 flex-shrink-0 flex flex-col items-center gap-1 p-2 rounded-md border transition {{ $projectLive->display_mode === $mode ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30' : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
                                 <img src="{{ asset($mode->iconPath()) }}" alt="{{ $mode->label() }}" class="w-8 h-14 object-contain">
-                                <span class="text-[10px] font-medium {{ $projectLive->display_mode === $mode ? 'text-indigo-700 dark:text-indigo-300' : 'text-gray-500 dark:text-gray-400' }}">{{ $mode->label() }}</span>
+                                <span class="text-[10px] font-medium text-center leading-tight {{ $projectLive->display_mode === $mode ? 'text-indigo-700 dark:text-indigo-300' : 'text-gray-500 dark:text-gray-400' }}">{{ $mode->label() }}</span>
                             </button>
                         @endforeach
                     </div>

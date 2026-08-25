@@ -16,7 +16,7 @@
                     @if ($projectLive->auto_gift_mode)
                         Kursi diatur otomatis dari gift TikTok LIVE. Edit manual tetap bisa dipakai, tapi kursi bisa ketiban update otomatis berikutnya.
                     @else
-                        Atur 8 kursi tamu untuk project ini. Klik salah satu kotak untuk mengubah foto, nama, coin, hotkey, dan status tampil/sembunyi.
+                        Atur {{ $details->count() }} kursi tamu untuk project ini. Klik salah satu kotak untuk mengubah foto, nama, coin, hotkey, dan status tampil/sembunyi.
                     @endif
                 </p>
                 <button wire:click="hideAll" wire:confirm="Sembunyikan semua kursi?" type="button"
@@ -27,17 +27,33 @@
 
             <!-- Kontainer ini SENGAJA meniru persis bentuk halaman Live asli (rasio +
                  grid-cols/rows sama dgn live-show.blade.php) - jadi bentuknya (potret/
-                 lanskap) beneran berubah sesuai tata letak yang dipilih, bukan cuma
-                 grid kotak generik. Class Tailwind-nya SENGAJA ditulis langsung di sini
-                 (bukan lewat method PHP di App\Enums\DisplayMode) - Tailwind cuma scan
-                 file .blade.php buat tahu class mana yang perlu di-compile, jadi class
-                 yang cuma ada di string PHP (di luar resources/views) tidak pernah
-                 kedeteksi & CSS-nya tidak pernah ke-generate sama sekali walau di-build. -->
+                 lanskap/kotak) beneran berubah sesuai tata letak yang dipilih, bukan
+                 cuma grid kotak generik. Ukurannya dihitung langsung di PHP (bukan CSS
+                 min(), krn di sini targetnya "92vh dari sisi terpanjang", bukan dual-
+                 constraint viewport spt di live-show.blade.php) - "long" = sisi yg
+                 rasionya lebih besar (92vh), sisi satunya diturunkan dari situ, supaya
+                 rasio apa pun (potret/lanskap/kotak) tetap konsisten skalanya. Class
+                 Tailwind SENGAJA cuma yang statis (grid/gap) - ukurannya lewat style
+                 inline, bukan class dinamis (lihat komentar di App\Enums\DisplayMode
+                 kenapa class dinamis di PHP tidak pernah ke-generate Tailwind-nya). -->
             <div class="flex justify-center">
                 @php
-                    $isVertical = $projectLive->display_mode === \App\Enums\DisplayMode::Vertical;
+                    $mode = $projectLive->display_mode;
+                    $long = 92;
+                    if ($mode->ratioH() >= $mode->ratioW()) {
+                        $heightVh = $long;
+                        $widthVh = $long * $mode->ratioW() / $mode->ratioH();
+                    } else {
+                        $widthVh = $long;
+                        $heightVh = $long * $mode->ratioH() / $mode->ratioW();
+                    }
                 @endphp
-                <div class="{{ $isVertical ? 'h-[92vh] w-[46vh] grid-cols-2 grid-rows-4' : 'h-[46vh] w-[92vh] grid-cols-4 grid-rows-2' }} grid gap-3">
+                <div class="grid gap-3" style="
+                    height: {{ $heightVh }}vh;
+                    width: {{ $widthVh }}vh;
+                    grid-template-columns: repeat({{ $mode->cols() }}, 1fr);
+                    grid-template-rows: repeat({{ $mode->rows() }}, 1fr);
+                ">
                     @foreach ($details as $detail)
                         <div wire:click="openEdit({{ $detail->id }})" role="button" tabindex="0"
                             class="relative w-full h-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center gap-1 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer">

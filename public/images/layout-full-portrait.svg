@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 160" fill="none">
+    <style>
+        .gtt-frame { fill: #e2e8f0; }
+        .gtt-box { fill: #94a3b8; }
+        @media (prefers-color-scheme: dark) {
+            .gtt-frame { fill: #334155; }
+            .gtt-box { fill: #64748b; }
+        }
+    </style>
+    <!-- Rasio bingkai INI SENDIRI = 9:16 (potret), beda dari layout-vertical.svg yang
+         bingkainya seragam 9:16 tapi ISI-nya grid 8 kursi - di sini cuma 1 kotak besar
+         mengisi hampir seluruh bingkai, merepresentasikan "1 kursi memenuhi layar". -->
+    <rect class="gtt-frame" x="1" y="1" width="88" height="158" rx="14"/>
+    <rect class="gtt-box" x="8" y="8" width="74" height="144" rx="8"/>
+</svg>

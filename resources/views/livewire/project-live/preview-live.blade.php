@@ -25,13 +25,14 @@
                 </button>
             </div>
 
-            <!-- Selalu pakai jumlah kolom yang sama (spt Horizontal) apa pun tata letak yang
-                 dipilih, supaya ukuran kotaknya konsisten - Vertical dgn cuma 2 kolom bikin
-                 tiap kotak jadi kegedean kalau ngikutin jumlah kolom asli mode itu. -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <!-- Jumlah kolom ikut tata letak yang dipilih (2 utk Vertical, 4 utk Horizontal)
+                 supaya preview beneran kelihatan berubah - tapi tiap kotak dibatasi
+                 max-w-48 (lihat class kotak di bawah) supaya Vertical yang cuma 2 kolom
+                 tidak jadi kegedean dibanding Horizontal yang 4 kolom. -->
+            <div class="grid {{ $projectLive->display_mode->previewGridCols() }} gap-3">
                 @foreach ($details as $detail)
                     <div wire:click="openEdit({{ $detail->id }})" role="button" tabindex="0"
-                        class="relative aspect-square rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center gap-1 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer">
+                        class="relative aspect-square max-w-48 w-full justify-self-center rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center gap-1 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer">
                         <span class="absolute top-1.5 left-1.5 flex items-center gap-1">
                             <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/60 text-white">
                                 #{{ $detail->position }}

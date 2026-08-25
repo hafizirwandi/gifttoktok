@@ -36,4 +36,19 @@ enum DisplayMode: string
             self::Horizontal => 'images/layout-horizontal.svg',
         };
     }
+
+    /**
+     * Jumlah kolom grid preview kursi (lihat preview-live.blade.php) — beda per mode
+     * supaya preview-nya BENERAN kelihatan berubah waktu tata letak diganti (2 kolom
+     * "tinggi" utk Vertical, 4 kolom "lebar" utk Horizontal). Ukuran tiap kotak sendiri
+     * DIBATASI via max-width di blade-nya (bukan lewat jumlah kolom), supaya Vertical
+     * yang cuma 2 kolom tidak jadi kegedean dibanding Horizontal yang 4 kolom.
+     */
+    public function previewGridCols(): string
+    {
+        return match ($this) {
+            self::Vertical => 'grid-cols-2',
+            self::Horizontal => 'grid-cols-2 sm:grid-cols-4',
+        };
+    }
 }

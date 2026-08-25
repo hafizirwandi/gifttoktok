@@ -28,29 +28,21 @@
             <!-- Kontainer ini SENGAJA meniru persis bentuk halaman Live asli (rasio +
                  grid-cols/rows sama dgn live-show.blade.php) - jadi bentuknya (potret/
                  lanskap/kotak) beneran berubah sesuai tata letak yang dipilih, bukan
-                 cuma grid kotak generik. Ukurannya dihitung langsung di PHP (bukan CSS
-                 min(), krn di sini targetnya "92vh dari sisi terpanjang", bukan dual-
-                 constraint viewport spt di live-show.blade.php) - "long" = sisi yg
-                 rasionya lebih besar (92vh), sisi satunya diturunkan dari situ, supaya
-                 rasio apa pun (potret/lanskap/kotak) tetap konsisten skalanya. Class
-                 Tailwind SENGAJA cuma yang statis (grid/gap) - ukurannya lewat style
-                 inline, bukan class dinamis (lihat komentar di App\Enums\DisplayMode
-                 kenapa class dinamis di PHP tidak pernah ke-generate Tailwind-nya). -->
+                 cuma grid kotak generik. Lebar dipatok maksimal 480px ("mobile-first",
+                 sama spt live-show.blade.php) - custom property --seat-w dihitung dari
+                 basis 92vh DAN batas 480px, tinggi diturunkan darinya lewat calc() biar
+                 rasionya selalu konsisten. Class Tailwind SENGAJA cuma yang statis
+                 (grid/gap) - ukurannya lewat style inline, bukan class dinamis (lihat
+                 komentar di App\Enums\DisplayMode kenapa class dinamis di PHP tidak
+                 pernah ke-generate Tailwind-nya). -->
             <div class="flex justify-center">
                 @php
                     $mode = $projectLive->display_mode;
-                    $long = 92;
-                    if ($mode->ratioH() >= $mode->ratioW()) {
-                        $heightVh = $long;
-                        $widthVh = $long * $mode->ratioW() / $mode->ratioH();
-                    } else {
-                        $widthVh = $long;
-                        $heightVh = $long * $mode->ratioH() / $mode->ratioW();
-                    }
                 @endphp
                 <div class="grid gap-3" style="
-                    height: {{ $heightVh }}vh;
-                    width: {{ $widthVh }}vh;
+                    --seat-w: min(92vh * {{ $mode->ratioW() }} / {{ $mode->ratioH() }}, 480px);
+                    width: var(--seat-w);
+                    height: calc(var(--seat-w) * {{ $mode->ratioH() }} / {{ $mode->ratioW() }});
                     grid-template-columns: repeat({{ $mode->cols() }}, 1fr);
                     grid-template-rows: repeat({{ $mode->rows() }}, 1fr);
                 ">

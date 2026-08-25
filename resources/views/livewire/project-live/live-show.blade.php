@@ -51,18 +51,21 @@
     @else
         <!-- Generik utk SEMUA tata letak (bukan percabangan per mode lagi) - cols/rows/rasio
              datang dari App\Enums\DisplayMode (angka murni, bukan class Tailwind, lihat
-             komentar di enum itu kenapa). Tinggi+lebar kontainer dihitung lewat rumus
-             "contain" (min()) yg otomatis pas di viewport utk rasio APA PUN (potret,
-             lanskap, ATAU kotak) tanpa perlu tahu ini mode "tinggi" atau "lebar". -->
+             komentar di enum itu kenapa). Lebar dipatok maksimal 480px ("mobile-first",
+             biar lanskap tidak melebar sampai memenuhi layar monitor lebar) - custom
+             property --seat-w dihitung sekali (min lebar viewport, lebar hasil rasio dari
+             tinggi viewport, DAN batas 480px), tinggi diturunkan darinya lewat calc() biar
+             rasionya selalu konsisten (bukan dihitung independen spt sebelumnya). -->
         @php
             $mode = $projectLive->display_mode;
         @endphp
         <div class="w-screen h-screen flex items-center justify-center p-3">
             <div class="grid gap-3" style="
+                --seat-w: min(100vw, 100vh * {{ $mode->ratioW() }} / {{ $mode->ratioH() }}, 480px);
+                width: var(--seat-w);
+                height: calc(var(--seat-w) * {{ $mode->ratioH() }} / {{ $mode->ratioW() }});
                 grid-template-columns: repeat({{ $mode->cols() }}, 1fr);
                 grid-template-rows: repeat({{ $mode->rows() }}, 1fr);
-                height: min(100vh, 100vw * {{ $mode->ratioH() }} / {{ $mode->ratioW() }});
-                width: min(100vw, 100vh * {{ $mode->ratioW() }} / {{ $mode->ratioH() }});
             ">
                 @foreach ($details as $detail)
                     @include('livewire.project-live.partials.seat-box', ['detail' => $detail])

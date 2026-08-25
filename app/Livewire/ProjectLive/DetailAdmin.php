@@ -2,7 +2,6 @@
 
 namespace App\Livewire\ProjectLive;
 
-use App\Enums\DetailStatus;
 use App\Enums\DisplayMode;
 use App\Enums\ProjectLiveStatus;
 use App\Models\ProjectLive;
@@ -110,13 +109,6 @@ class DetailAdmin extends Component
         }
 
         $this->saveSizes();
-    }
-
-    public function hideAll(): void
-    {
-        $this->authorize('viewLive', $this->projectLive);
-
-        $this->projectLive->details()->update(['status' => DetailStatus::Hide->value]);
     }
 
     public function toggleProjectLiveStatus(): void

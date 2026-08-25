@@ -49,6 +49,13 @@ class PreviewLive extends Component
         $this->projectLive = $projectLive;
     }
 
+    public function hideAll(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $this->projectLive->details()->update(['status' => DetailStatus::Hide->value]);
+    }
+
     public function openEdit(int $detailId): void
     {
         $detail = $this->projectLive->details()->findOrFail($detailId);

@@ -11,15 +11,24 @@
 
     <div class="py-8">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-                @if ($projectLive->auto_gift_mode)
-                    Kursi diatur otomatis dari gift TikTok LIVE. Edit manual tetap bisa dipakai, tapi kursi bisa ketiban update otomatis berikutnya.
-                @else
-                    Atur 8 kursi tamu untuk project ini. Klik salah satu kotak untuk mengubah foto, nama, coin, hotkey, dan status tampil/sembunyi.
-                @endif
-            </p>
+            <div class="flex items-start justify-between gap-3">
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    @if ($projectLive->auto_gift_mode)
+                        Kursi diatur otomatis dari gift TikTok LIVE. Edit manual tetap bisa dipakai, tapi kursi bisa ketiban update otomatis berikutnya.
+                    @else
+                        Atur 8 kursi tamu untuk project ini. Klik salah satu kotak untuk mengubah foto, nama, coin, hotkey, dan status tampil/sembunyi.
+                    @endif
+                </p>
+                <button wire:click="hideAll" wire:confirm="Sembunyikan semua kursi?" type="button"
+                    class="flex-shrink-0 inline-flex items-center px-3 py-1.5 bg-gray-800 dark:bg-gray-700 text-white text-xs font-semibold rounded-md hover:bg-gray-700 dark:hover:bg-gray-600">
+                    Hide All
+                </button>
+            </div>
 
-            <div class="grid {{ $projectLive->display_mode->adminGridClass() }} gap-3">
+            <!-- Selalu pakai jumlah kolom yang sama (spt Horizontal) apa pun tata letak yang
+                 dipilih, supaya ukuran kotaknya konsisten - Vertical dgn cuma 2 kolom bikin
+                 tiap kotak jadi kegedean kalau ngikutin jumlah kolom asli mode itu. -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 @foreach ($details as $detail)
                     <div wire:click="openEdit({{ $detail->id }})" role="button" tabindex="0"
                         class="relative aspect-square rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center gap-1 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer">

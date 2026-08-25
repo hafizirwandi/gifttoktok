@@ -52,10 +52,6 @@
                         class="flex-shrink-0 inline-flex items-center px-3 py-1.5 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-semibold rounded-md hover:bg-red-100 dark:hover:bg-red-900/50">
                         Reset Leaderboard
                     </button>
-                    <button wire:click="hideAll" wire:confirm="Sembunyikan semua kursi?" type="button"
-                        class="flex-shrink-0 inline-flex items-center px-3 py-1.5 bg-gray-800 dark:bg-gray-700 text-white text-xs font-semibold rounded-md hover:bg-gray-700 dark:hover:bg-gray-600">
-                        Hide All
-                    </button>
                 </div>
             </div>
 
@@ -98,8 +94,7 @@
                         <p class="text-xs text-gray-500 dark:text-gray-400">Menentukan susunan kursi di halaman Live (yang dibuka lewat "Buka Live").</p>
                     </div>
                     <!-- Kartu ikon (bukan cuma teks) - klik langsung simpan spt sebelumnya. Preview
-                         asli sudah ada di grid daftar kursi di bawah (lihat adminGridClass() di
-                         App\Enums\DisplayMode), jadi tidak perlu preview terpisah di sini lagi. -->
+                         kursinya sendiri ada di menu "Preview Live" terpisah. -->
                     <div class="flex gap-2">
                         @foreach (\App\Enums\DisplayMode::cases() as $mode)
                             <button type="button" wire:click="updateDisplayMode('{{ $mode->value }}')"

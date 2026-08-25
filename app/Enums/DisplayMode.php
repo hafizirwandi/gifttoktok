@@ -36,19 +36,4 @@ enum DisplayMode: string
             self::Horizontal => 'images/layout-horizontal.svg',
         };
     }
-
-    /**
-     * Class Tailwind buat grid daftar kursi di halaman Admin (detail-admin.blade.php)
-     * — dibuat SAMA jumlah kolomnya dengan grid kursi asli di live-show.blade.php
-     * (grid-cols-2 grid-rows-4 utk Vertical, grid-cols-4 grid-rows-2 utk Horizontal),
-     * supaya admin langsung kebayang susunan aslinya sambil ngedit. 2 kolom tetap
-     * dipakai di layar sempit (mobile) apa pun mode-nya, biar kotaknya tidak kekecilan.
-     */
-    public function adminGridClass(): string
-    {
-        return match ($this) {
-            self::Vertical => 'grid-cols-2',
-            self::Horizontal => 'grid-cols-2 sm:grid-cols-4',
-        };
-    }
 }

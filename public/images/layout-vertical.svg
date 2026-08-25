@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 120" fill="none">
+    <style>
+        .gtt-frame { fill: #e2e8f0; }
+        .gtt-box { fill: #94a3b8; }
+        @media (prefers-color-scheme: dark) {
+            .gtt-frame { fill: #334155; }
+            .gtt-box { fill: #64748b; }
+        }
+    </style>
+    <rect class="gtt-frame" x="1" y="1" width="58" height="118" rx="10"/>
+    <rect class="gtt-box" x="6" y="6" width="22" height="24" rx="3"/>
+    <rect class="gtt-box" x="32" y="6" width="22" height="24" rx="3"/>
+    <rect class="gtt-box" x="6" y="34" width="22" height="24" rx="3"/>
+    <rect class="gtt-box" x="32" y="34" width="22" height="24" rx="3"/>
+    <rect class="gtt-box" x="6" y="62" width="22" height="24" rx="3"/>
+    <rect class="gtt-box" x="32" y="62" width="22" height="24" rx="3"/>
+    <rect class="gtt-box" x="6" y="90" width="22" height="24" rx="3"/>
+    <rect class="gtt-box" x="32" y="90" width="22" height="24" rx="3"/>
+</svg>

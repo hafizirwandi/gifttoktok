@@ -97,13 +97,26 @@
                         <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Tata Letak Halaman Live</p>
                         <p class="text-xs text-gray-500 dark:text-gray-400">Menentukan susunan kursi di halaman Live (yang dibuka lewat "Buka Live").</p>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        @foreach (\App\Enums\DisplayMode::cases() as $mode)
-                            <button type="button" wire:click="updateDisplayMode('{{ $mode->value }}')"
-                                class="text-left px-3 py-2 rounded-md border text-xs font-medium transition {{ $projectLive->display_mode === $mode ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
-                                {{ $mode->label() }}
-                            </button>
-                        @endforeach
+                    <div class="flex items-start gap-4">
+                        <!-- Pilihan: kartu ikon (bukan cuma teks) - klik langsung simpan spt sebelumnya. -->
+                        <div class="flex gap-2">
+                            @foreach (\App\Enums\DisplayMode::cases() as $mode)
+                                <button type="button" wire:click="updateDisplayMode('{{ $mode->value }}')"
+                                    title="{{ $mode->description() }}"
+                                    class="flex flex-col items-center gap-1 p-2 rounded-md border transition {{ $projectLive->display_mode === $mode ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30' : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                                    <img src="{{ asset($mode->iconPath()) }}" alt="{{ $mode->label() }}" class="w-8 h-14 object-contain">
+                                    <span class="text-[10px] font-medium {{ $projectLive->display_mode === $mode ? 'text-indigo-700 dark:text-indigo-300' : 'text-gray-500 dark:text-gray-400' }}">{{ $mode->label() }}</span>
+                                </button>
+                            @endforeach
+                        </div>
+
+                        <!-- Preview: ikut berubah begitu tombol di atas diklik - cuma render ulang
+                             biasa dari $projectLive->display_mode yang sudah tersimpan (bukan state
+                             JS terpisah), jadi otomatis sinkron tanpa kode tambahan. -->
+                        <div class="flex flex-col items-center gap-1 pl-4 border-l border-gray-100 dark:border-gray-700">
+                            <img src="{{ asset($projectLive->display_mode->iconPath()) }}" alt="Preview {{ $projectLive->display_mode->label() }}" class="w-12 h-20 object-contain">
+                            <span class="text-[10px] text-gray-400 dark:text-gray-500">Preview</span>
+                        </div>
                     </div>
                 </div>
             @endcan

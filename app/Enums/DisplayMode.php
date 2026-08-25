@@ -38,17 +38,30 @@ enum DisplayMode: string
     }
 
     /**
-     * Jumlah kolom grid preview kursi (lihat preview-live.blade.php) — beda per mode
-     * supaya preview-nya BENERAN kelihatan berubah waktu tata letak diganti (2 kolom
-     * "tinggi" utk Vertical, 4 kolom "lebar" utk Horizontal). Ukuran tiap kotak sendiri
-     * DIBATASI via max-width di blade-nya (bukan lewat jumlah kolom), supaya Vertical
-     * yang cuma 2 kolom tidak jadi kegedean dibanding Horizontal yang 4 kolom.
+     * Rasio + tinggi kontainer preview kursi (lihat preview-live.blade.php) — SAMA
+     * PERSIS dgn aspect-[...] yang dipakai kontainer asli di live-show.blade.php, jadi
+     * preview-nya benar-benar mirip bentuk halaman Live sungguhan (potret 1:2 utk
+     * Vertical, lanskap 2:1 utk Horizontal), bukan cuma grid kotak generik. Tinggi
+     * dipatok beda per mode (bukan h-full/h-screen spt aslinya, krn ini di dalam
+     * halaman admin, bukan fullscreen) supaya luas visualnya sebanding.
      */
-    public function previewGridCols(): string
+    public function previewContainerClass(): string
     {
         return match ($this) {
-            self::Vertical => 'grid-cols-2',
-            self::Horizontal => 'grid-cols-2 sm:grid-cols-4',
+            self::Vertical => 'h-[32rem] aspect-[1/2]',
+            self::Horizontal => 'h-[16rem] aspect-[2/1]',
+        };
+    }
+
+    /**
+     * Susunan grid kursi di dalam kontainer preview — SAMA PERSIS dgn grid-cols/
+     * grid-rows di live-show.blade.php.
+     */
+    public function previewGridClass(): string
+    {
+        return match ($this) {
+            self::Vertical => 'grid-cols-2 grid-rows-4',
+            self::Horizontal => 'grid-cols-4 grid-rows-2',
         };
     }
 }

@@ -25,14 +25,16 @@
                 </button>
             </div>
 
-            <!-- Jumlah kolom ikut tata letak yang dipilih (2 utk Vertical, 4 utk Horizontal)
-                 supaya preview beneran kelihatan berubah - tapi tiap kotak dibatasi
-                 max-w-48 (lihat class kotak di bawah) supaya Vertical yang cuma 2 kolom
-                 tidak jadi kegedean dibanding Horizontal yang 4 kolom. -->
-            <div class="grid {{ $projectLive->display_mode->previewGridCols() }} gap-3">
-                @foreach ($details as $detail)
-                    <div wire:click="openEdit({{ $detail->id }})" role="button" tabindex="0"
-                        class="relative aspect-square max-w-48 w-full justify-self-center rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center gap-1 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer">
+            <!-- Kontainer ini SENGAJA meniru persis bentuk halaman Live asli (rasio +
+                 grid-cols/rows sama dgn live-show.blade.php, lihat DisplayMode::
+                 previewContainerClass()/previewGridClass()) - jadi bentuknya (potret/
+                 lanskap) beneran berubah sesuai tata letak yang dipilih, bukan cuma
+                 grid kotak generik. -->
+            <div class="flex justify-center">
+                <div class="{{ $projectLive->display_mode->previewContainerClass() }} grid {{ $projectLive->display_mode->previewGridClass() }} gap-3">
+                    @foreach ($details as $detail)
+                        <div wire:click="openEdit({{ $detail->id }})" role="button" tabindex="0"
+                            class="relative w-full h-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center gap-1 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer">
                         <span class="absolute top-1.5 left-1.5 flex items-center gap-1">
                             <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/60 text-white">
                                 #{{ $detail->position }}
@@ -79,8 +81,9 @@
                                 {{ $detail->hotkey }}
                             </span>
                         @endif
-                    </div>
-                @endforeach
+                        </div>
+                    @endforeach
+                </div>
             </div>
         </div>
     </div>

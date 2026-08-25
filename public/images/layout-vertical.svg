@@ -1,19 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 120" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 160" fill="none">
     <style>
-        .gtt-frame { fill: #e2e8f0; }
+        .gtt-bg { fill: #f1f5f9; }
+        .gtt-border { stroke: #94a3b8; }
         .gtt-box { fill: #94a3b8; }
         @media (prefers-color-scheme: dark) {
-            .gtt-frame { fill: #334155; }
+            .gtt-bg { fill: #1e293b; }
+            .gtt-border { stroke: #64748b; }
             .gtt-box { fill: #64748b; }
         }
     </style>
-    <rect class="gtt-frame" x="1" y="1" width="58" height="118" rx="10"/>
-    <rect class="gtt-box" x="6" y="6" width="22" height="24" rx="3"/>
-    <rect class="gtt-box" x="32" y="6" width="22" height="24" rx="3"/>
-    <rect class="gtt-box" x="6" y="34" width="22" height="24" rx="3"/>
-    <rect class="gtt-box" x="32" y="34" width="22" height="24" rx="3"/>
-    <rect class="gtt-box" x="6" y="62" width="22" height="24" rx="3"/>
-    <rect class="gtt-box" x="32" y="62" width="22" height="24" rx="3"/>
-    <rect class="gtt-box" x="6" y="90" width="22" height="24" rx="3"/>
-    <rect class="gtt-box" x="32" y="90" width="22" height="24" rx="3"/>
+    <!-- Bingkai seperti HP, 9:16, sama persis di semua pilihan tata letak. -->
+    <rect class="gtt-bg gtt-border" x="3" y="3" width="84" height="154" rx="16" stroke-width="3"/>
+    <!-- Grid 2 kolom x 4 baris, memenuhi hampir seluruh bingkai. -->
+    <rect class="gtt-box" x="10" y="12" width="33" height="31" rx="4"/>
+    <rect class="gtt-box" x="47" y="12" width="33" height="31" rx="4"/>
+    <rect class="gtt-box" x="10" y="47" width="33" height="31" rx="4"/>
+    <rect class="gtt-box" x="47" y="47" width="33" height="31" rx="4"/>
+    <rect class="gtt-box" x="10" y="82" width="33" height="31" rx="4"/>
+    <rect class="gtt-box" x="47" y="82" width="33" height="31" rx="4"/>
+    <rect class="gtt-box" x="10" y="117" width="33" height="31" rx="4"/>
+    <rect class="gtt-box" x="47" y="117" width="33" height="31" rx="4"/>
 </svg>

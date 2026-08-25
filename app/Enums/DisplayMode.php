@@ -36,34 +36,4 @@ enum DisplayMode: string
             self::Horizontal => 'images/layout-horizontal.svg',
         };
     }
-
-    /**
-     * Tinggi+lebar kontainer preview kursi (lihat preview-live.blade.php), EKSPLISIT
-     * dua-duanya (bukan h-[Xvh] aspect-[...]) — class aspect-[...] kombinasi dgn
-     * elemen di dalam flex container ternyata bikin tingginya diam-diam menyusut
-     * ngikutin konten (bukan beneran 92vh/46vh spt yang di-set), jadi kotak & tulisan
-     * di dalamnya kepotong. Rasionya SAMA PERSIS dgn live-show.blade.php (1:2 potret
-     * utk Vertical, 2:1 lanskap utk Horizontal, Horizontal = separuh tinggi Vertical
-     * spt aslinya h-screen/100vh vs h-[50vh]/50vh), cuma disisakan sedikit dari 100vh
-     * penuh (92vh) biar tidak mepet ke header halaman.
-     */
-    public function previewContainerClass(): string
-    {
-        return match ($this) {
-            self::Vertical => 'h-[92vh] w-[46vh]',
-            self::Horizontal => 'h-[46vh] w-[92vh]',
-        };
-    }
-
-    /**
-     * Susunan grid kursi di dalam kontainer preview — SAMA PERSIS dgn grid-cols/
-     * grid-rows di live-show.blade.php.
-     */
-    public function previewGridClass(): string
-    {
-        return match ($this) {
-            self::Vertical => 'grid-cols-2 grid-rows-4',
-            self::Horizontal => 'grid-cols-4 grid-rows-2',
-        };
-    }
 }

@@ -26,12 +26,18 @@
             </div>
 
             <!-- Kontainer ini SENGAJA meniru persis bentuk halaman Live asli (rasio +
-                 grid-cols/rows sama dgn live-show.blade.php, lihat DisplayMode::
-                 previewContainerClass()/previewGridClass()) - jadi bentuknya (potret/
+                 grid-cols/rows sama dgn live-show.blade.php) - jadi bentuknya (potret/
                  lanskap) beneran berubah sesuai tata letak yang dipilih, bukan cuma
-                 grid kotak generik. -->
+                 grid kotak generik. Class Tailwind-nya SENGAJA ditulis langsung di sini
+                 (bukan lewat method PHP di App\Enums\DisplayMode) - Tailwind cuma scan
+                 file .blade.php buat tahu class mana yang perlu di-compile, jadi class
+                 yang cuma ada di string PHP (di luar resources/views) tidak pernah
+                 kedeteksi & CSS-nya tidak pernah ke-generate sama sekali walau di-build. -->
             <div class="flex justify-center">
-                <div class="{{ $projectLive->display_mode->previewContainerClass() }} grid {{ $projectLive->display_mode->previewGridClass() }} gap-3">
+                @php
+                    $isVertical = $projectLive->display_mode === \App\Enums\DisplayMode::Vertical;
+                @endphp
+                <div class="{{ $isVertical ? 'h-[92vh] w-[46vh] grid-cols-2 grid-rows-4' : 'h-[46vh] w-[92vh] grid-cols-4 grid-rows-2' }} grid gap-3">
                     @foreach ($details as $detail)
                         <div wire:click="openEdit({{ $detail->id }})" role="button" tabindex="0"
                             class="relative w-full h-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center gap-1 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer">

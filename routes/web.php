@@ -8,6 +8,7 @@ use App\Livewire\ProjectLive\GiftMapping;
 use App\Livewire\ProjectLive\HotkeyColor;
 use App\Livewire\ProjectLive\Index as ProjectLiveIndex;
 use App\Livewire\ProjectLive\LiveShow;
+use App\Livewire\ProjectLive\PreviewLive;
 use App\Livewire\User\Index as UserIndex;
 use Illuminate\Support\Facades\Route;
 
@@ -43,6 +44,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/project-live/{projectLive}/frame-host-live', FrameHostLive::class)->name('project-live.frame-host-live');
     Route::get('/project-live/{projectLive}/hotkey-color', HotkeyColor::class)->name('project-live.hotkey-color');
     Route::get('/project-live/{projectLive}/event-trigger', EventTrigger::class)->name('project-live.event-trigger');
+    Route::get('/project-live/{projectLive}/preview-live', PreviewLive::class)->name('project-live.preview-live');
 });
 
 require __DIR__.'/auth.php';

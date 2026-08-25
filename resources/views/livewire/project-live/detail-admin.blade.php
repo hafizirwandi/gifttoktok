@@ -192,14 +192,18 @@
             </div>
 
             <!-- Efek Pulse Kursi: border SATU kotak kursi tertentu di halaman Live
-                 berkedip gonta-ganti warna - beda dari efek pulse Frame Host (border
-                 overlay OBS terpisah, lihat App\Livewire\ProjectLive\FrameHost) krn
-                 ini nempel di kotak kursi itu sendiri. -->
+                 berkedip gonta-ganti warna - warna & kecepatannya SELALU ikut
+                 settingan "Frame Host" (frame_pulse_color_1/2/3, frame_pulse_speed_ms,
+                 lihat App\Livewire\ProjectLive\FrameHost), jadi tidak ada input warna
+                 di sini - admin cukup pilih KOTAK mana yang berkedip. -->
             <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-4">
                 <div class="flex items-center justify-between gap-3">
                     <div>
                         <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Efek Pulse Kursi</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Border 1 kotak kursi tertentu berkedip gonta-ganti warna di halaman Live.</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            Border 1 kotak kursi berkedip di halaman Live, pakai warna &amp; kecepatan dari
+                            <a href="{{ route('project-live.frame-host', $projectLive) }}" wire:navigate class="text-indigo-600 dark:text-indigo-400 hover:underline">Frame Host</a>.
+                        </p>
                     </div>
                     <button type="button" wire:click="toggleSeatPulse"
                         class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full pl-1 pr-3 py-1 transition {{ $projectLive->seat_pulse_enabled ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
@@ -219,52 +223,7 @@
                         @endfor
                     </select>
                     <x-input-error :messages="$errors->get('seatPulsePosition')" class="mt-1" />
-                </div>
-
-                <div>
-                    <x-input-label for="seatPulseSpeedMs" value="Kecepatan (ms per siklus)" />
-                    <x-text-input wire:model.live.debounce.300ms="seatPulseSpeedMs" type="number" id="seatPulseSpeedMs" min="200" max="10000" step="100" class="block mt-1 w-full text-sm" />
-                    <x-input-error :messages="$errors->get('seatPulseSpeedMs')" class="mt-1" />
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <x-input-label for="seatPulseColor1" value="Warna 1" />
-                        <div class="flex items-center gap-1 mt-1">
-                            <input type="color" wire:model.live="seatPulseColor1" id="seatPulseColor1" class="w-9 h-9 rounded border border-gray-300 dark:border-gray-600 bg-transparent p-0.5 flex-shrink-0">
-                            <x-text-input wire:model.live.debounce.300ms="seatPulseColor1" type="text" class="block w-full text-xs font-mono" maxlength="7" />
-                        </div>
-                        <x-input-error :messages="$errors->get('seatPulseColor1')" class="mt-1" />
-                    </div>
-                    <div>
-                        <x-input-label for="seatPulseColor2" value="Warna 2" />
-                        <div class="flex items-center gap-1 mt-1">
-                            <input type="color" wire:model.live="seatPulseColor2" id="seatPulseColor2" class="w-9 h-9 rounded border border-gray-300 dark:border-gray-600 bg-transparent p-0.5 flex-shrink-0">
-                            <x-text-input wire:model.live.debounce.300ms="seatPulseColor2" type="text" class="block w-full text-xs font-mono" maxlength="7" />
-                        </div>
-                        <x-input-error :messages="$errors->get('seatPulseColor2')" class="mt-1" />
-                    </div>
-                </div>
-
-                <div>
-                    <div class="flex items-center justify-between">
-                        <x-input-label for="seatPulseColor3" value="Warna 3 (opsional)" />
-                        @if ($seatPulseColor3 !== '')
-                            <button type="button" wire:click="clearSeatPulseColor3" class="text-xs font-semibold text-red-500 hover:underline">Hapus, cuma 2 warna</button>
-                        @endif
-                    </div>
-                    <div class="flex items-center gap-1 mt-1">
-                        <input type="color" wire:model.live="seatPulseColor3" id="seatPulseColor3" class="w-9 h-9 rounded border border-gray-300 dark:border-gray-600 bg-transparent p-0.5 flex-shrink-0" value="{{ $seatPulseColor3 ?: '#000000' }}">
-                        <x-text-input wire:model.live.debounce.300ms="seatPulseColor3" type="text" class="block w-full text-xs font-mono" maxlength="7" placeholder="Kosongkan buat 2 warna saja" />
-                    </div>
-                    <x-input-error :messages="$errors->get('seatPulseColor3')" class="mt-1" />
-                </div>
-
-                <div class="flex justify-end">
-                    <button type="button" wire:click="saveSeatPulse"
-                        class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700">
-                        Simpan Efek Pulse
-                    </button>
+                    <p class="text-xs text-gray-400 mt-1">Langsung tersimpan begitu diganti.</p>
                 </div>
             </div>
 

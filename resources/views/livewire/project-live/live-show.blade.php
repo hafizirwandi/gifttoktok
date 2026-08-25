@@ -64,20 +64,23 @@
             $mode = $projectLive->display_mode;
         @endphp
         {{-- Efek pulse kursi: border 1 kotak kursi tertentu berkedip gonta-ganti warna
-             (lihat App\Livewire\ProjectLive\DetailAdmin::saveSeatPulse() & posisi kotak
-             yg cocok ditandai di partials/seat-box.blade.php) - keyframe-nya cukup 1x
+             (posisi kotak yg cocok ditandai di partials/seat-box.blade.php, dipilih
+             lewat App\Livewire\ProjectLive\DetailAdmin::updatedSeatPulsePosition()) -
+             warna & kecepatannya SENGAJA dari frame_pulse_* (settingan Frame Host),
+             BUKAN kolom seat_pulse_color/speed sendiri - biar admin tidak perlu atur
+             ulang warna, cukup pilih kotak mana yang berkedip. Keyframe-nya cukup 1x
              di sini (dipakai oleh SATU kotak yg posisinya cocok), bukan per-kotak. --}}
         @if ($projectLive->seat_pulse_enabled)
             <style>
                 @keyframes gtt-seat-pulse {
-                    0% { border-color: {{ $projectLive->seat_pulse_color_1 }}; }
-                    @if ($projectLive->seat_pulse_color_3)
-                        33% { border-color: {{ $projectLive->seat_pulse_color_2 }}; }
-                        66% { border-color: {{ $projectLive->seat_pulse_color_3 }}; }
+                    0% { border-color: {{ $projectLive->frame_pulse_color_1 }}; }
+                    @if ($projectLive->frame_pulse_color_3)
+                        33% { border-color: {{ $projectLive->frame_pulse_color_2 }}; }
+                        66% { border-color: {{ $projectLive->frame_pulse_color_3 }}; }
                     @else
-                        50% { border-color: {{ $projectLive->seat_pulse_color_2 }}; }
+                        50% { border-color: {{ $projectLive->frame_pulse_color_2 }}; }
                     @endif
-                    100% { border-color: {{ $projectLive->seat_pulse_color_1 }}; }
+                    100% { border-color: {{ $projectLive->frame_pulse_color_1 }}; }
                 }
             </style>
         @endif

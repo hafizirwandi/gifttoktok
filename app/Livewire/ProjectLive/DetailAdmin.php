@@ -72,24 +72,18 @@ class DetailAdmin extends Component
 
     /**
      * Efek pulse (border kotak berkedip gonta-ganti warna) buat SATU kursi tertentu
-     * di halaman Live - beda dari efek pulse Frame Host (App\Livewire\ProjectLive\
-     * FrameHost, overlay OBS terpisah) krn ini nempel di kotak KURSI itu sendiri
-     * (lihat partials/seat-box.blade.php & live-show.blade.php). seatPulseEnabled
-     * toggle LANGSUNG tersimpan (sama pola spt toggleVisible()/togglePulse() di
-     * FrameHost), sisanya (posisi/kecepatan/warna) di-stage dulu, baru tersimpan
-     * lewat saveSeatPulse().
+     * di halaman Live - nempel di kotak KURSI itu sendiri (lihat
+     * partials/seat-box.blade.php & live-show.blade.php), TAPI warna & kecepatan
+     * kedipnya SELALU ikut settingan Frame Host (frame_pulse_color_1/2/3,
+     * frame_pulse_speed_ms - lihat App\Livewire\ProjectLive\FrameHost) - admin
+     * cukup pilih KOTAK mana yang berkedip di sini, tidak perlu atur ulang warna.
+     * Baik toggle enabled maupun ganti posisi kursi LANGSUNG tersimpan (tidak ada
+     * tombol "Simpan" terpisah, krn tidak ada lagi input warna/kecepatan yang
+     * perlu di-debounce).
      */
     public bool $seatPulseEnabled = false;
 
     public string $seatPulsePosition = '1';
-
-    public int $seatPulseSpeedMs = 1500;
-
-    public string $seatPulseColor1 = '#1e3a8a';
-
-    public string $seatPulseColor2 = '#38bdf8';
-
-    public string $seatPulseColor3 = '';
 
     /**
      * Hotkey yang dipencet di halaman LIVE (bukan di sini) buat langsung memicu Reset
@@ -119,10 +113,6 @@ class DetailAdmin extends Component
 
         $this->seatPulseEnabled = $projectLive->seat_pulse_enabled;
         $this->seatPulsePosition = (string) ($projectLive->seat_pulse_position ?: 1);
-        $this->seatPulseSpeedMs = $projectLive->seat_pulse_speed_ms;
-        $this->seatPulseColor1 = $projectLive->seat_pulse_color_1;
-        $this->seatPulseColor2 = $projectLive->seat_pulse_color_2;
-        $this->seatPulseColor3 = (string) $projectLive->seat_pulse_color_3;
     }
 
     public function saveSizes(): void
@@ -198,12 +188,12 @@ class DetailAdmin extends Component
         $this->seatPulseEnabled = $this->projectLive->seat_pulse_enabled;
     }
 
-    public function clearSeatPulseColor3(): void
-    {
-        $this->seatPulseColor3 = '';
-    }
-
-    public function saveSeatPulse(): void
+    /**
+     * Livewire lifecycle hook - jalan otomatis begitu <select> posisi kursi diganti
+     * (wire:model.live="seatPulsePosition"), langsung tersimpan tanpa tombol "Simpan"
+     * terpisah (beda dari saveBoxStyle() dkk yg di-debounce krn berupa text input).
+     */
+    public function updatedSeatPulsePosition(): void
     {
         $this->authorize('viewLive', $this->projectLive);
 
@@ -211,23 +201,10 @@ class DetailAdmin extends Component
 
         $validated = $this->validate([
             'seatPulsePosition' => ['required', 'integer', 'min:1', "max:{$maxPosition}"],
-            'seatPulseSpeedMs' => ['required', 'integer', 'min:200', 'max:10000'],
-            'seatPulseColor1' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
-            'seatPulseColor2' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
-            'seatPulseColor3' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
         ]);
 
-        $this->projectLive->update([
-            'seat_pulse_position' => $validated['seatPulsePosition'],
-            'seat_pulse_speed_ms' => $validated['seatPulseSpeedMs'],
-            'seat_pulse_color_1' => $validated['seatPulseColor1'],
-            'seat_pulse_color_2' => $validated['seatPulseColor2'],
-            'seat_pulse_color_3' => $validated['seatPulseColor3'] !== '' ? $validated['seatPulseColor3'] : null,
-        ]);
-
+        $this->projectLive->update(['seat_pulse_position' => $validated['seatPulsePosition']]);
         $this->projectLive->refresh();
-
-        $this->dispatch('notify', message: 'Efek pulse kursi berhasil disimpan.');
     }
 
     public function toggleProjectLiveStatus(): void

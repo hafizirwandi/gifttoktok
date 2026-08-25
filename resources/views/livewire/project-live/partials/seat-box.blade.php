@@ -17,10 +17,11 @@
     $boxStyle = 'padding: '.$projectLive->seat_padding.'px; border-width: '.$projectLive->seat_border_width.'px; border-radius: '.$projectLive->seat_border_radius.'px;';
 
     // Efek pulse kursi: cuma kotak yg POSISI-nya cocok yg dapat animasi (keyframe-nya
-    // didefinisikan sekali di live-show.blade.php, bukan di sini) - lihat
-    // App\Livewire\ProjectLive\DetailAdmin::saveSeatPulse().
+    // didefinisikan sekali di live-show.blade.php, bukan di sini) - kecepatannya
+    // SENGAJA dari frame_pulse_speed_ms (settingan Frame Host, bukan kolom seat_pulse
+    // sendiri) - lihat App\Livewire\ProjectLive\DetailAdmin::updatedSeatPulsePosition().
     if ($projectLive->seat_pulse_enabled && (int) $detail['position'] === (int) $projectLive->seat_pulse_position) {
-        $boxStyle .= ' animation: gtt-seat-pulse '.$projectLive->seat_pulse_speed_ms.'ms ease-in-out infinite;';
+        $boxStyle .= ' animation: gtt-seat-pulse '.$projectLive->frame_pulse_speed_ms.'ms ease-in-out infinite;';
     }
 @endphp
 @if ($detail['status'] === 'show' && $detail['name'])

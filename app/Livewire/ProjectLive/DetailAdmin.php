@@ -67,9 +67,12 @@ class DetailAdmin extends Component
         'seat_border_width' => ['label' => 'Tebal Border', 'min' => 0, 'max' => 20, 'default' => 4],
         'seat_border_radius' => ['label' => 'Rounded Border', 'min' => 0, 'max' => 40, 'default' => 12],
         'seat_gap' => ['label' => 'Jarak Antar Kotak', 'min' => 0, 'max' => 40, 'default' => 12],
-        // Negatif = naik, positif = turun - cuma menggeser icon+teks kotak KOSONG
-        // (empty_icon + empty_label), bukan avatar/nama/coin kursi yang sudah terisi.
-        'empty_content_offset_y' => ['label' => 'Naik/Turun Icon & Teks Kotak Kosong', 'min' => -100, 'max' => 100, 'default' => 0],
+        // Negatif = naik, positif = turun - cuma menggeser icon/teks kotak KOSONG
+        // (empty_icon/empty_label), bukan avatar/nama/coin kursi yang sudah terisi.
+        // Dipisah jadi 2 field (bukan 1 offset gabungan) supaya icon & teks bisa
+        // diatur naik-turunnya independen satu sama lain.
+        'empty_icon_offset_y' => ['label' => 'Naik/Turun Icon Kotak Kosong', 'min' => -100, 'max' => 100, 'default' => 0],
+        'empty_label_offset_y' => ['label' => 'Naik/Turun Teks Kotak Kosong', 'min' => -100, 'max' => 100, 'default' => 0],
     ];
 
     public array $boxStyle = [];

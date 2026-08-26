@@ -19,6 +19,17 @@ class EventTriggerProcessor
 
     private const COOLDOWN_RAW_TYPES = ['like', 'chat'];
 
+    /**
+     * TikTok mengirim like sebagai delta PER PESAN (mis. tap 1x = count:1, tap lagi
+     * beberapa detik kemudian = count:1 lagi di pesan terpisah) — BUKAN akumulasi
+     * sejak live mulai. Kalau "min_count" trigger like langsung dicocokkan ke delta
+     * satu pesan itu, syarat "minimal 2x tap" nyaris tidak pernah kepenuhi (user
+     * harus tap 2x dalam satu window batching TikTok yang sama, jarang terjadi).
+     * Makanya delta di-akumulasi per user di cache, direset ke 0 begitu satu trigger
+     * berhasil kena, supaya butuh "min_count" tap BARU lagi utk trigger berikutnya.
+     */
+    private const LIKE_COUNT_TTL_HOURS = 6;
+
     public function __construct(
         private readonly TikTokGiftEventProcessor $giftProcessor,
     ) {}
@@ -31,7 +42,7 @@ class EventTriggerProcessor
      */
     public function handle(ProjectLive $projectLive, string $rawEventType, array $user, ?int $likeCount = null, ?string $chatContent = null): void
     {
-        $trigger = $this->resolveTrigger($projectLive, $rawEventType, $likeCount, $chatContent);
+        $trigger = $this->resolveTrigger($projectLive, $rawEventType, $user, $likeCount, $chatContent);
 
         if (! $trigger || ! $trigger->mapped_gift_id) {
             return;
@@ -47,17 +58,23 @@ class EventTriggerProcessor
             return;
         }
 
-        $this->giftProcessor->applyGift($projectLive, $gift, $user, repeatCount: 1, groupId: (string) Str::uuid());
+        if ($rawEventType === 'like') {
+            $this->resetLikeCount($projectLive, $user['tiktok_user_id']);
+        }
+
+        $this->giftProcessor->applyGift($projectLive, $gift, $user, repeatCount: 1, groupId: (string) Str::uuid(), isRealGiftEvent: false);
     }
 
-    private function resolveTrigger(ProjectLive $projectLive, string $rawEventType, ?int $likeCount, ?string $chatContent): ?ProjectLiveEventTrigger
+    private function resolveTrigger(ProjectLive $projectLive, string $rawEventType, array $user, ?int $likeCount, ?string $chatContent): ?ProjectLiveEventTrigger
     {
         $active = $projectLive->eventTriggers()->where('active', true);
 
         if ($rawEventType === 'like') {
+            $count = $this->accumulateLikeCount($projectLive, $user['tiktok_user_id'], $likeCount ?? 0);
+
             return (clone $active)
                 ->where('type', EventTriggerType::Like->value)
-                ->where('min_count', '<=', $likeCount ?? 0)
+                ->where('min_count', '<=', $count)
                 ->orderByDesc('min_count')
                 ->first();
         }
@@ -96,5 +113,25 @@ class EventTriggerProcessor
         Cache::put($key, true, now()->addSeconds(self::COOLDOWN_SECONDS));
 
         return false;
+    }
+
+    private function likeCountKey(ProjectLive $projectLive, string $tiktokUserId): string
+    {
+        return "event-trigger-like-count:{$projectLive->id}:{$tiktokUserId}";
+    }
+
+    private function accumulateLikeCount(ProjectLive $projectLive, string $tiktokUserId, int $delta): int
+    {
+        $key = $this->likeCountKey($projectLive, $tiktokUserId);
+        $count = Cache::get($key, 0) + $delta;
+
+        Cache::put($key, $count, now()->addHours(self::LIKE_COUNT_TTL_HOURS));
+
+        return $count;
+    }
+
+    private function resetLikeCount(ProjectLive $projectLive, string $tiktokUserId): void
+    {
+        Cache::forget($this->likeCountKey($projectLive, $tiktokUserId));
     }
 }

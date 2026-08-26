@@ -67,14 +67,21 @@ class TikTokGiftEventProcessor
      * "disintesis" dari trigger non-gift seperti follow/like/chat — utk kasus itu,
      * gift-mapping di trigger-nya sendiri SUDAH merupakan bentuk opt-in, jadi tidak
      * perlu dicek ulang ke enabledGifts()).
+     *
+     * $isRealGiftEvent = false dipakai oleh trigger like/join/chat/dst — gift yang
+     * "disintesis" itu TETAP masuk leaderboard/kursi seperti biasa, tapi SENGAJA
+     * tidak dicatat ke project_live_gift_events. Tabel itu adalah histori "gift
+     * SEBENARNYA yang masuk" utk halaman Pengirim Gift (App\Livewire\GiftSenders\Index)
+     * — kalau ikut dicatat, laporan itu akan bohong (seolah-olah user mengirim gift
+     * padahal cuma like/join/chat biasa).
      */
-    public function applyGift(ProjectLive $projectLive, TikTokGift $gift, array $gifterData, int $repeatCount, string $groupId): void
+    public function applyGift(ProjectLive $projectLive, TikTokGift $gift, array $gifterData, int $repeatCount, string $groupId, bool $isRealGiftEvent = true): void
     {
         $value = $gift->diamond_count * max(1, $repeatCount);
 
         $lock = Cache::lock("leaderboard-{$projectLive->id}", 5);
 
-        $lock->block(3, function () use ($projectLive, $gifterData, $groupId, $value, $gift, $repeatCount) {
+        $lock->block(3, function () use ($projectLive, $gifterData, $groupId, $value, $gift, $repeatCount, $isRealGiftEvent) {
             $dedupeKey = "gift-dedupe:{$projectLive->id}:{$groupId}";
 
             if (Cache::has($dedupeKey)) {
@@ -88,7 +95,10 @@ class TikTokGiftEventProcessor
             $gifter = $this->upsertGifter($projectLive, $gifterData, $value);
             $this->leaderboard->recalculate($projectLive);
             $this->stampGiftIcon($projectLive, $gifter, $gift);
-            $this->logGiftEvent($projectLive, $gifter, $gift, $repeatCount, $value);
+
+            if ($isRealGiftEvent) {
+                $this->logGiftEvent($projectLive, $gifter, $gift, $repeatCount, $value);
+            }
         });
     }
 

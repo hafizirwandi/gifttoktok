@@ -85,6 +85,9 @@ class GiftLeaderboardService
      * waktu ini) tidak boleh otomatis balik menempati kursi lagi cuma karena ada gift
      * dari orang lain masuk — mereka baru dianggap "ronde berjalan" lagi kalau BENERAN
      * kirim gift baru setelah titik reset ini.
+     *
+     * `status` (show/hide) SENGAJA tidak disentuh — itu preferensi tampilan admin,
+     * bukan bagian dari state leaderboard, jadi reset tidak boleh mengubahnya.
      */
     public function reset(ProjectLive $projectLive): void
     {
@@ -92,7 +95,6 @@ class GiftLeaderboardService
             $projectLive->update(['round_reset_at' => now()]);
 
             $projectLive->details()->update([
-                'status' => DetailStatus::Hide->value,
                 'name' => null,
                 'img' => null,
                 'project_live_gifter_id' => null,

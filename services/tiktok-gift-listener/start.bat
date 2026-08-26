@@ -19,6 +19,17 @@ if not exist .env (
     exit /b 1
 )
 
+REM Bersihkan cache config Laravel yang basi (bootstrap/cache/config.php) SEBELUM
+REM apa pun lain jalan - inilah penyebab error "No application encryption key has
+REM been specified" / popup 500 tiba-tiba yang muncul kalau .env sempat berubah
+REM setelah cache config sempat dibuat (manual "php artisan optimize"/"config:cache"
+REM di masa lalu, atau job terjadwal). Dijalankan setiap start.bat dipanggil supaya
+REM config yang dipakai Apache/CLI SELALU baca .env terbaru, bukan cache basi.
+echo Membersihkan cache config Laravel yang mungkin basi...
+pushd "%~dp0..\.."
+call php artisan config:clear >nul 2>&1
+popd
+
 REM Cek listener.pid BENERAN masih proses node.exe yang hidup, bukan cuma
 REM percaya file-nya ada - PID basi (proses sudah mati/PC restart/ditutup
 REM manual) adalah penyebab utama start.bat "kadang gagal" (nolak jalan

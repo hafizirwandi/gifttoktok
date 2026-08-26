@@ -191,42 +191,6 @@
                 </div>
             </div>
 
-            <!-- Efek Pulse Kursi: border SATU kotak kursi tertentu di halaman Live
-                 berkedip gonta-ganti warna - warna & kecepatannya SELALU ikut
-                 settingan "Frame Host" (frame_pulse_color_1/2/3, frame_pulse_speed_ms,
-                 lihat App\Livewire\ProjectLive\FrameHost), jadi tidak ada input warna
-                 di sini - admin cukup pilih KOTAK mana yang berkedip. -->
-            <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-4">
-                <div class="flex items-center justify-between gap-3">
-                    <div>
-                        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Efek Pulse Kursi</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">
-                            Border 1 kotak kursi berkedip di halaman Live, pakai warna &amp; kecepatan dari
-                            <a href="{{ route('project-live.frame-host', $projectLive) }}" wire:navigate class="text-indigo-600 dark:text-indigo-400 hover:underline">Frame Host</a>.
-                        </p>
-                    </div>
-                    <button type="button" wire:click="toggleSeatPulse"
-                        class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full pl-1 pr-3 py-1 transition {{ $projectLive->seat_pulse_enabled ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
-                        <span class="relative inline-flex h-5 w-9 items-center rounded-full bg-black/20">
-                            <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition {{ $projectLive->seat_pulse_enabled ? 'translate-x-[18px]' : 'translate-x-1' }}"></span>
-                        </span>
-                        <span class="text-sm font-semibold text-white">{{ $projectLive->seat_pulse_enabled ? 'ON' : 'OFF' }}</span>
-                    </button>
-                </div>
-
-                <div>
-                    <x-input-label for="seatPulsePosition" value="Kursi Nomor" />
-                    <select wire:model.live="seatPulsePosition" id="seatPulsePosition"
-                        class="mt-1 block w-full text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
-                        @for ($i = 1; $i <= $projectLive->display_mode->seatCount(); $i++)
-                            <option value="{{ $i }}">Kursi #{{ $i }}</option>
-                        @endfor
-                    </select>
-                    <x-input-error :messages="$errors->get('seatPulsePosition')" class="mt-1" />
-                    <p class="text-xs text-gray-400 mt-1">Langsung tersimpan begitu diganti.</p>
-                </div>
-            </div>
-
             <!-- Auto Gift Mode -->
             <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-4">
                 <div class="flex items-center justify-between gap-3">

@@ -16,11 +16,12 @@
     // App\Enums\DisplayMode: class yg cuma ada di PHP tidak pernah ke-generate).
     $boxStyle = 'padding: '.$projectLive->seat_padding.'px; border-width: '.$projectLive->seat_border_width.'px; border-radius: '.$projectLive->seat_border_radius.'px;';
 
-    // Efek pulse kursi: cuma kotak yg POSISI-nya cocok yg dapat animasi (keyframe-nya
+    // Efek pulse kursi: kotak yg POSISI-nya ada di seat_pulse_positions (checklist,
+    // bisa lebih dari 1 kotak sekaligus) yang dapat animasi (keyframe-nya
     // didefinisikan sekali di live-show.blade.php, bukan di sini) - kecepatannya
-    // SENGAJA dari frame_pulse_speed_ms (settingan Frame Host, bukan kolom seat_pulse
-    // sendiri) - lihat App\Livewire\ProjectLive\DetailAdmin::updatedSeatPulsePosition().
-    if ($projectLive->seat_pulse_enabled && (int) $detail['position'] === (int) $projectLive->seat_pulse_position) {
+    // SENGAJA dari frame_pulse_speed_ms (settingan Frame Host, bukan kolom sendiri)
+    // - lihat App\Livewire\ProjectLive\FrameHost::updatedSeatPulsePositions().
+    if ($projectLive->seat_pulse_enabled && in_array((int) $detail['position'], $projectLive->seat_pulse_positions ?? [], true)) {
         $boxStyle .= ' animation: gtt-seat-pulse '.$projectLive->frame_pulse_speed_ms.'ms ease-in-out infinite;';
     }
 @endphp

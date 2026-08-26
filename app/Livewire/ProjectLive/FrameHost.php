@@ -50,6 +50,19 @@ class FrameHost extends Component
 
     public string $pulseColor3 = '';
 
+    /**
+     * Efek pulse (border kotak berkedip gonta-ganti warna) buat kotak KURSI di
+     * halaman Live (beda dari border frame OBS di atas, tapi warna & kecepatannya
+     * SENGAJA dipakai bareng/reuse dari pulseColor1/2/3 & pulseSpeedMs yang sama -
+     * lihat live-show.blade.php & partials/seat-box.blade.php) - admin cukup
+     * centang kotak MANA SAJA yang mau ikut berkedip (bisa lebih dari 1), tidak
+     * perlu atur warna terpisah. Checklist-nya langsung tersimpan tiap dicentang/
+     * di-uncheck (lihat updatedSeatPulsePositions()).
+     */
+    public bool $seatPulseEnabled = false;
+
+    public array $seatPulsePositions = [];
+
     public function mount(ProjectLive $projectLive): void
     {
         $this->authorize('viewLive', $projectLive);
@@ -64,6 +77,8 @@ class FrameHost extends Component
         $this->pulseColor1 = $projectLive->frame_pulse_color_1;
         $this->pulseColor2 = $projectLive->frame_pulse_color_2;
         $this->pulseColor3 = (string) $projectLive->frame_pulse_color_3;
+        $this->seatPulseEnabled = $projectLive->seat_pulse_enabled;
+        $this->seatPulsePositions = $projectLive->seat_pulse_positions ?? [];
     }
 
     public function updateOrientation(string $value): void
@@ -102,6 +117,39 @@ class FrameHost extends Component
     public function clearPulseColor3(): void
     {
         $this->pulseColor3 = '';
+    }
+
+    public function toggleSeatPulse(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $this->projectLive->update(['seat_pulse_enabled' => ! $this->projectLive->seat_pulse_enabled]);
+        $this->projectLive->refresh();
+
+        $this->seatPulseEnabled = $this->projectLive->seat_pulse_enabled;
+    }
+
+    /**
+     * Livewire lifecycle hook - jalan otomatis begitu checkbox kursi mana pun
+     * dicentang/di-uncheck (wire:model.live="seatPulsePositions", tiap checkbox
+     * beda value tapi target property sama - Livewire otomatis nambah/buang value
+     * itu dari/ke array), langsung tersimpan tanpa tombol "Simpan" terpisah.
+     */
+    public function updatedSeatPulsePositions(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $maxPosition = $this->projectLive->display_mode->seatCount();
+
+        $validated = $this->validate([
+            'seatPulsePositions' => ['array'],
+            'seatPulsePositions.*' => ['integer', 'min:1', "max:{$maxPosition}"],
+        ]);
+
+        $this->projectLive->update([
+            'seat_pulse_positions' => array_values(array_map('intval', $validated['seatPulsePositions'])),
+        ]);
+        $this->projectLive->refresh();
     }
 
     public function saveAppearance(): void

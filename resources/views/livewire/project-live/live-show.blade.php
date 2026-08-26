@@ -63,13 +63,15 @@
         @php
             $mode = $projectLive->display_mode;
         @endphp
-        {{-- Efek pulse kursi: border 1 kotak kursi tertentu berkedip gonta-ganti warna
-             (posisi kotak yg cocok ditandai di partials/seat-box.blade.php, dipilih
-             lewat App\Livewire\ProjectLive\DetailAdmin::updatedSeatPulsePosition()) -
-             warna & kecepatannya SENGAJA dari frame_pulse_* (settingan Frame Host),
-             BUKAN kolom seat_pulse_color/speed sendiri - biar admin tidak perlu atur
-             ulang warna, cukup pilih kotak mana yang berkedip. Keyframe-nya cukup 1x
-             di sini (dipakai oleh SATU kotak yg posisinya cocok), bukan per-kotak. --}}
+        {{-- Efek pulse kursi: border kotak kursi yang DICENTANG (bisa lebih dari 1
+             sekaligus) berkedip gonta-ganti warna (dicek per-kotak di
+             partials/seat-box.blade.php via seat_pulse_positions, diatur lewat
+             App\Livewire\ProjectLive\FrameHost::updatedSeatPulsePositions() - menu
+             "Frame Host", bukan Admin) - warna & kecepatannya SENGAJA dari
+             frame_pulse_* (settingan Efek Pulse border frame yang sama), biar admin
+             tidak perlu atur ulang warna, cukup centang kotak mana yang berkedip.
+             Keyframe-nya cukup 1x di sini (dipakai semua kotak yg posisinya
+             tercentang), bukan per-kotak. --}}
         @if ($projectLive->seat_pulse_enabled)
             <style>
                 @keyframes gtt-seat-pulse {

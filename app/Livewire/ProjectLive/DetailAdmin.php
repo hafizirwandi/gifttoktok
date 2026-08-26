@@ -71,21 +71,6 @@ class DetailAdmin extends Component
     public array $boxStyle = [];
 
     /**
-     * Efek pulse (border kotak berkedip gonta-ganti warna) buat SATU kursi tertentu
-     * di halaman Live - nempel di kotak KURSI itu sendiri (lihat
-     * partials/seat-box.blade.php & live-show.blade.php), TAPI warna & kecepatan
-     * kedipnya SELALU ikut settingan Frame Host (frame_pulse_color_1/2/3,
-     * frame_pulse_speed_ms - lihat App\Livewire\ProjectLive\FrameHost) - admin
-     * cukup pilih KOTAK mana yang berkedip di sini, tidak perlu atur ulang warna.
-     * Baik toggle enabled maupun ganti posisi kursi LANGSUNG tersimpan (tidak ada
-     * tombol "Simpan" terpisah, krn tidak ada lagi input warna/kecepatan yang
-     * perlu di-debounce).
-     */
-    public bool $seatPulseEnabled = false;
-
-    public string $seatPulsePosition = '1';
-
-    /**
      * Hotkey yang dipencet di halaman LIVE (bukan di sini) buat langsung memicu Reset
      * Leaderboard/Reset Coin tanpa pindah tab — lihat LiveShow::triggerResetLeaderboard()/
      * triggerResetCoins() dan live-show.blade.php.
@@ -110,9 +95,6 @@ class DetailAdmin extends Component
         foreach (self::BOX_STYLE_FIELDS as $field => $config) {
             $this->boxStyle[$field] = $projectLive->{$field};
         }
-
-        $this->seatPulseEnabled = $projectLive->seat_pulse_enabled;
-        $this->seatPulsePosition = (string) ($projectLive->seat_pulse_position ?: 1);
     }
 
     public function saveSizes(): void
@@ -176,35 +158,6 @@ class DetailAdmin extends Component
         }
 
         $this->saveBoxStyle();
-    }
-
-    public function toggleSeatPulse(): void
-    {
-        $this->authorize('viewLive', $this->projectLive);
-
-        $this->projectLive->update(['seat_pulse_enabled' => ! $this->projectLive->seat_pulse_enabled]);
-        $this->projectLive->refresh();
-
-        $this->seatPulseEnabled = $this->projectLive->seat_pulse_enabled;
-    }
-
-    /**
-     * Livewire lifecycle hook - jalan otomatis begitu <select> posisi kursi diganti
-     * (wire:model.live="seatPulsePosition"), langsung tersimpan tanpa tombol "Simpan"
-     * terpisah (beda dari saveBoxStyle() dkk yg di-debounce krn berupa text input).
-     */
-    public function updatedSeatPulsePosition(): void
-    {
-        $this->authorize('viewLive', $this->projectLive);
-
-        $maxPosition = $this->projectLive->display_mode->seatCount();
-
-        $validated = $this->validate([
-            'seatPulsePosition' => ['required', 'integer', 'min:1', "max:{$maxPosition}"],
-        ]);
-
-        $this->projectLive->update(['seat_pulse_position' => $validated['seatPulsePosition']]);
-        $this->projectLive->refresh();
     }
 
     public function toggleProjectLiveStatus(): void

@@ -156,6 +156,39 @@
                         </div>
                     </div>
 
+                    <!-- Efek Pulse Kursi: sama persis warna & kecepatannya dgn Efek Pulse
+                         border frame di atas (pulseColor1/2/3, pulseSpeedMs) - admin
+                         cukup centang kotak KURSI mana saja (bisa lebih dari 1 sekaligus)
+                         yang mau ikut berkedip di halaman Live, lihat
+                         App\Livewire\ProjectLive\FrameHost::updatedSeatPulsePositions(). -->
+                    <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-4">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Efek Pulse Kursi</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Kotak kursi yang dicentang ikut berkedip di halaman Live, pakai warna &amp; kecepatan Efek Pulse di atas.</p>
+                            </div>
+                            <button type="button" wire:click="toggleSeatPulse"
+                                class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full pl-1 pr-3 py-1 transition {{ $projectLive->seat_pulse_enabled ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                <span class="relative inline-flex h-5 w-9 items-center rounded-full bg-black/20">
+                                    <span class="inline-block h-3.5 w-3.5 transform rounded-full bg-white transition {{ $projectLive->seat_pulse_enabled ? 'translate-x-[18px]' : 'translate-x-1' }}"></span>
+                                </span>
+                                <span class="text-sm font-semibold text-white">{{ $projectLive->seat_pulse_enabled ? 'ON' : 'OFF' }}</span>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-4 gap-2">
+                            @for ($i = 1; $i <= $projectLive->display_mode->seatCount(); $i++)
+                                <label class="inline-flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-300">
+                                    <input type="checkbox" wire:model.live="seatPulsePositions" value="{{ $i }}"
+                                        class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500">
+                                    Kursi #{{ $i }}
+                                </label>
+                            @endfor
+                        </div>
+                        <x-input-error :messages="$errors->get('seatPulsePositions')" class="mt-1" />
+                        <p class="text-xs text-gray-400">Langsung tersimpan begitu dicentang/di-uncheck.</p>
+                    </div>
+
                     <!-- URL OBS -->
                     <div class="bg-gray-50 dark:bg-gray-900/50 rounded-md p-3 space-y-2 text-xs" x-data="{ copied: false }">
                         <div class="flex items-center justify-between gap-2">

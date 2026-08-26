@@ -13,19 +13,25 @@ use Illuminate\Support\Facades\DB;
 class GiftLeaderboardService
 {
     /**
-     * Hitung ulang top-N gifter (N = jumlah SEMUA kursi project ini, ikut
-     * display_mode->seatCount()) berdasarkan round_value putaran berjalan,
+     * Hitung ulang top-N gifter (N = jumlah kursi yang IKUT DIHITUNG, lihat
+     * $eligibleSeats di bawah) berdasarkan round_value putaran berjalan,
      * sinkronkan ke kursi (project_live_details). "Sticky": kursi yang
      * gifter-nya masih di top-N tidak pindah posisi, hanya di-refresh
      * datanya — supaya kotak tidak lompat-lompat tiap ada gift kecil masuk.
      *
-     * Kursi kosong (belum pernah ada gifter, status masih Hide default sejak
-     * dibuat) TETAP boleh diisi otomatis lewat method ini begitu ada gifter yang
-     * cukup peringkatnya — ini yang bikin tata letak spt Sorotan langsung
-     * "hidup" tanpa admin perlu klik Show satu-satu dulu. YANG DIJAGA cuma:
-     * kursi yang SUDAH pernah terisi TIDAK dipaksa balik ke Hide oleh sistem
-     * cuma karena tersalip peringkat gifter lain — lihat emptySeat() di bawah,
-     * itu murni soal status tidak boleh berubah SENDIRI di luar aksi admin.
+     * Kursi KOSONG & VIRGIN (belum pernah ada gifter — project_live_gifter_id
+     * null, status Hide default sejak dibuat) TETAP ikut dihitung & boleh diisi
+     * otomatis begitu ada gifter yang cukup peringkatnya - ini yang bikin tata
+     * letak spt Sorotan langsung "hidup" tanpa admin perlu klik Show satu-satu.
+     *
+     * Kursi Hide yang MASIH PUNYA project_live_gifter_id (satu-satunya cara ini
+     * kejadian: admin sengaja hide manual kursi yang sudah terisi, lihat
+     * PreviewLive::toggleStatus()/hideAll() - fillSeat() selalu set status Show,
+     * jadi kursi terisi tidak akan pernah Hide dgn sendirinya) DIKELUARKAN TOTAL
+     * dari perhitungan ini - baik kursinya (tidak dianggap "sticky" lagi, tidak
+     * bisa dibuka ulang oleh gift/trigger apa pun) MAUPUN gifter-nya (tidak ikut
+     * bersaing masuk top-N di kursi lain juga) - supaya kursi yang admin matikan
+     * manual benar2 tetap mati sampai admin nyalakan lagi sendiri.
      *
      * Papan yang penuh TIDAK otomatis dikosongkan lagi — itu sepenuhnya
      * keputusan admin lewat tombol "Reset Leaderboard" (lihat reset() di bawah).
@@ -33,9 +39,19 @@ class GiftLeaderboardService
     public function recalculate(ProjectLive $projectLive): void
     {
         DB::transaction(function () use ($projectLive) {
-            $activeSeats = $projectLive->details()
+            $allSeats = $projectLive->details()
                 ->lockForUpdate()
                 ->get();
+
+            $manuallyOffSeats = $allSeats->filter(
+                fn ($seat) => $seat->status === DetailStatus::Hide && $seat->project_live_gifter_id !== null
+            );
+
+            $eligibleSeats = $allSeats->reject(
+                fn ($seat) => $manuallyOffSeats->contains('id', $seat->id)
+            )->values();
+
+            $excludedGifterIds = $manuallyOffSeats->pluck('project_live_gifter_id');
 
             // round_value > 0 - gifter yang belum kontribusi apa pun tidak usah ikut ranking.
             //
@@ -47,27 +63,28 @@ class GiftLeaderboardService
             $topGifters = ProjectLiveGifter::query()
                 ->where('project_live_id', $projectLive->id)
                 ->where('round_value', '>', 0)
+                ->whereNotIn('id', $excludedGifterIds)
                 // >= (bukan >) - kolom timestamp MySQL presisi detik, gift yang masuk
                 // di detik yang SAMA PERSIS dengan klik reset harus tetap dihitung
                 // "ronde baru", bukan malah terbuang gara-gara technically "tidak lebih besar".
                 ->when($projectLive->round_reset_at, fn ($q) => $q->where('last_gift_at', '>=', $projectLive->round_reset_at))
                 ->orderByDesc('round_value')
                 ->orderBy('id')
-                ->limit($activeSeats->count())
+                ->limit($eligibleSeats->count())
                 ->get()
                 ->keyBy('id');
 
-            $stillTopSeats = $activeSeats->filter(
+            $stillTopSeats = $eligibleSeats->filter(
                 fn ($seat) => $seat->project_live_gifter_id && $topGifters->has($seat->project_live_gifter_id)
             );
 
-            $freeSeats = $activeSeats->reject(
+            $freeSeats = $eligibleSeats->reject(
                 fn ($seat) => $stillTopSeats->contains('id', $seat->id)
             )->values();
 
             // Arah pengisian kursi KOSONG yang baru (tidak ngefek ke kursi yang sudah
             // "sticky" di atas) - default 'asc' kotak index #1 diisi duluan (urutan
-            // posisi apa adanya, $activeSeats sudah orderBy('position') dari relasi
+            // posisi apa adanya, $eligibleSeats sudah orderBy('position') dari relasi
             // details()), 'desc' dibalik supaya kotak paling akhir yang diisi duluan.
             if ($projectLive->seat_fill_direction === SeatFillDirection::Desc) {
                 $freeSeats = $freeSeats->reverse()->values();

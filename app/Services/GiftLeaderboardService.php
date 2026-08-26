@@ -13,25 +13,20 @@ use Illuminate\Support\Facades\DB;
 class GiftLeaderboardService
 {
     /**
-     * Hitung ulang top-N gifter (N = jumlah kursi yang IKUT DIHITUNG, lihat
-     * $eligibleSeats di bawah) berdasarkan round_value putaran berjalan,
-     * sinkronkan ke kursi (project_live_details). "Sticky": kursi yang
-     * gifter-nya masih di top-N tidak pindah posisi, hanya di-refresh
-     * datanya — supaya kotak tidak lompat-lompat tiap ada gift kecil masuk.
+     * Hitung ulang top-N gifter (N = jumlah kursi yang statusnya SHOW saja)
+     * berdasarkan round_value putaran berjalan, sinkronkan ke kursi
+     * (project_live_details). "Sticky": kursi yang gifter-nya masih di top-N
+     * tidak pindah posisi, hanya di-refresh datanya — supaya kotak tidak
+     * lompat-lompat tiap ada gift kecil masuk.
      *
-     * Kursi KOSONG & VIRGIN (belum pernah ada gifter — project_live_gifter_id
-     * null, status Hide default sejak dibuat) TETAP ikut dihitung & boleh diisi
-     * otomatis begitu ada gifter yang cukup peringkatnya - ini yang bikin tata
-     * letak spt Sorotan langsung "hidup" tanpa admin perlu klik Show satu-satu.
-     *
-     * Kursi Hide yang MASIH PUNYA project_live_gifter_id (satu-satunya cara ini
-     * kejadian: admin sengaja hide manual kursi yang sudah terisi, lihat
-     * PreviewLive::toggleStatus()/hideAll() - fillSeat() selalu set status Show,
-     * jadi kursi terisi tidak akan pernah Hide dgn sendirinya) DIKELUARKAN TOTAL
-     * dari perhitungan ini - baik kursinya (tidak dianggap "sticky" lagi, tidak
-     * bisa dibuka ulang oleh gift/trigger apa pun) MAUPUN gifter-nya (tidak ikut
-     * bersaing masuk top-N di kursi lain juga) - supaya kursi yang admin matikan
-     * manual benar2 tetap mati sampai admin nyalakan lagi sendiri.
+     * Kursi berstatus Hide DIKELUARKAN TOTAL dari perhitungan ini, TANPA
+     * PENGECUALIAN — baik yang masih kosong/virgin maupun yang sudah pernah
+     * terisi gifter sebelumnya: tidak dihitung sbg slot yang bisa diisi, tidak
+     * ikut menentukan siapa top-N-nya, gifter yang kebetulan masih terkait ke
+     * kursi itu juga tidak ikut bersaing di kursi lain. Kursi Hide TIDAK BISA
+     * terbuka sendiri oleh gift/trigger apa pun — admin yang harus membukanya
+     * manual (individual toggle atau "Show All" di Preview Live) SEBELUM kursi
+     * itu bisa mulai diisi otomatis oleh sistem.
      *
      * Papan yang penuh TIDAK otomatis dikosongkan lagi — itu sepenuhnya
      * keputusan admin lewat tombol "Reset Leaderboard" (lihat reset() di bawah).
@@ -39,19 +34,10 @@ class GiftLeaderboardService
     public function recalculate(ProjectLive $projectLive): void
     {
         DB::transaction(function () use ($projectLive) {
-            $allSeats = $projectLive->details()
+            $eligibleSeats = $projectLive->details()
                 ->lockForUpdate()
+                ->where('status', DetailStatus::Show->value)
                 ->get();
-
-            $manuallyOffSeats = $allSeats->filter(
-                fn ($seat) => $seat->status === DetailStatus::Hide && $seat->project_live_gifter_id !== null
-            );
-
-            $eligibleSeats = $allSeats->reject(
-                fn ($seat) => $manuallyOffSeats->contains('id', $seat->id)
-            )->values();
-
-            $excludedGifterIds = $manuallyOffSeats->pluck('project_live_gifter_id');
 
             // round_value > 0 - gifter yang belum kontribusi apa pun tidak usah ikut ranking.
             //
@@ -63,7 +49,6 @@ class GiftLeaderboardService
             $topGifters = ProjectLiveGifter::query()
                 ->where('project_live_id', $projectLive->id)
                 ->where('round_value', '>', 0)
-                ->whereNotIn('id', $excludedGifterIds)
                 // >= (bukan >) - kolom timestamp MySQL presisi detik, gift yang masuk
                 // di detik yang SAMA PERSIS dengan klik reset harus tetap dihitung
                 // "ronde baru", bukan malah terbuang gara-gara technically "tidak lebih besar".

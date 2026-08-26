@@ -214,46 +214,22 @@ class LiveShow extends Component
     }
 
     /**
-     * Dipanggil berkala oleh wire:poll. Hanya menyinkronkan transisi ke HIDE secara
-     * otomatis (kursi yang di-hide dari admin langsung ikut hilang di layar live).
-     * Transisi ke SHOW sengaja tidak di-auto-sync di sini, menunggu trigger hotkey/klik.
+     * Dipanggil berkala oleh wire:poll. DB sepenuhnya otoritatif — status show/hide
+     * (dan semua field lain) langsung disinkronkan penuh dari DB tiap tick, DUA ARAH
+     * (show maupun hide), berapa pun mode-nya (auto_gift_mode atau manual). Hotkey/klik
+     * kursi (toggleByHotkey/toggleClick di bawah) tetap ada sebagai jalan pintas supaya
+     * operator tidak perlu menunggu tick poll berikutnya.
      */
     public function syncFromDatabase(): void
     {
         $this->projectLive->refresh();
         $this->syncColorHotkeys();
 
-        if ($this->projectLive->auto_gift_mode) {
-            // Auto Gift Mode: DB sepenuhnya otoritatif (leaderboard sudah tervalidasi
-            // server-side), tidak ada gating "tunggu trigger operator" sama sekali.
-            $this->details = $this->projectLive->details()
-                ->orderBy('position')
-                ->get()
-                ->map(fn (ProjectLiveDetail $detail) => $this->toArray($detail))
-                ->all();
-
-            return;
-        }
-
-        $dbRows = $this->projectLive->details()->get(['id', 'status', 'hotkey', 'mic_visible'])->keyBy('id');
-
-        foreach ($this->details as $i => $detail) {
-            $dbRow = $dbRows->get($detail['id']);
-
-            if (! $dbRow) {
-                continue;
-            }
-
-            // Hotkey & mic_visible selalu disinkronkan langsung (bukan konten gift),
-            // supaya operator selalu ikut setting terbaru meski admin baru saja
-            // mengubahnya lewat modal edit kursi di Preview Live.
-            $this->details[$i]['hotkey'] = $dbRow->hotkey;
-            $this->details[$i]['mic_visible'] = $dbRow->mic_visible;
-
-            if ($dbRow->status === DetailStatus::Hide && $detail['status'] !== DetailStatus::Hide->value) {
-                $this->details[$i]['status'] = DetailStatus::Hide->value;
-            }
-        }
+        $this->details = $this->projectLive->details()
+            ->orderBy('position')
+            ->get()
+            ->map(fn (ProjectLiveDetail $detail) => $this->toArray($detail))
+            ->all();
     }
 
     /**

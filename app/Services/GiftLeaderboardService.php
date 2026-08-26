@@ -12,20 +12,29 @@ use Illuminate\Support\Facades\DB;
 class GiftLeaderboardService
 {
     /**
-     * Hitung ulang top-N gifter (N = jumlah kursi project ini, ikut
-     * display_mode->seatCount() — TIDAK selalu 8 lagi, lihat App\Models\
-     * ProjectLive::syncDetailsToDisplayMode()) berdasarkan round_value putaran
-     * berjalan, sinkronkan ke kursi (project_live_details). "Sticky": kursi
-     * yang gifter-nya masih di top-N tidak pindah posisi, hanya di-refresh
-     * datanya — supaya kotak tidak lompat-lompat tiap ada gift kecil masuk.
+     * Hitung ulang top-N gifter (N = jumlah kursi YANG SEDANG AKTIF/Show — kursi
+     * berstatus Hide SENGAJA dikeluarkan total dari perhitungan ini, lihat catatan
+     * di bawah) berdasarkan round_value putaran berjalan, sinkronkan ke kursi
+     * (project_live_details). "Sticky": kursi yang gifter-nya masih di top-N tidak
+     * pindah posisi, hanya di-refresh datanya — supaya kotak tidak lompat-lompat
+     * tiap ada gift kecil masuk.
      *
      * Papan yang penuh TIDAK otomatis dikosongkan lagi — itu sepenuhnya
      * keputusan admin lewat tombol "Reset Leaderboard" (lihat reset() di bawah).
+     *
+     * Kursi berstatus Hide TIDAK PERNAH disentuh oleh method ini (tidak dihitung
+     * sbg slot yg bisa diisi, tidak ikut ditentukan siapa top-N-nya) — admin yang
+     * nyembunyiin kotak itu, jadi gift/trigger apa pun yg masuk TIDAK BOLEH otomatis
+     * membuka/isi kotak itu lagi. Cuma kursi yang sedang Show yang boleh diisi
+     * gifter baru ATAU dikosongkan balik kalau tersalip peringkat.
      */
     public function recalculate(ProjectLive $projectLive): void
     {
         DB::transaction(function () use ($projectLive) {
-            $seats = $projectLive->details()->lockForUpdate()->get();
+            $activeSeats = $projectLive->details()
+                ->lockForUpdate()
+                ->where('status', DetailStatus::Show->value)
+                ->get();
 
             // round_value > 0 - gifter yang belum kontribusi apa pun tidak usah ikut ranking.
             //
@@ -43,15 +52,15 @@ class GiftLeaderboardService
                 ->when($projectLive->round_reset_at, fn ($q) => $q->where('last_gift_at', '>=', $projectLive->round_reset_at))
                 ->orderByDesc('round_value')
                 ->orderBy('id')
-                ->limit($seats->count())
+                ->limit($activeSeats->count())
                 ->get()
                 ->keyBy('id');
 
-            $stillTopSeats = $seats->filter(
+            $stillTopSeats = $activeSeats->filter(
                 fn ($seat) => $seat->project_live_gifter_id && $topGifters->has($seat->project_live_gifter_id)
             );
 
-            $freeSeats = $seats->reject(
+            $freeSeats = $activeSeats->reject(
                 fn ($seat) => $stillTopSeats->contains('id', $seat->id)
             )->values();
 
@@ -138,8 +147,11 @@ class GiftLeaderboardService
             return;
         }
 
+        // `status` SENGAJA tidak disentuh di sini — show/hide murni kendali admin,
+        // bukan bagian dari state leaderboard. Kursi yang tersalip peringkat cuma
+        // dikosongkan datanya (tetap Show, tapi kosong/blank), TIDAK dipaksa balik
+        // ke Hide oleh sistem.
         $seat->update([
-            'status' => DetailStatus::Hide->value,
             'name' => null,
             'img' => null,
             'gift_total_value' => 0,

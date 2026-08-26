@@ -192,6 +192,20 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Arah kotak kosong diisi gifter baru - lihat
+                     App\Services\GiftLeaderboardService::recalculate(). -->
+                <div class="border-t border-gray-100 dark:border-gray-700 pt-3 space-y-2">
+                    <p class="text-xs font-semibold text-gray-600 dark:text-gray-300">Urutan Kotak Diisi Gift Baru</p>
+                    <div class="grid grid-cols-1 gap-2">
+                        @foreach (\App\Enums\SeatFillDirection::cases() as $direction)
+                            <button type="button" wire:click="updateSeatFillDirection('{{ $direction->value }}')"
+                                class="text-left px-3 py-2 rounded-md border text-xs font-medium transition {{ $projectLive->seat_fill_direction === $direction ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                                {{ $direction->label() }}
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
             </div>
 
             <!-- Auto Gift Mode -->

@@ -6,6 +6,7 @@ use App\Enums\DetailStatus;
 use App\Enums\DisplayMode;
 use App\Enums\FrameOrientation;
 use App\Enums\ProjectLiveStatus;
+use App\Enums\SeatFillDirection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -43,6 +44,7 @@ class ProjectLive extends Model
         'seat_border_radius',
         'seat_gap',
         'empty_content_offset_y',
+        'seat_fill_direction',
         'frame_orientation',
         'frame_ratio_w',
         'frame_ratio_h',
@@ -81,6 +83,7 @@ class ProjectLive extends Model
             'status' => ProjectLiveStatus::class,
             'display_mode' => DisplayMode::class,
             'frame_orientation' => FrameOrientation::class,
+            'seat_fill_direction' => SeatFillDirection::class,
             'frame_visible' => 'boolean',
             'frame_pulse' => 'boolean',
             'seat_pulse_enabled' => 'boolean',

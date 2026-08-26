@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\DetailSource;
 use App\Enums\DetailStatus;
+use App\Enums\SeatFillDirection;
 use App\Models\ProjectLive;
 use App\Models\ProjectLiveDetail;
 use App\Models\ProjectLiveGifter;
@@ -63,6 +64,14 @@ class GiftLeaderboardService
             $freeSeats = $activeSeats->reject(
                 fn ($seat) => $stillTopSeats->contains('id', $seat->id)
             )->values();
+
+            // Arah pengisian kursi KOSONG yang baru (tidak ngefek ke kursi yang sudah
+            // "sticky" di atas) - default 'asc' kotak index #1 diisi duluan (urutan
+            // posisi apa adanya, $activeSeats sudah orderBy('position') dari relasi
+            // details()), 'desc' dibalik supaya kotak paling akhir yang diisi duluan.
+            if ($projectLive->seat_fill_direction === SeatFillDirection::Desc) {
+                $freeSeats = $freeSeats->reverse()->values();
+            }
 
             $newGifters = $topGifters->reject(
                 fn ($gifter) => $stillTopSeats->contains('project_live_gifter_id', $gifter->id)

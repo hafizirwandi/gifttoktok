@@ -4,6 +4,7 @@ namespace App\Livewire\ProjectLive;
 
 use App\Enums\DisplayMode;
 use App\Enums\ProjectLiveStatus;
+use App\Enums\SeatFillDirection;
 use App\Models\ProjectLive;
 use App\Models\TikTokGift;
 use App\Services\GiftLeaderboardService;
@@ -161,6 +162,22 @@ public function saveBoxStyle(): void
         }
 
         $this->saveBoxStyle();
+    }
+
+    /**
+     * Arah kotak KOSONG diisi gifter baru — 'asc' (default) kotak index #1 diisi
+     * duluan lanjut ke bawah, 'desc' kebalikannya (kotak paling akhir duluan,
+     * lanjut ke atas). Lihat App\Services\GiftLeaderboardService::recalculate().
+     */
+    public function updateSeatFillDirection(string $value): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $this->projectLive->update([
+            'seat_fill_direction' => SeatFillDirection::from($value)->value,
+        ]);
+
+        $this->projectLive->refresh();
     }
 
     public function toggleProjectLiveStatus(): void

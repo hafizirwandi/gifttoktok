@@ -133,10 +133,15 @@
              warna latarnya yg tetap tampil), biar kelihatan beda dari kursi yg memang
              sedang menunggu. --}}
         @if ($detail['status'] !== 'hide')
-            <div class="text-white/70 text-4xl leading-none" style="transform: scale({{ $projectLive->empty_icon_size / 100 }});">
-                {{ $detail['empty_icon'] ?? '' ?: '+' }}
+            {{-- Dibungkus 1 wrapper supaya icon+teks bisa digeser naik/turun BERSAMAAN
+                 lewat 1 offset (App\Livewire\ProjectLive\DetailAdmin::BOX_STYLE_FIELDS
+                 empty_content_offset_y), tanpa ikut menggeser kotak/background-nya. --}}
+            <div class="flex flex-col items-center gap-2" style="transform: translateY({{ $projectLive->empty_content_offset_y }}px);">
+                <div class="text-white/70 text-4xl leading-none" style="transform: scale({{ $projectLive->empty_icon_size / 100 }});">
+                    {{ $detail['empty_icon'] ?? '' ?: '+' }}
+                </div>
+                <span class="text-lg text-white/50 font-medium" style="transform: scale({{ $projectLive->empty_label_size / 100 }}); display: inline-block;">{{ $detail['empty_label'] ?? '' ?: 'Request' }}</span>
             </div>
-            <span class="text-lg text-white/50 font-medium" style="transform: scale({{ $projectLive->empty_label_size / 100 }}); display: inline-block;">{{ $detail['empty_label'] ?? '' ?: 'Request' }}</span>
         @endif
     </div>
 @endif

@@ -42,6 +42,7 @@ class ProjectLive extends Model
         'seat_border_width',
         'seat_border_radius',
         'seat_gap',
+        'empty_content_offset_y',
         'frame_orientation',
         'frame_ratio_w',
         'frame_ratio_h',

@@ -23,6 +23,7 @@ class ProjectLiveDetail extends Model
         'dominant_color',
         'empty_label',
         'empty_icon',
+        'mic_visible',
         'active_hotkey_color',
         'source',
         'gift_total_value',
@@ -36,6 +37,7 @@ class ProjectLiveDetail extends Model
         return [
             'status' => DetailStatus::class,
             'source' => DetailSource::class,
+            'mic_visible' => 'boolean',
             'last_gift_at' => 'datetime',
         ];
     }

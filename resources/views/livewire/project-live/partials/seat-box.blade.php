@@ -77,8 +77,10 @@
         </div>
 
         <!-- Mic mute: pojok kanan bawah, transparan tanpa badge - bisa disembunyikan
-             admin lewat toggle "Tampilkan Icon Mic" (project_lives.mic_visible). -->
-        @if ($projectLive->mic_visible)
+             PER KURSI lewat modal edit kursi di Preview Live (project_live_details.
+             mic_visible), beda dari mic_size yg tetap satu setting global buat semua
+             kotak. -->
+        @if ($detail['mic_visible'])
             <div class="absolute bottom-2 right-2 h-10 flex items-center justify-center" style="transform: scale({{ $projectLive->mic_size / 100 }}); transform-origin: bottom right;">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="w-5 h-5 text-white/80 drop-shadow">
                     <path d="M12 15a3 3 0 003-3V6a3 3 0 10-6 0v6a3 3 0 003 3z" stroke="currentColor" stroke-width="1.5"/>

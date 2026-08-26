@@ -235,7 +235,7 @@ class LiveShow extends Component
             return;
         }
 
-        $dbRows = $this->projectLive->details()->get(['id', 'status', 'hotkey'])->keyBy('id');
+        $dbRows = $this->projectLive->details()->get(['id', 'status', 'hotkey', 'mic_visible'])->keyBy('id');
 
         foreach ($this->details as $i => $detail) {
             $dbRow = $dbRows->get($detail['id']);
@@ -244,9 +244,11 @@ class LiveShow extends Component
                 continue;
             }
 
-            // Hotkey selalu disinkronkan langsung (bukan konten), supaya operator selalu
-            // tahu tombol yang benar meski admin baru saja mengubahnya.
+            // Hotkey & mic_visible selalu disinkronkan langsung (bukan konten gift),
+            // supaya operator selalu ikut setting terbaru meski admin baru saja
+            // mengubahnya lewat modal edit kursi di Preview Live.
             $this->details[$i]['hotkey'] = $dbRow->hotkey;
+            $this->details[$i]['mic_visible'] = $dbRow->mic_visible;
 
             if ($dbRow->status === DetailStatus::Hide && $detail['status'] !== DetailStatus::Hide->value) {
                 $this->details[$i]['status'] = DetailStatus::Hide->value;
@@ -274,6 +276,7 @@ class LiveShow extends Component
             'gift_total_value' => $detail->gift_total_value,
             'empty_label' => $detail->empty_label,
             'empty_icon' => $detail->empty_icon,
+            'mic_visible' => $detail->mic_visible,
             'active_hotkey_color' => $detail->active_hotkey_color,
             'last_gift_icon_url' => $detail->last_gift_icon_url,
             'last_gift_at' => $detail->last_gift_at?->timestamp,

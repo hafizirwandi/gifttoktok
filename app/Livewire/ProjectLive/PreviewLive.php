@@ -37,6 +37,8 @@ class PreviewLive extends Component
 
     public string $status = 'hide';
 
+    public bool $micEnabled = true;
+
     /**
      * Pilihan ikon (emoji) untuk kotak kursi yang masih kosong di layar Live.
      */
@@ -74,12 +76,13 @@ class PreviewLive extends Component
         $this->emptyIcon = (string) ($detail->empty_icon ?: '+');
         $this->hotkey = (string) $detail->hotkey;
         $this->status = $detail->status->value;
+        $this->micEnabled = $detail->mic_visible;
         $this->img = null;
     }
 
     public function closeEdit(): void
     {
-        $this->reset(['editingDetailId', 'img', 'name', 'coin', 'emptyLabel', 'emptyIcon', 'hotkey', 'status']);
+        $this->reset(['editingDetailId', 'img', 'name', 'coin', 'emptyLabel', 'emptyIcon', 'hotkey', 'status', 'micEnabled']);
     }
 
     public function toggleStatus(int $detailId): void
@@ -98,6 +101,11 @@ class PreviewLive extends Component
     public function toggleModalStatus(): void
     {
         $this->status = $this->status === 'show' ? 'hide' : 'show';
+    }
+
+    public function toggleModalMic(): void
+    {
+        $this->micEnabled = ! $this->micEnabled;
     }
 
     public function save(): void
@@ -131,6 +139,7 @@ class PreviewLive extends Component
                 },
             ],
             'status' => 'required|in:hide,show',
+            'micEnabled' => 'boolean',
             // 2048 (2MB) sebelumnya kelewat kecil buat foto HP modern — upload gagal
             // divalidasi diam-diam (cuma teks error kecil yang gampang kelewat), user
             // ngira foto-nya tidak terupload sama sekali. Dinaikkan ke 8MB.
@@ -144,6 +153,7 @@ class PreviewLive extends Component
             'empty_icon' => $validated['emptyIcon'] !== '' ? $validated['emptyIcon'] : null,
             'hotkey' => $validated['hotkey'] !== '' ? $validated['hotkey'] : null,
             'status' => $validated['status'],
+            'mic_visible' => $validated['micEnabled'],
             // Edit manual selalu mengembalikan kursi ke source "manual", supaya tidak
             // langsung ketiban timpa oleh recalculation leaderboard auto-mode berikutnya.
             'source' => DetailSource::Manual->value,

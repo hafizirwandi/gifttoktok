@@ -203,6 +203,18 @@
                         <x-input-error :messages="$errors->get('status')" class="mt-2" />
                     </div>
 
+                    <div>
+                        <x-input-label value="Icon Mic" />
+                        <button type="button" wire:click="toggleModalMic"
+                            class="mt-1 inline-flex items-center gap-2 rounded-full pl-1 pr-3 py-1 transition {{ $micEnabled ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                            <span class="relative inline-flex h-6 w-11 items-center rounded-full bg-black/20">
+                                <span class="inline-block h-4 w-4 transform rounded-full bg-white transition {{ $micEnabled ? 'translate-x-6' : 'translate-x-1' }}"></span>
+                            </span>
+                            <span class="text-sm font-medium text-white">{{ $micEnabled ? 'Tampil' : 'Sembunyi' }}</span>
+                        </button>
+                        <x-input-error :messages="$errors->get('micEnabled')" class="mt-2" />
+                    </div>
+
                     <div class="flex justify-end gap-2 pt-2">
                         <button type="button" wire:click="closeEdit"
                             class="px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md hover:bg-gray-50 dark:hover:bg-gray-800">

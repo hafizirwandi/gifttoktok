@@ -133,6 +133,14 @@ class DetailAdmin extends Component
         $this->saveSizes();
     }
 
+    public function toggleMicVisible(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $this->projectLive->update(['mic_visible' => ! $this->projectLive->mic_visible]);
+        $this->projectLive->refresh();
+    }
+
     public function saveBoxStyle(): void
     {
         $this->authorize('viewLive', $this->projectLive);

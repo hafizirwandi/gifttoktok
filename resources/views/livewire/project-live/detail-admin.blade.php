@@ -140,7 +140,18 @@
                         'mic' => 'Icon mic',
                     ] as $field => $label)
                         <div>
-                            <x-input-label :for="'size-'.$field" :value="$label" />
+                            <div class="flex items-center justify-between gap-2">
+                                <x-input-label :for="'size-'.$field" :value="$label" />
+                                @if ($field === 'mic')
+                                    <button type="button" wire:click="toggleMicVisible" title="{{ $projectLive->mic_visible ? 'Klik untuk sembunyikan icon mic' : 'Klik untuk tampilkan icon mic' }}"
+                                        class="flex-shrink-0 inline-flex items-center gap-1 rounded-full pl-0.5 pr-1.5 py-0.5 transition {{ $projectLive->mic_visible ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                        <span class="relative inline-flex h-3.5 w-6 items-center rounded-full bg-black/20">
+                                            <span class="inline-block h-2.5 w-2.5 transform rounded-full bg-white transition {{ $projectLive->mic_visible ? 'translate-x-3' : 'translate-x-0.5' }}"></span>
+                                        </span>
+                                        <span class="text-[9px] font-semibold text-white">{{ $projectLive->mic_visible ? 'ON' : 'OFF' }}</span>
+                                    </button>
+                                @endif
+                            </div>
                             <div class="flex items-center gap-1 mt-1">
                                 <x-text-input :id="'size-'.$field" wire:model="sizes.{{ $field }}" type="number" min="50" max="200" step="5" class="block w-full text-sm" />
                                 <span class="text-xs text-gray-400 flex-shrink-0">%</span>

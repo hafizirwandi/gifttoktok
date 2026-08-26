@@ -76,14 +76,17 @@
             <span class="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-white text-xs leading-none flex-shrink-0">+</span>
         </div>
 
-        <!-- Mic mute: pojok kanan bawah, transparan tanpa badge -->
-        <div class="absolute bottom-2 right-2 h-10 flex items-center justify-center" style="transform: scale({{ $projectLive->mic_size / 100 }}); transform-origin: bottom right;">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="w-5 h-5 text-white/80 drop-shadow">
-                <path d="M12 15a3 3 0 003-3V6a3 3 0 10-6 0v6a3 3 0 003 3z" stroke="currentColor" stroke-width="1.5"/>
-                <path d="M5 10v2a7 7 0 0014 0v-2M12 19v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                <path d="M4 4l16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-        </div>
+        <!-- Mic mute: pojok kanan bawah, transparan tanpa badge - bisa disembunyikan
+             admin lewat toggle "Tampilkan Icon Mic" (project_lives.mic_visible). -->
+        @if ($projectLive->mic_visible)
+            <div class="absolute bottom-2 right-2 h-10 flex items-center justify-center" style="transform: scale({{ $projectLive->mic_size / 100 }}); transform-origin: bottom right;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="w-5 h-5 text-white/80 drop-shadow">
+                    <path d="M12 15a3 3 0 003-3V6a3 3 0 10-6 0v6a3 3 0 003 3z" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M5 10v2a7 7 0 0014 0v-2M12 19v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    <path d="M4 4l16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+            </div>
+        @endif
 
         <!-- Ikon gift terakhir: pojok kanan atas, muncul sebentar (fade-in lalu fade-out
              otomatis ~8 detik, lihat LiveShow::toArray()) — icon_url gift TUJUAN pemetaan

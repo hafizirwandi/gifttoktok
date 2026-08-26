@@ -13,28 +13,28 @@ use Illuminate\Support\Facades\DB;
 class GiftLeaderboardService
 {
     /**
-     * Hitung ulang top-N gifter (N = jumlah kursi YANG SEDANG AKTIF/Show — kursi
-     * berstatus Hide SENGAJA dikeluarkan total dari perhitungan ini, lihat catatan
-     * di bawah) berdasarkan round_value putaran berjalan, sinkronkan ke kursi
-     * (project_live_details). "Sticky": kursi yang gifter-nya masih di top-N tidak
-     * pindah posisi, hanya di-refresh datanya — supaya kotak tidak lompat-lompat
-     * tiap ada gift kecil masuk.
+     * Hitung ulang top-N gifter (N = jumlah SEMUA kursi project ini, ikut
+     * display_mode->seatCount()) berdasarkan round_value putaran berjalan,
+     * sinkronkan ke kursi (project_live_details). "Sticky": kursi yang
+     * gifter-nya masih di top-N tidak pindah posisi, hanya di-refresh
+     * datanya — supaya kotak tidak lompat-lompat tiap ada gift kecil masuk.
+     *
+     * Kursi kosong (belum pernah ada gifter, status masih Hide default sejak
+     * dibuat) TETAP boleh diisi otomatis lewat method ini begitu ada gifter yang
+     * cukup peringkatnya — ini yang bikin tata letak spt Sorotan langsung
+     * "hidup" tanpa admin perlu klik Show satu-satu dulu. YANG DIJAGA cuma:
+     * kursi yang SUDAH pernah terisi TIDAK dipaksa balik ke Hide oleh sistem
+     * cuma karena tersalip peringkat gifter lain — lihat emptySeat() di bawah,
+     * itu murni soal status tidak boleh berubah SENDIRI di luar aksi admin.
      *
      * Papan yang penuh TIDAK otomatis dikosongkan lagi — itu sepenuhnya
      * keputusan admin lewat tombol "Reset Leaderboard" (lihat reset() di bawah).
-     *
-     * Kursi berstatus Hide TIDAK PERNAH disentuh oleh method ini (tidak dihitung
-     * sbg slot yg bisa diisi, tidak ikut ditentukan siapa top-N-nya) — admin yang
-     * nyembunyiin kotak itu, jadi gift/trigger apa pun yg masuk TIDAK BOLEH otomatis
-     * membuka/isi kotak itu lagi. Cuma kursi yang sedang Show yang boleh diisi
-     * gifter baru ATAU dikosongkan balik kalau tersalip peringkat.
      */
     public function recalculate(ProjectLive $projectLive): void
     {
         DB::transaction(function () use ($projectLive) {
             $activeSeats = $projectLive->details()
                 ->lockForUpdate()
-                ->where('status', DetailStatus::Show->value)
                 ->get();
 
             // round_value > 0 - gifter yang belum kontribusi apa pun tidak usah ikut ranking.

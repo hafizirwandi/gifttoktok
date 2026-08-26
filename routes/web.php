@@ -13,24 +13,6 @@ use App\Livewire\ProjectLive\PreviewLive;
 use App\Livewire\User\Index as UserIndex;
 use Illuminate\Support\Facades\Route;
 
-// SEMENTARA - buat diagnosa production.ERROR MissingAppKeyException yang cuma
-// muncul di request WEB (bukan CLI artisan) - cek apakah Apache benar2 baca
-// .env/base_path yang SAMA dengan yang dipakai `php artisan tinker` di terminal.
-// TIDAK menampilkan APP_KEY aslinya, cuma ada/tidaknya + panjangnya. HAPUS route
-// ini sesudah selesai diagnosa, jangan dibiarkan nempel di production.
-Route::get('/_debug-env', function () {
-    return response()->json([
-        'base_path' => base_path(),
-        'app_key_present' => ! empty(config('app.key')),
-        'app_key_length' => strlen((string) config('app.key')),
-        'config_cache_file_exists' => file_exists(base_path('bootstrap/cache/config.php')),
-        'env_file_exists' => file_exists(base_path('.env')),
-        'env_file_mtime' => file_exists(base_path('.env')) ? date('Y-m-d H:i:s', filemtime(base_path('.env'))) : null,
-        'app_env' => app()->environment(),
-        'php_sapi' => PHP_SAPI,
-    ]);
-});
-
 Route::redirect('/', '/login');
 
 Route::middleware('auth')->group(function () {

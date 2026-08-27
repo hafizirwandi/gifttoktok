@@ -74,6 +74,8 @@ class DetailAdmin extends Component
         'empty_icon_offset_y' => ['label' => 'Naik/Turun Icon Kotak Kosong', 'min' => -100, 'max' => 100, 'default' => 0],
         'empty_label_offset_y' => ['label' => 'Naik/Turun Teks Kotak Kosong', 'min' => -100, 'max' => 100, 'default' => 0],
         'mic_offset_y' => ['label' => 'Naik/Turun Icon Mic (Elevator)', 'min' => -100, 'max' => 100, 'default' => 0],
+        'coin_offset_y' => ['label' => 'Naik/Turun Badge Coin (Elevator)', 'min' => -100, 'max' => 100, 'default' => 0],
+        'name_offset_y' => ['label' => 'Naik/Turun Badge Nama (Elevator)', 'min' => -100, 'max' => 100, 'default' => 0],
     ];
 
     public array $boxStyle = [];

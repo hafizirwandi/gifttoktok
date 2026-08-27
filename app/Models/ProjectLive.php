@@ -46,6 +46,8 @@ class ProjectLive extends Model
         'empty_icon_offset_y',
         'empty_label_offset_y',
         'mic_offset_y',
+        'coin_offset_y',
+        'name_offset_y',
         'seat_fill_direction',
         'frame_orientation',
         'frame_ratio_w',

@@ -33,9 +33,9 @@
         </style>
     @endif
 
-    <div class="w-screen overflow-hidden flex items-center justify-center" style="height: 99vh;">
+    <div class="w-screen overflow-hidden flex items-start justify-center pt-4" style="height: 95vh;">
         <div style="
-            width: min(100vw, 99vh * {{ $projectLive->frame_ratio_w }} / {{ $projectLive->frame_ratio_h }});
+            width: min(100vw, 91vh * {{ $projectLive->frame_ratio_w }} / {{ $projectLive->frame_ratio_h }});
             aspect-ratio: {{ $projectLive->frame_ratio_w }} / {{ $projectLive->frame_ratio_h }};
             {{ $borderRadius }} {{ $borderStyle }}
         "></div>

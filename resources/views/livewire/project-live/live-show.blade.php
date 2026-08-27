@@ -40,7 +40,7 @@
     }"
     @keydown.window="handle($event)"
     wire:poll.{{ $projectLive->auto_gift_mode ? '1500ms' : 'visible.3s' }}="syncFromDatabase"
-    class="min-h-screen bg-black text-white"
+    class="bg-black text-white overflow-hidden"
 >
     @if (! $projectLive->isLive())
         <div class="min-h-screen max-w-[430px] mx-auto flex flex-col items-center justify-center gap-2 px-6 text-center">
@@ -86,9 +86,9 @@
                 }
             </style>
         @endif
-        <div class="w-screen h-screen flex items-center justify-center py-12 px-3">
+        <div class="w-screen overflow-hidden flex items-start justify-center px-3 pt-4" style="height: 97vh;">
             <div class="grid" style="
-                --seat-w: min(100vw, 100vh * {{ $mode->ratioW() }} / {{ $mode->ratioH() }}, 480px);
+                --seat-w: min(100vw, 93vh * {{ $mode->ratioW() }} / {{ $mode->ratioH() }}, 480px);
                 width: var(--seat-w);
                 height: {{ $mode->intrinsicHeight() ? 'auto' : 'calc(var(--seat-w) * '.$mode->ratioH().' / '.$mode->ratioW().')' }};
                 grid-template-columns: {{ $mode->gridTemplateColumns() }};

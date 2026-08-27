@@ -86,7 +86,7 @@
                 }
             </style>
         @endif
-        <div class="w-screen h-screen flex items-center justify-center p-3">
+        <div class="w-screen h-screen flex items-center justify-center py-12 px-3">
             <div class="grid" style="
                 --seat-w: min(100vw, 100vh * {{ $mode->ratioW() }} / {{ $mode->ratioH() }}, 480px);
                 width: var(--seat-w);

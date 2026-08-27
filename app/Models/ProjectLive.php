@@ -45,6 +45,7 @@ class ProjectLive extends Model
         'seat_gap',
         'empty_icon_offset_y',
         'empty_label_offset_y',
+        'mic_offset_y',
         'seat_fill_direction',
         'frame_orientation',
         'frame_ratio_w',

@@ -33,7 +33,7 @@
         </style>
     @endif
 
-    <div class="min-h-screen w-screen flex items-center justify-center p-3">
+    <div class="min-h-screen w-screen flex items-center justify-center py-12 px-3">
         <div style="
             width: min(100vw, 100vh * {{ $projectLive->frame_ratio_w }} / {{ $projectLive->frame_ratio_h }});
             aspect-ratio: {{ $projectLive->frame_ratio_w }} / {{ $projectLive->frame_ratio_h }};

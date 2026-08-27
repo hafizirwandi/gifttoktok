@@ -73,6 +73,7 @@ class DetailAdmin extends Component
         // diatur naik-turunnya independen satu sama lain.
         'empty_icon_offset_y' => ['label' => 'Naik/Turun Icon Kotak Kosong', 'min' => -100, 'max' => 100, 'default' => 0],
         'empty_label_offset_y' => ['label' => 'Naik/Turun Teks Kotak Kosong', 'min' => -100, 'max' => 100, 'default' => 0],
+        'mic_offset_y' => ['label' => 'Naik/Turun Icon Mic (Elevator)', 'min' => -100, 'max' => 100, 'default' => 0],
     ];
 
     public array $boxStyle = [];

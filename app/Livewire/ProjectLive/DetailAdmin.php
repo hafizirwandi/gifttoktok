@@ -76,6 +76,7 @@ class DetailAdmin extends Component
         'mic_offset_y' => ['label' => 'Naik/Turun Icon Mic (Elevator)', 'min' => -100, 'max' => 100, 'default' => 0],
         'coin_offset_y' => ['label' => 'Naik/Turun Badge Coin (Elevator)', 'min' => -100, 'max' => 100, 'default' => 0],
         'name_offset_y' => ['label' => 'Naik/Turun Badge Nama (Elevator)', 'min' => -100, 'max' => 100, 'default' => 0],
+        'gift_badge_offset_y' => ['label' => 'Naik/Turun Icon Gift Pemetaan (Elevator)', 'min' => -100, 'max' => 100, 'default' => 0],
     ];
 
     public array $boxStyle = [];

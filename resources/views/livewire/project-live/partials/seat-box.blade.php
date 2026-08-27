@@ -110,8 +110,8 @@
                 x-transition:leave="transition ease-in duration-700"
                 x-transition:leave-start="opacity-100 scale-100"
                 x-transition:leave-end="opacity-0 scale-75"
-                class="absolute top-2 right-2 object-contain drop-shadow-lg"
-                style="width: {{ $giftBadgePx }}px; height: {{ $giftBadgePx }}px;">
+                class="absolute right-2 object-contain drop-shadow-lg"
+                style="width: {{ $giftBadgePx }}px; height: {{ $giftBadgePx }}px; top: calc(0.5rem + {{ $projectLive->gift_badge_offset_y }}px);">
         @endif
     </div>
 @else

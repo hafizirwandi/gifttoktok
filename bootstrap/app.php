@@ -34,13 +34,35 @@ return Application::configure(basePath: dirname(__DIR__))
             // Laravel cek APP_ENV di level OS (getenv, SEBELUM .env dibaca sama sekali)
             // - kalau ada, dia load `.env.{APP_ENV}` MENGGANTIKAN `.env` sepenuhnya (lihat
             // Illuminate\Foundation\Bootstrap\LoadEnvironmentVariables::checkForSpecificEnvironmentFile()).
-            // Kalau file .env.production itu ada tapi basi/tidak lengkap (mis. APP_KEY atau
-            // DB_CONNECTION ketinggalan), .env biasa yang sudah benar TIDAK PERNAH kepakai
-            // sama sekali - dan config:clear/optimize:clear TIDAK akan membantu krn ini bukan
-            // soal cache, tapi file .env yang salah yang dibaca fresh tiap request. Dicatat
-            // di sini setelah kasus MissingAppKeyException yang persis pola ini.
+            // Sudah TERBUKTI BUKAN penyebabnya (app_env_from_os_getenv selalu null di kasus
+            // nyata) - dibiarkan di log ini cuma buat definitif menutup kemungkinan itu tiap
+            // kali, bukan tebakan lagi.
             $osAppEnv = \Illuminate\Support\Env::get('APP_ENV');
             $envSpecificPath = $osAppEnv ? base_path('.env.'.$osAppEnv) : null;
+
+            // db_connection_env_raw sempat balik NULL walau .env ADA dan APP_KEY/DB_CONNECTION
+            // diyakini sudah ditulis di dalamnya - satu-satunya penjelasan yang konsisten:
+            // Dotenv::safeLoad() gagal parse SELURUH file (bukan cuma baris yang salah) dan
+            // diam-diam skip semuanya, biasanya karena file disimpan bukan UTF-8 murni (mis.
+            // Notepad Windows nulis BOM UTF-8/UTF-16 di awal file) atau ada syntax error (kutip
+            // tidak ditutup, dst). Baris di bawah ini coba parse ULANG file-nya secara eksplisit
+            // (bukan lewat safeLoad yang diam-diam nelan errornya) supaya pesan error PARSE-nya
+            // sendiri (posisi baris, dsb) ketangkap di log - bukti langsung, bukan dugaan lagi.
+            $envParseError = null;
+            $envHasBom = null;
+
+            if (file_exists($envPath)) {
+                $rawEnv = file_get_contents($envPath);
+                $envHasBom = str_starts_with($rawEnv, "\xEF\xBB\xBF") ? 'UTF-8 BOM'
+                    : (str_starts_with($rawEnv, "\xFF\xFE") ? 'UTF-16 LE BOM'
+                    : (str_starts_with($rawEnv, "\xFE\xFF") ? 'UTF-16 BE BOM' : false));
+
+                try {
+                    (new \Dotenv\Parser\Parser)->parse($rawEnv);
+                } catch (\Dotenv\Exception\InvalidFileException $parseException) {
+                    $envParseError = $parseException->getMessage();
+                }
+            }
 
             Log::channel('diagnostics')->error('Uncaught exception', [
                 'exception' => get_class($e),
@@ -54,6 +76,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 'env_production_style_file_exists' => $envSpecificPath ? file_exists($envSpecificPath) : null,
                 'db_connection_resolved' => config('database.default'),
                 'db_connection_env_raw' => env('DB_CONNECTION'),
+                'env_file_parse_error' => $envParseError,
+                'env_file_encoding_issue' => $envHasBom,
                 'config_cache_exists' => file_exists($configCachePath),
                 'config_cache_mtime' => file_exists($configCachePath)
                     ? date('Y-m-d H:i:s', filemtime($configCachePath))

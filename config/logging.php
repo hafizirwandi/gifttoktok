@@ -65,6 +65,32 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // Trace tiap aksi di halaman Live (mount, poll, klik kursi, hotkey, reset) —
+        // terpisah dari laravel.log yang isinya campur semua modul, supaya waktu Live
+        // error bisa langsung dilihat urutan aksi persis sebelum errornya tanpa perlu
+        // grep di antara ribuan baris log modul lain. Lihat App\Livewire\ProjectLive\
+        // LiveShow::logLive().
+        'live' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/live.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
+        // Snapshot diagnostik tiap ada exception TIDAK TERTANGKAP (500) di SELURUH
+        // aplikasi (bukan cuma Live) — dicatat lewat bootstrap/app.php withExceptions().
+        // Isinya bukan cuma pesan errornya, tapi juga config yang BENAR-BENAR aktif
+        // saat itu (koneksi DB, ada-tidaknya bootstrap/cache/config.php, kapan .env
+        // terakhir diubah) - dibuat khusus utk kasus spt "500 SQLite padahal pakai
+        // MySQL" yang penyebabnya config CACHE basi, bukan kelihatan dari pesan
+        // exception-nya sendiri.
+        'diagnostics' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/diagnostics.log'),
+            'level' => 'error',
+            'replace_placeholders' => true,
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),

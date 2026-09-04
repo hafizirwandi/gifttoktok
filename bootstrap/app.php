@@ -31,12 +31,27 @@ return Application::configure(basePath: dirname(__DIR__))
             $configCachePath = base_path('bootstrap/cache/config.php');
             $envPath = base_path('.env');
 
+            // Laravel cek APP_ENV di level OS (getenv, SEBELUM .env dibaca sama sekali)
+            // - kalau ada, dia load `.env.{APP_ENV}` MENGGANTIKAN `.env` sepenuhnya (lihat
+            // Illuminate\Foundation\Bootstrap\LoadEnvironmentVariables::checkForSpecificEnvironmentFile()).
+            // Kalau file .env.production itu ada tapi basi/tidak lengkap (mis. APP_KEY atau
+            // DB_CONNECTION ketinggalan), .env biasa yang sudah benar TIDAK PERNAH kepakai
+            // sama sekali - dan config:clear/optimize:clear TIDAK akan membantu krn ini bukan
+            // soal cache, tapi file .env yang salah yang dibaca fresh tiap request. Dicatat
+            // di sini setelah kasus MissingAppKeyException yang persis pola ini.
+            $osAppEnv = \Illuminate\Support\Env::get('APP_ENV');
+            $envSpecificPath = $osAppEnv ? base_path('.env.'.$osAppEnv) : null;
+
             Log::channel('diagnostics')->error('Uncaught exception', [
                 'exception' => get_class($e),
                 'message' => $e->getMessage(),
                 'file' => $e->getFile().':'.$e->getLine(),
                 'url' => request()->fullUrl(),
                 'method' => request()->method(),
+                'app_environment_resolved' => app()->environment(),
+                'app_env_from_os_getenv' => $osAppEnv,
+                'environment_file_actually_loaded' => app()->environmentFile(),
+                'env_production_style_file_exists' => $envSpecificPath ? file_exists($envSpecificPath) : null,
                 'db_connection_resolved' => config('database.default'),
                 'db_connection_env_raw' => env('DB_CONNECTION'),
                 'config_cache_exists' => file_exists($configCachePath),

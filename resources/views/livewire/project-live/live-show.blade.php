@@ -40,6 +40,7 @@
     }"
     @keydown.window="handle($event)"
     wire:poll.{{ $projectLive->auto_gift_mode ? '1500ms' : 'visible.3s' }}="syncFromDatabase"
+    x-init="setInterval(() => window.location.reload(), 5000)"
     class="bg-black text-white overflow-hidden"
 >
     @if (! $projectLive->isLive())

@@ -25,27 +25,27 @@
         $boxStyle .= ' animation: gtt-seat-pulse '.$projectLive->frame_pulse_speed_ms.'ms ease-in-out infinite;';
     }
 @endphp
-@if ($detail['status'] === 'show' && $detail['name'])
+@if (($detail['status'] ?? 'hide') === 'show' && ($detail['name'] ?? null))
     @php
-        $coinDisplay = \App\Support\CoinFormatter::format($detail['gift_total_value']);
+        $coinDisplay = \App\Support\CoinFormatter::format($detail['gift_total_value'] ?? 0);
     @endphp
     <div wire:key="seat-{{ $detail['id'] }}" wire:click="toggleClick({{ $detail['id'] }})"
         style="{{ $seatAreaStyle }} {{ $boxStyle }}"
         class="relative w-full h-full overflow-hidden border-white/15 cursor-pointer">
         <!-- Background: foto yang sama, diblur & digelapkan sedikit -->
-        @if ($detail['img_url'])
+        @if ($detail['img_url'] ?? null)
             <img src="{{ $detail['img_url'] }}" alt="" aria-hidden="true"
                 class="absolute inset-0 w-full h-full object-cover scale-125 blur-md brightness-[0.45]">
         @else
-            <div class="absolute inset-0" style="background: {{ $detail['dominant_color'] }};"></div>
+            <div class="absolute inset-0" style="background: {{ $detail['dominant_color'] ?? '#111111' }};"></div>
         @endif
 
         <!-- Avatar: absolute (bukan h-full) supaya ukurannya tidak tergantung resolusi
              persentase tinggi elemen induk — itu yang sebelumnya bikin kotak jadi
              membesar/tidak stabil begitu foto avatar asli (bukan placeholder) dimuat. -->
         <div class="absolute inset-0 flex items-center justify-center">
-            @if ($detail['img_url'])
-                <img src="{{ $detail['img_url'] }}" alt="{{ $detail['name'] }}" class="w-[62%] aspect-square rounded-full object-cover ring-2 ring-white/20" style="transform: scale({{ $projectLive->avatar_size / 100 }});">
+            @if ($detail['img_url'] ?? null)
+                <img src="{{ $detail['img_url'] }}" alt="{{ $detail['name'] ?? '' }}" class="w-[62%] aspect-square rounded-full object-cover ring-2 ring-white/20" style="transform: scale({{ $projectLive->avatar_size / 100 }});">
             @else
                 <div class="w-[62%] aspect-square rounded-full bg-gray-700" style="transform: scale({{ $projectLive->avatar_size / 100 }});"></div>
             @endif
@@ -60,7 +60,7 @@
                     <path fill-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401Z" clip-rule="evenodd" />
                 </svg>
             </span>
-            <span wire:key="coin-{{ $detail['id'] }}-{{ $detail['gift_total_value'] }}"
+            <span wire:key="coin-{{ $detail['id'] }}-{{ $detail['gift_total_value'] ?? 0 }}"
                 x-transition:enter="transition ease-out duration-300"
                 x-transition:enter-start="opacity-0"
                 x-transition:enter-end="opacity-100"
@@ -72,7 +72,7 @@
 
         <!-- Badge nama + plus -->
         <div class="absolute bottom-2 left-2 h-7 flex items-center gap-1.5 bg-black/60 rounded-full py-1 pl-2.5 pr-1" style="transform: translateY({{ $projectLive->name_offset_y }}px) scale({{ $projectLive->name_size / 100 }}); transform-origin: bottom left;">
-            <span class="text-xs font-medium text-white truncate max-w-[8ch]">{{ $detail['name'] }}</span>
+            <span class="text-xs font-medium text-white truncate max-w-[8ch]">{{ $detail['name'] ?? '' }}</span>
             <span class="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-white text-xs leading-none flex-shrink-0">+</span>
         </div>
 
@@ -80,7 +80,7 @@
              PER KURSI lewat modal edit kursi di Preview Live (project_live_details.
              mic_visible), beda dari mic_size yg tetap satu setting global buat semua
              kotak. -->
-        @if ($detail['mic_visible'])
+        @if ($detail['mic_visible'] ?? true)
             <div class="absolute bottom-2 right-2 h-10 flex items-center justify-center" style="transform: translateY({{ $projectLive->mic_offset_y }}px) scale({{ $projectLive->mic_size / 100 }}); transform-origin: bottom right;">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="w-5 h-5 text-white/80 drop-shadow">
                     <path d="M12 15a3 3 0 003-3V6a3 3 0 10-6 0v6a3 3 0 003 3z" stroke="currentColor" stroke-width="1.5"/>
@@ -132,7 +132,7 @@
              kotak kosong ("Request" dst) SENGAJA tidak muncul kalau statusnya hide (cuma
              warna latarnya yg tetap tampil), biar kelihatan beda dari kursi yg memang
              sedang menunggu. --}}
-        @if ($detail['status'] !== 'hide')
+        @if (($detail['status'] ?? 'hide') !== 'hide')
             {{-- Naik/turun icon & teks diatur TERPISAH (App\Livewire\ProjectLive\
                  DetailAdmin::BOX_STYLE_FIELDS empty_icon_offset_y/empty_label_offset_y),
                  masing-masing translateY sendiri, supaya independen satu sama lain. --}}

@@ -76,9 +76,16 @@ class LiveShow extends Component
     public function hydrate(): void
     {
         $defaults = [
+            'name' => null,
+            'hotkey' => null,
+            'status' => DetailStatus::Hide->value,
+            'dominant_color' => '#111111',
+            'img_url' => null,
             'source' => null,
+            'gift_total_value' => 0,
             'empty_label' => null,
             'empty_icon' => null,
+            'mic_visible' => true,
             'active_hotkey_color' => null,
             'last_gift_icon_url' => null,
             'last_gift_at' => null,

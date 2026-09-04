@@ -6,7 +6,6 @@ use App\Enums\DetailStatus;
 use App\Models\ProjectLive;
 use App\Models\ProjectLiveDetail;
 use App\Services\GiftLeaderboardService;
-use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -63,20 +62,6 @@ class LiveShow extends Component
             ->all();
 
         $this->syncColorHotkeys();
-
-        $this->logLive('mount', ['seat_count' => count($this->details)]);
-    }
-
-    /**
-     * Baris log terpisah per aksi Live (mount/poll/klik/hotkey/reset) ke channel
-     * 'live' (storage/logs/live.log) - dibuat supaya kalau Live error lagi, urutan
-     * aksi persis sebelum errornya kelihatan tanpa perlu grep di antara log modul
-     * lain. project_live_id SELALU disertakan biar bisa filter per-project kalau
-     * ada beberapa project live bersamaan.
-     */
-    private function logLive(string $action, array $context = []): void
-    {
-        Log::channel('live')->debug($action, ['project_live_id' => $this->projectLive->id, ...$context]);
     }
 
     /**
@@ -107,21 +92,7 @@ class LiveShow extends Component
             'show_gift_badge' => false,
         ];
 
-        $missingByDetail = [];
-
-        $this->details = array_map(function (array $detail) use ($defaults, &$missingByDetail) {
-            $missingKeys = array_keys(array_diff_key($defaults, $detail));
-
-            if ($missingKeys !== []) {
-                $missingByDetail[$detail['id'] ?? '?'] = $missingKeys;
-            }
-
-            return $detail + $defaults;
-        }, $this->details);
-
-        if ($missingByDetail !== []) {
-            $this->logLive('hydrate.stale_snapshot_backfilled', ['missing_keys_by_detail_id' => $missingByDetail]);
-        }
+        $this->details = array_map(fn (array $detail) => $detail + $defaults, $this->details);
     }
 
     /**
@@ -136,16 +107,12 @@ class LiveShow extends Component
         $entry = $this->projectLive->colorHotkeys()->where('hotkey', strtolower($hotkey))->first();
 
         if (! $entry) {
-            $this->logLive('activateColorHotkey.not_found', ['hotkey' => $hotkey]);
-
             return;
         }
 
         if ($entry->project_live_detail_id === null) {
             $this->projectLive->update(['active_hotkey_color' => $entry->color]);
             $this->projectLive->refresh();
-
-            $this->logLive('activateColorHotkey.global', ['hotkey' => $hotkey, 'color' => $entry->color]);
 
             return;
         }
@@ -160,12 +127,6 @@ class LiveShow extends Component
                 break;
             }
         }
-
-        $this->logLive('activateColorHotkey.per_seat', [
-            'hotkey' => $hotkey,
-            'color' => $entry->color,
-            'detail_id' => $entry->project_live_detail_id,
-        ]);
     }
 
     /**
@@ -183,8 +144,6 @@ class LiveShow extends Component
         foreach ($this->details as $i => $detail) {
             $this->details[$i]['active_hotkey_color'] = null;
         }
-
-        $this->logLive('resetColorHotkey');
     }
 
     private function syncColorHotkeys(): void
@@ -210,8 +169,6 @@ class LiveShow extends Component
             ->get()
             ->map(fn (ProjectLiveDetail $detail) => $this->toArray($detail))
             ->all();
-
-        $this->logLive('triggerResetLeaderboard');
     }
 
     /**
@@ -226,18 +183,16 @@ class LiveShow extends Component
             ->get()
             ->map(fn (ProjectLiveDetail $detail) => $this->toArray($detail))
             ->all();
-
-        $this->logLive('triggerResetCoins');
     }
 
     public function toggleByHotkey(int $detailId): void
     {
-        $this->reveal($detailId, 'hotkey');
+        $this->reveal($detailId);
     }
 
     public function toggleClick(int $detailId): void
     {
-        $this->reveal($detailId, 'click');
+        $this->reveal($detailId);
     }
 
     /**
@@ -245,23 +200,15 @@ class LiveShow extends Component
      * jika admin sudah meng-approve (status di DB = show). Kalau di DB masih hide,
      * trigger ini tidak berpengaruh sama sekali.
      */
-    private function reveal(int $detailId, string $source): void
+    private function reveal(int $detailId): void
     {
         if (! $this->projectLive->isLive()) {
-            $this->logLive('reveal.skipped_not_live', ['detail_id' => $detailId, 'source' => $source]);
-
             return;
         }
 
         $dbDetail = $this->projectLive->details()->find($detailId);
 
         if (! $dbDetail || $dbDetail->status === DetailStatus::Hide) {
-            $this->logLive('reveal.skipped_hidden_or_missing', [
-                'detail_id' => $detailId,
-                'source' => $source,
-                'found_in_db' => $dbDetail !== null,
-            ]);
-
             return;
         }
 
@@ -271,8 +218,6 @@ class LiveShow extends Component
                 break;
             }
         }
-
-        $this->logLive('reveal.shown', ['detail_id' => $detailId, 'source' => $source]);
     }
 
     /**
@@ -292,11 +237,6 @@ class LiveShow extends Component
             ->get()
             ->map(fn (ProjectLiveDetail $detail) => $this->toArray($detail))
             ->all();
-
-        $this->logLive('syncFromDatabase', [
-            'seat_count' => count($this->details),
-            'db_connection' => $this->projectLive->getConnectionName() ?? config('database.default'),
-        ]);
     }
 
     /**

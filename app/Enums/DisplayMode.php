@@ -29,6 +29,7 @@ enum DisplayMode: string
     case SorotanTujuh = 'spotlight_7';
     case SorotanTujuhRect = 'spotlight_7_rect';
     case SorotanDelapan = 'spotlight_8';
+    case SorotanSembilan = 'spotlight_9';
     case MejaBundarSatu = 'round_table_1';
     case MejaBundarDua = 'round_table_2';
 
@@ -60,6 +61,7 @@ enum DisplayMode: string
             self::SorotanTujuh => 'Sorotan VII',
             self::SorotanTujuhRect => 'Sorotan VII (Persegi Panjang)',
             self::SorotanDelapan => 'Sorotan VIII',
+            self::SorotanSembilan => 'Sorotan IX',
             self::MejaBundarSatu => 'Meja Bundar I',
             self::MejaBundarDua => 'Meja Bundar II',
         };
@@ -93,6 +95,7 @@ enum DisplayMode: string
             self::SorotanTujuh => '5 kursi: 1 kursi besar di kiri (3x lebar, 4x tinggi kotak) + 4 kursi persegi bertumpuk (1x4) di kanan',
             self::SorotanTujuhRect => '5 kursi: sama spt Sorotan VII, tapi kursi kecilnya persegi panjang (kontainer lebih tinggi, bukan rasio kotak)',
             self::SorotanDelapan => '7 kursi: 1 kursi besar di kiri (4x lebar, 6x tinggi kotak) + 6 kursi persegi bertumpuk (1x6) di kanan',
+            self::SorotanSembilan => '9 kursi, grid unit 4x4 seragam (kontainer persegi): 1 kursi besar di kiri (2x lebar, 4x tinggi kotak) + grid 2 kolom x 4 baris (8 kursi persegi) di kanan',
             self::MejaBundarSatu => '8 kursi, grid unit 4x4: 4 kursi persegi kiri + 4 kursi persegi kanan, celah kosong 2x4 di tengah',
             self::MejaBundarDua => '9 kursi, grid unit 4x4: sama spt Meja Bundar I, tapi celah tengahnya diisi 1 kursi persegi panjang (2x lebar, 4x tinggi kotak)',
         };
@@ -132,6 +135,7 @@ enum DisplayMode: string
             self::SorotanTujuh => 'images/layout-spotlight-7.svg',
             self::SorotanTujuhRect => 'images/layout-spotlight-7-rect.svg',
             self::SorotanDelapan => 'images/layout-spotlight-8.svg',
+            self::SorotanSembilan => 'images/layout-spotlight-9.svg',
             self::MejaBundarSatu => 'images/layout-round-table-1.svg',
             self::MejaBundarDua => 'images/layout-round-table-2.svg',
         };
@@ -160,7 +164,7 @@ enum DisplayMode: string
             self::Grid2x3 => 2,
             self::Grid3x2, self::Grid3x2Rect => 3,
             self::KisiDinamis => 2,
-            self::Bersebelahan, self::BersebelahanDua, self::SorotanDua, self::SorotanTiga, self::MejaBundarSatu, self::MejaBundarDua => 4,
+            self::Bersebelahan, self::BersebelahanDua, self::SorotanDua, self::SorotanTiga, self::SorotanSembilan, self::MejaBundarSatu, self::MejaBundarDua => 4,
             self::Sorotan => 3,
             self::SorotanEnam => 3,
             self::SorotanEmpat, self::SorotanDelapan => 5,
@@ -180,7 +184,7 @@ enum DisplayMode: string
             self::Grid3x2, self::Grid3x2Rect => 2,
             self::KisiDinamis => 2,
             self::SorotanEnam => 3,
-            self::Bersebelahan, self::BersebelahanDua, self::Sorotan, self::SorotanDua, self::SorotanTiga, self::MejaBundarSatu, self::MejaBundarDua, self::SorotanTujuh, self::SorotanTujuhRect => 4,
+            self::Bersebelahan, self::BersebelahanDua, self::Sorotan, self::SorotanDua, self::SorotanTiga, self::SorotanSembilan, self::MejaBundarSatu, self::MejaBundarDua, self::SorotanTujuh, self::SorotanTujuhRect => 4,
             self::SorotanEmpat => 8,
             self::SorotanDelapan => 6,
         };
@@ -205,6 +209,7 @@ enum DisplayMode: string
             self::SorotanEnam => 4,
             self::SorotanTujuh, self::SorotanTujuhRect => 5,
             self::SorotanDelapan => 7,
+            self::SorotanSembilan => 9,
             self::MejaBundarSatu => 8,
             self::MejaBundarDua => 9,
             default => $this->cols() * $this->rows(),
@@ -246,7 +251,7 @@ enum DisplayMode: string
             self::FullPortrait, self::Grid2x1Rect => 9,
             self::FullSquare => 1,
             self::FullLandscape => 16,
-            self::Grid2x2, self::Grid3x3, self::Bersebelahan, self::BersebelahanDua, self::SorotanDua, self::SorotanTiga, self::SorotanEnam, self::SorotanTujuh, self::MejaBundarSatu, self::MejaBundarDua => 1,
+            self::Grid2x2, self::Grid3x3, self::Bersebelahan, self::BersebelahanDua, self::SorotanDua, self::SorotanTiga, self::SorotanEnam, self::SorotanTujuh, self::SorotanSembilan, self::MejaBundarSatu, self::MejaBundarDua => 1,
             self::Grid2x3 => 2,
             self::Grid3x2, self::Sorotan => 3,
             self::KisiDinamis => 9,
@@ -265,7 +270,7 @@ enum DisplayMode: string
             self::FullPortrait, self::Grid2x1Rect => 16,
             self::FullSquare => 1,
             self::FullLandscape => 9,
-            self::Grid2x2, self::Grid3x3, self::Bersebelahan, self::BersebelahanDua, self::SorotanDua, self::SorotanTiga, self::SorotanEnam, self::SorotanTujuh, self::MejaBundarSatu, self::MejaBundarDua => 1,
+            self::Grid2x2, self::Grid3x3, self::Bersebelahan, self::BersebelahanDua, self::SorotanDua, self::SorotanTiga, self::SorotanEnam, self::SorotanTujuh, self::SorotanSembilan, self::MejaBundarSatu, self::MejaBundarDua => 1,
             self::Grid2x3 => 3,
             self::Grid3x2 => 2,
             self::Sorotan => 4,
@@ -362,6 +367,11 @@ enum DisplayMode: string
             self::SorotanEnam => '"s1 s1 s2" "s1 s1 s3" "s1 s1 s4"',
             self::SorotanTujuh, self::SorotanTujuhRect => '"s1 s1 s1 s2" "s1 s1 s1 s3" "s1 s1 s1 s4" "s1 s1 s1 s5"',
             self::SorotanDelapan => '"s1 s1 s1 s1 s2" "s1 s1 s1 s1 s3" "s1 s1 s1 s1 s4" "s1 s1 s1 s1 s5" "s1 s1 s1 s1 s6" "s1 s1 s1 s1 s7"',
+            // Sorotan IX: grid unit 4x4 SERAGAM (kontainer persegi, lihat ratioW/ratioH) -
+            // kursi besar (s1) span kolom 1-2 x semua baris (2x lebar, 4x tinggi unit),
+            // 8 kursi kecil (s2-s9) di kolom 3-4 bentuk grid 2 kolom x 4 baris PERSEGI ASLI
+            // (beda dari SorotanEmpat/Delapan yg kursi kecilnya numpuk 1 kolom saja).
+            self::SorotanSembilan => '"s1 s1 s2 s3" "s1 s1 s4 s5" "s1 s1 s6 s7" "s1 s1 s8 s9"',
             self::MejaBundarSatu => '"s1 . . s5" "s2 . . s6" "s3 . . s7" "s4 . . s8"',
             self::MejaBundarDua => '"s1 s5 s5 s6" "s2 s5 s5 s7" "s3 s5 s5 s8" "s4 s5 s5 s9"',
             default => null,

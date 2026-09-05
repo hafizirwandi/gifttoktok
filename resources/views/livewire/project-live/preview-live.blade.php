@@ -87,7 +87,16 @@
                     @else
                         <div wire:click="openEdit({{ $detail['id'] }})" role="button" tabindex="0"
                             style="{{ $seatStyle }}"
-                            class="relative w-full h-full rounded-xl overflow-hidden border border-gray-700 bg-gray-900 flex flex-col items-center justify-center gap-1 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer">
+                            class="relative w-full h-full rounded-xl overflow-hidden bg-gray-900 flex flex-col items-center justify-center gap-1 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer {{ $detail['is_pinned'] ? 'border-2 border-amber-500' : 'border border-gray-700' }}">
+                            {{-- Pin (App\Services\GiftLeaderboardService) - datanya dikunci, tidak ikut
+                                 ter-reset/ditimpa auto-gift selama pin aktif. Border kotak & badge ini
+                                 SENGAJA lebih mencolok (amber) drpd indikator lain, biar status "aktif
+                                 dikunci" langsung kelihatan sekilas tanpa perlu buka modal. --}}
+                            @if ($detail['is_pinned'])
+                                <span class="absolute bottom-1.5 left-1.5 z-10 flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-500 text-black shadow" title="Di-pin - tidak ikut reset/auto-gift">
+                                    📌 PIN
+                                </span>
+                            @endif
                             <span class="absolute top-1.5 left-1.5 flex items-center gap-1">
                                 <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/60 text-white">
                                     #{{ $detail['position'] }}
@@ -96,11 +105,6 @@
                                     $previewColor = $detail['status'] === 'show' ? $detail['dominant_color'] : ($detail['active_hotkey_color'] ?: '#000000');
                                 @endphp
                                 <span class="w-3 h-3 rounded-full border border-white/60 shadow" style="background: {{ $previewColor }};" title="{{ $previewColor }}"></span>
-                                {{-- Pin (App\Services\GiftLeaderboardService) - datanya dikunci, tidak
-                                     ikut ter-reset/ditimpa auto-gift selama pin aktif. --}}
-                                @if ($detail['is_pinned'])
-                                    <span class="text-[10px] px-1 py-0.5 rounded bg-amber-500 text-black" title="Di-pin - tidak ikut reset/auto-gift">📌</span>
-                                @endif
                             </span>
 
                             <!-- Toggle status: klik langsung ubah tanpa buka modal -->
@@ -114,18 +118,18 @@
                             </button>
 
                             @if ($detail['img_url'])
-                                <img src="{{ $detail['img_url'] }}" class="w-20 h-20 rounded-full object-cover" alt="{{ $detail['name'] }}">
+                                <img src="{{ $detail['img_url'] }}" class="w-12 h-12 rounded-full object-cover" alt="{{ $detail['name'] }}">
                             @else
-                                <div class="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center text-gray-400 text-2xl">
+                                <div class="w-12 h-12 rounded-full bg-gray-700 flex items-center justify-center text-gray-400 text-lg">
                                     +
                                 </div>
                             @endif
 
-                            <span class="text-xs font-medium text-gray-300 truncate max-w-[90%]">
+                            <span class="text-[10px] font-medium text-gray-300 truncate max-w-[90%]">
                                 {{ $detail['name'] ?: 'Belum diisi' }}
                             </span>
 
-                            <span class="text-[10px] text-gray-500">
+                            <span class="text-[9px] text-gray-500">
                                 {{ number_format($detail['gift_total_value']) }} coin
                             </span>
 

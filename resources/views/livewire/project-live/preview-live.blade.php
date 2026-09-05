@@ -27,7 +27,7 @@
     @php
         $mode = $projectLive->display_mode;
     @endphp
-    <div class="w-screen overflow-hidden flex items-start justify-center px-3 pt-14" style="height: 97vh;">
+    <div class="w-screen overflow-hidden flex items-start justify-center px-3 pt-20" style="height: 97vh;">
         {{-- Kotak mobile-first max 480px ini SATU-SATUNYA acuan ukuran/posisi baik utk
              grid kursi MAUPUN BG layar penuh - SAMA PERSIS dgn live-show.blade.php,
              lihat komentar di sana. --}}

@@ -4,7 +4,6 @@ namespace App\Livewire\ProjectLive;
 
 use App\Enums\DetailStatus;
 use App\Models\ProjectLive;
-use App\Models\ProjectLiveBackground;
 use App\Models\ProjectLiveDetail;
 use App\Services\GiftLeaderboardService;
 use Livewire\Attributes\Layout;
@@ -25,7 +24,10 @@ class LiveShow extends Component
      * hotkey/klik. Status "hide" dari admin sebaliknya langsung tersinkron otomatis
      * (lihat syncFromDatabase()).
      *
-     * @var array<int, array{id:int, position:int, name:?string, hotkey:?string, status:string, dominant_color:string, img_url:?string, empty_label:?string, empty_icon_url:?string, active_hotkey_color:?string, last_gift_icon_url:?string, last_gift_at:?int, show_gift_badge:bool}>
+     * Bentuk tiap elemen array ini lihat App\Models\ProjectLiveDetail::toLiveArray()
+     * (dipakai bareng oleh App\Livewire\ProjectLive\PreviewLive juga).
+     *
+     * @var array<int, array<string, mixed>>
      */
     public array $details = [];
 
@@ -69,7 +71,7 @@ class LiveShow extends Component
             ->with('background')
             ->orderBy('position')
             ->get()
-            ->map(fn (ProjectLiveDetail $detail) => $this->toArray($detail))
+            ->map(fn (ProjectLiveDetail $detail) => $detail->toLiveArray())
             ->all();
 
         $this->syncColorHotkeys();
@@ -80,26 +82,14 @@ class LiveShow extends Component
     {
         $bg = $this->projectLive->activeScreenBackground();
 
-        $this->screenBackground = $bg ? $this->backgroundToArray($bg) : null;
-    }
-
-    private function backgroundToArray(ProjectLiveBackground $bg): array
-    {
-        return [
-            'type' => $bg->type->value,
-            'url' => $bg->fileUrl(),
-            'fit_mode' => $bg->fit_mode->value,
-            'offset_x' => $bg->offset_x,
-            'offset_y' => $bg->offset_y,
-            'scale' => $bg->scale,
-        ];
+        $this->screenBackground = $bg ? $bg->toLiveArray() : null;
     }
 
     /**
      * Dipanggil Livewire setiap kali komponen di-restore dari snapshot browser (setiap
      * request SELAIN load pertama/mount). Tab Live yang sudah lama terbuka bisa bawa
      * snapshot $details versi lama yang bentuk arraynya belum punya key yang baru
-     * ditambahkan ke toArray() (mis. active_hotkey_color) — tanpa ini, seat-box.blade.php
+     * ditambahkan ke ProjectLiveDetail::toLiveArray() (mis. active_hotkey_color) — tanpa ini, seat-box.blade.php
      * bakal lempar "Undefined array key" begitu ada request (polling/klik) dan bikin
      * halaman Live error 500 sampai operator refresh manual. Backfill key yang hilang
      * dengan default supaya tab lama tetap jalan normal sampai halaman di-reload.
@@ -116,6 +106,8 @@ class LiveShow extends Component
             'gift_total_value' => 0,
             'empty_label' => null,
             'empty_icon_url' => null,
+            'font' => null,
+            'border_color' => null,
             'mic_visible' => true,
             'background' => null,
             'active_hotkey_color' => null,
@@ -200,7 +192,7 @@ class LiveShow extends Component
             ->with('background')
             ->orderBy('position')
             ->get()
-            ->map(fn (ProjectLiveDetail $detail) => $this->toArray($detail))
+            ->map(fn (ProjectLiveDetail $detail) => $detail->toLiveArray())
             ->all();
     }
 
@@ -215,7 +207,7 @@ class LiveShow extends Component
             ->with('background')
             ->orderBy('position')
             ->get()
-            ->map(fn (ProjectLiveDetail $detail) => $this->toArray($detail))
+            ->map(fn (ProjectLiveDetail $detail) => $detail->toLiveArray())
             ->all();
     }
 
@@ -248,7 +240,7 @@ class LiveShow extends Component
 
         foreach ($this->details as $i => $detail) {
             if ($detail['id'] === $detailId) {
-                $this->details[$i] = $this->toArray($dbDetail);
+                $this->details[$i] = $dbDetail->toLiveArray();
                 break;
             }
         }
@@ -271,38 +263,8 @@ class LiveShow extends Component
             ->with('background')
             ->orderBy('position')
             ->get()
-            ->map(fn (ProjectLiveDetail $detail) => $this->toArray($detail))
+            ->map(fn (ProjectLiveDetail $detail) => $detail->toLiveArray())
             ->all();
-    }
-
-    /**
-     * Berapa lama badge ikon gift terakhir tetap tampil di pojok kotak sebelum fade-out
-     * otomatis (lihat GiftBadgeVisibility di partials/seat-box.blade.php).
-     */
-    private const GIFT_BADGE_SECONDS = 8;
-
-    private function toArray(ProjectLiveDetail $detail): array
-    {
-        return [
-            'id' => $detail->id,
-            'position' => $detail->position,
-            'name' => $detail->name,
-            'hotkey' => $detail->hotkey,
-            'status' => $detail->status->value,
-            'dominant_color' => $detail->dominant_color,
-            'img_url' => $detail->imgUrl(),
-            'source' => $detail->source->value,
-            'gift_total_value' => $detail->gift_total_value,
-            'empty_label' => $detail->empty_label,
-            'empty_icon_url' => $detail->emptyIconUrl(),
-            'mic_visible' => $detail->mic_visible,
-            'background' => $detail->background ? $this->backgroundToArray($detail->background) : null,
-            'active_hotkey_color' => $detail->active_hotkey_color,
-            'last_gift_icon_url' => $detail->last_gift_icon_url,
-            'last_gift_at' => $detail->last_gift_at?->timestamp,
-            'show_gift_badge' => $detail->last_gift_at !== null
-                && $detail->last_gift_at->gt(now()->subSeconds(self::GIFT_BADGE_SECONDS)),
-        ];
     }
 
     public function render()

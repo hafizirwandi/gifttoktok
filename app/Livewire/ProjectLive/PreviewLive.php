@@ -4,7 +4,9 @@ namespace App\Livewire\ProjectLive;
 
 use App\Enums\DetailSource;
 use App\Enums\DetailStatus;
+use App\Enums\SeatFont;
 use App\Models\ProjectLive;
+use App\Models\ProjectLiveDetail;
 use App\Services\DominantColorExtractor;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -13,7 +15,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
-#[Layout('layouts.app')]
+#[Layout('layouts.preview')]
 #[Title('Preview Live')]
 class PreviewLive extends Component
 {
@@ -47,11 +49,36 @@ class PreviewLive extends Component
 
     public bool $micEnabled = true;
 
+    /**
+     * Font teks kotak kosong (App\Enums\SeatFont) & warna border kustom kursi ini -
+     * lihat App\Models\ProjectLiveDetail::font/border_color. borderColor string kosong
+     * = pakai default bawaan (border-white/15), bukan hitam/putih literal.
+     */
+    public string $font = 'default';
+
+    public string $borderColor = '';
+
+    /**
+     * BG layar penuh yang lagi aktif - sama persis dgn App\Livewire\ProjectLive\
+     * LiveShow::$screenBackground, dipakai biar Preview menampilkan BG juga.
+     *
+     * @var array<string, mixed>|null
+     */
+    public ?array $screenBackground = null;
+
     public function mount(ProjectLive $projectLive): void
     {
         $this->authorize('viewLive', $projectLive);
 
         $this->projectLive = $projectLive;
+        $this->loadScreenBackground();
+    }
+
+    private function loadScreenBackground(): void
+    {
+        $bg = $this->projectLive->activeScreenBackground();
+
+        $this->screenBackground = $bg ? $bg->toLiveArray() : null;
     }
 
     public function hideAll(): void
@@ -81,12 +108,14 @@ class PreviewLive extends Component
         $this->hotkey = (string) $detail->hotkey;
         $this->status = $detail->status->value;
         $this->micEnabled = $detail->mic_visible;
+        $this->font = $detail->font?->value ?? SeatFont::Default->value;
+        $this->borderColor = (string) $detail->border_color;
         $this->img = null;
     }
 
     public function closeEdit(): void
     {
-        $this->reset(['editingDetailId', 'img', 'name', 'coin', 'emptyLabel', 'emptyIcon', 'emptyIconFile', 'hotkey', 'status', 'micEnabled']);
+        $this->reset(['editingDetailId', 'img', 'name', 'coin', 'emptyLabel', 'emptyIcon', 'emptyIconFile', 'hotkey', 'status', 'micEnabled', 'font', 'borderColor']);
     }
 
     /**
@@ -172,6 +201,8 @@ class PreviewLive extends Component
             ],
             'status' => 'required|in:hide,show',
             'micEnabled' => 'boolean',
+            'font' => ['required', Rule::in(array_column(SeatFont::cases(), 'value'))],
+            'borderColor' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             // 2048 (2MB) sebelumnya kelewat kecil buat foto HP modern — upload gagal
             // divalidasi diam-diam (cuma teks error kecil yang gampang kelewat), user
             // ngira foto-nya tidak terupload sama sekali. Dinaikkan ke 8MB.
@@ -185,6 +216,8 @@ class PreviewLive extends Component
             'hotkey' => $validated['hotkey'] !== '' ? $validated['hotkey'] : null,
             'status' => $validated['status'],
             'mic_visible' => $validated['micEnabled'],
+            'font' => $validated['font'] !== SeatFont::Default->value ? $validated['font'] : null,
+            'border_color' => $validated['borderColor'] !== '' ? $validated['borderColor'] : null,
             // Edit manual selalu mengembalikan kursi ke source "manual", supaya tidak
             // langsung ketiban timpa oleh recalculation leaderboard auto-mode berikutnya.
             'source' => DetailSource::Manual->value,
@@ -222,8 +255,19 @@ class PreviewLive extends Component
 
     public function render()
     {
+        // Dibentuk lewat ProjectLiveDetail::toLiveArray() yang SAMA PERSIS dgn
+        // App\Livewire\ProjectLive\LiveShow - lihat komentar method itu kenapa,
+        // ini yang bikin preview-live.blade.php bisa pakai partials/seat-box.blade.php
+        // yang sama dan otomatis menampilkan background/font/warna border PERSIS
+        // spt yang bakal tampil di halaman Live sungguhan.
+        $details = $this->projectLive->details()
+            ->with('background')
+            ->orderBy('position')
+            ->get()
+            ->map(fn (ProjectLiveDetail $detail) => $detail->toLiveArray());
+
         return view('livewire.project-live.preview-live', [
-            'details' => $this->projectLive->details,
+            'details' => $details,
         ]);
     }
 }

@@ -1,112 +1,137 @@
-<div>
-    <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                Preview Live
-            </h2>
-            <a href="{{ route('project-live.admin', $projectLive) }}" wire:navigate
-                class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">&larr; Kembali ke Admin</a>
+<div class="bg-black text-white min-h-screen overflow-hidden">
+    {{-- Bar kontrol tipis mengambang di atas - halaman ini SENGAJA fullscreen tanpa
+         header (layouts.live, sama seperti live-show.blade.php) supaya preview-nya
+         benar-benar mirip tampilan Live asli, bar ini cuma overlay tipis di atasnya. --}}
+    <div class="fixed top-0 inset-x-0 z-20 flex items-center justify-between gap-3 px-4 py-2 bg-black/70 backdrop-blur-sm text-xs">
+        <a href="{{ route('project-live.admin', $projectLive) }}" wire:navigate
+            class="text-indigo-400 hover:underline flex-shrink-0">&larr; Admin</a>
+        <p class="text-gray-400 truncate">
+            @if ($projectLive->auto_gift_mode)
+                Otomatis dari gift TikTok LIVE - edit manual bisa ketiban update berikutnya.
+            @else
+                {{ $details->count() }} kursi - klik kotak utk edit.
+            @endif
+        </p>
+        <div class="flex-shrink-0 flex items-center gap-2">
+            <button wire:click="showAll" wire:confirm="Tampilkan semua kursi?" type="button"
+                class="inline-flex items-center px-2.5 py-1 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700">
+                Show All
+            </button>
+            <button wire:click="hideAll" wire:confirm="Sembunyikan semua kursi?" type="button"
+                class="inline-flex items-center px-2.5 py-1 bg-gray-700 text-white font-semibold rounded-md hover:bg-gray-600">
+                Hide All
+            </button>
         </div>
-    </x-slot>
+    </div>
 
-    <div class="py-8">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
-            <div class="flex items-start justify-between gap-3">
-                <p class="text-sm text-gray-500 dark:text-gray-400">
-                    @if ($projectLive->auto_gift_mode)
-                        Kursi diatur otomatis dari gift TikTok LIVE. Edit manual tetap bisa dipakai, tapi kursi bisa ketiban update otomatis berikutnya.
+    @php
+        $mode = $projectLive->display_mode;
+    @endphp
+    <div class="w-screen overflow-hidden flex items-start justify-center px-3 pt-14" style="height: 97vh;">
+        {{-- Kotak mobile-first max 480px ini SATU-SATUNYA acuan ukuran/posisi baik utk
+             grid kursi MAUPUN BG layar penuh - SAMA PERSIS dgn live-show.blade.php,
+             lihat komentar di sana. --}}
+        <div style="
+            --seat-w: min(100vw, 93vh * {{ $mode->ratioW() }} / {{ $mode->ratioH() }}, 480px);
+            width: var(--seat-w);
+            height: {{ $mode->intrinsicHeight() ? 'auto' : 'calc(var(--seat-w) * '.$mode->ratioH().' / '.$mode->ratioW().')' }};
+            position: relative;
+        ">
+            @if ($screenBackground)
+                @php $screenFit = \App\Enums\BackgroundFit::from($screenBackground['fit_mode'])->cssObjectFit(); @endphp
+                <div style="position: absolute; inset: 0; z-index: 0; overflow: hidden;">
+                    @if ($screenBackground['type'] === 'video')
+                        <video src="{{ $screenBackground['url'] }}" autoplay loop muted playsinline
+                            style="width: 100%; height: 100%; object-fit: {{ $screenFit }}; transform: translate({{ $screenBackground['offset_x'] }}px, {{ $screenBackground['offset_y'] }}px) scale({{ $screenBackground['scale'] / 100 }});"></video>
                     @else
-                        Atur {{ $details->count() }} kursi tamu untuk project ini. Klik salah satu kotak untuk mengubah foto, nama, coin, hotkey, dan status tampil/sembunyi.
+                        <img src="{{ $screenBackground['url'] }}" alt=""
+                            style="width: 100%; height: 100%; object-fit: {{ $screenFit }}; transform: translate({{ $screenBackground['offset_x'] }}px, {{ $screenBackground['offset_y'] }}px) scale({{ $screenBackground['scale'] / 100 }});">
                     @endif
-                </p>
-                <div class="flex-shrink-0 flex items-center gap-2">
-                    <button wire:click="showAll" wire:confirm="Tampilkan semua kursi?" type="button"
-                        class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded-md hover:bg-green-700">
-                        Show All
-                    </button>
-                    <button wire:click="hideAll" wire:confirm="Sembunyikan semua kursi?" type="button"
-                        class="inline-flex items-center px-3 py-1.5 bg-gray-800 dark:bg-gray-700 text-white text-xs font-semibold rounded-md hover:bg-gray-700 dark:hover:bg-gray-600">
-                        Hide All
-                    </button>
                 </div>
-            </div>
+            @endif
 
-            <!-- Kontainer ini SENGAJA meniru persis bentuk halaman Live asli (rasio +
-                 grid columns/rows/areas sama dgn live-show.blade.php) - jadi bentuknya
-                 (potret/lanskap/kotak/mosaik) beneran berubah sesuai tata letak yang
-                 dipilih, bukan cuma grid kotak generik. Lebar dipatok maksimal 480px
-                 ("mobile-first", sama spt live-show.blade.php) - custom property
-                 --seat-w dihitung dari basis 92vh DAN batas 480px. Tinggi NORMALNYA
-                 diturunkan dari --seat-w lewat calc() - KECUALI mode intrinsicHeight()
-                 (Kisi Dinamis): dibiarkan `auto`, sama spt live-show.blade.php. Class
-                 Tailwind SENGAJA cuma yang statis (grid/gap) - ukurannya lewat style
-                 inline, bukan class dinamis (lihat komentar di App\Enums\DisplayMode
-                 kenapa class dinamis di PHP tidak pernah ke-generate Tailwind-nya). -->
-            <div class="flex justify-center">
-                @php
-                    $mode = $projectLive->display_mode;
-                @endphp
-                <div class="grid" style="
-                    --seat-w: min(92vh * {{ $mode->ratioW() }} / {{ $mode->ratioH() }}, 480px);
-                    width: var(--seat-w);
-                    height: {{ $mode->intrinsicHeight() ? 'auto' : 'calc(var(--seat-w) * '.$mode->ratioH().' / '.$mode->ratioW().')' }};
-                    grid-template-columns: {{ $mode->gridTemplateColumns() }};
-                    grid-template-rows: {{ $mode->gridTemplateRows() }};
-                    gap: {{ $projectLive->seat_gap }}px;
-                    @if ($mode->gridTemplateAreas()) grid-template-areas: {{ $mode->gridTemplateAreas() }}; @endif
-                ">
-                    @foreach ($details as $detail)
-                        @php
-                            $seatStyle = ($mode->gridTemplateAreas() ? 'grid-area: s'.$detail->position.';' : '')
-                                .($mode->seatStyleOverrides()[$detail->position] ?? '');
-                        @endphp
-                        <div wire:click="openEdit({{ $detail->id }})" role="button" tabindex="0"
-                            style="{{ $seatStyle }}"
-                            class="relative w-full h-full rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 flex flex-col items-center justify-center gap-1 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer">
-                        <span class="absolute top-1.5 left-1.5 flex items-center gap-1">
-                            <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/60 text-white">
-                                #{{ $detail->position }}
+            <div class="grid" style="
+                width: 100%;
+                height: 100%;
+                grid-template-columns: {{ $mode->gridTemplateColumns() }};
+                grid-template-rows: {{ $mode->gridTemplateRows() }};
+                gap: {{ $projectLive->seat_gap }}px;
+                position: relative;
+                z-index: 1;
+                @if ($mode->gridTemplateAreas()) grid-template-areas: {{ $mode->gridTemplateAreas() }}; @endif
+            ">
+                @foreach ($details as $detail)
+                    @php
+                        $seatStyle = ($mode->gridTemplateAreas() ? 'grid-area: s'.$detail['position'].';' : '')
+                            .($mode->seatStyleOverrides()[$detail['position']] ?? '')
+                            .(($detail['border_color'] ?? null) ? ' border-color: '.$detail['border_color'].';' : '');
+                    @endphp
+
+                    @if ($detail['background'] ?? null)
+                        {{-- Kotak ini jadi BG custom (App\Livewire\ProjectLive\Background) - diedit
+                             lewat halaman Background, bukan di sini, jadi tidak diklik. --}}
+                        @php $seatFit = \App\Enums\BackgroundFit::from($detail['background']['fit_mode'])->cssObjectFit(); @endphp
+                        <div style="{{ $seatStyle }}"
+                            class="relative w-full h-full rounded-xl overflow-hidden border border-gray-700">
+                            @if ($detail['background']['type'] === 'video')
+                                <video src="{{ $detail['background']['url'] }}" autoplay loop muted playsinline
+                                    style="width: 100%; height: 100%; object-fit: {{ $seatFit }}; transform: translate({{ $detail['background']['offset_x'] }}px, {{ $detail['background']['offset_y'] }}px) scale({{ $detail['background']['scale'] / 100 }});"></video>
+                            @else
+                                <img src="{{ $detail['background']['url'] }}" alt=""
+                                    style="width: 100%; height: 100%; object-fit: {{ $seatFit }}; transform: translate({{ $detail['background']['offset_x'] }}px, {{ $detail['background']['offset_y'] }}px) scale({{ $detail['background']['scale'] / 100 }});">
+                            @endif
+                            <span class="absolute top-1.5 left-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/60 text-white">
+                                #{{ $detail['position'] }} &middot; BG
                             </span>
-                            @php
-                                $previewColor = $detail->status->value === 'show' ? $detail->dominant_color : ($detail->active_hotkey_color ?: '#000000');
-                            @endphp
-                            <span class="w-3 h-3 rounded-full border border-white/60 shadow" style="background: {{ $previewColor }};" title="{{ $previewColor }}"></span>
-                        </span>
-
-                        <!-- Toggle status: klik langsung ubah tanpa buka modal -->
-                        <button type="button" wire:click.stop="toggleStatus({{ $detail->id }})"
-                            title="{{ $detail->status->value === 'show' ? 'Klik untuk Hide' : 'Klik untuk Show' }}"
-                            class="absolute top-1.5 right-1.5 flex items-center gap-1 rounded-full px-1 py-0.5 transition {{ $detail->status->value === 'show' ? 'bg-green-600' : 'bg-gray-400 dark:bg-gray-600' }}">
-                            <span class="relative inline-flex h-3.5 w-6 items-center rounded-full bg-black/20">
-                                <span class="inline-block h-2.5 w-2.5 transform rounded-full bg-white transition {{ $detail->status->value === 'show' ? 'translate-x-3' : 'translate-x-0.5' }}"></span>
-                            </span>
-                            <span class="text-[9px] font-semibold text-white pr-0.5">{{ $detail->status->value === 'show' ? 'Show' : 'Hide' }}</span>
-                        </button>
-
-                        @if ($detail->img)
-                            <img src="{{ $detail->imgUrl() }}" class="w-20 h-20 rounded-full object-cover" alt="{{ $detail->name }}">
-                        @else
-                            <div class="w-20 h-20 rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 text-2xl">
-                                +
-                            </div>
-                        @endif
-
-                        <span class="text-xs font-medium text-gray-700 dark:text-gray-300 truncate max-w-[90%]">
-                            {{ $detail->name ?: 'Belum diisi' }}
-                        </span>
-
-                        <span class="text-[10px] text-gray-500 dark:text-gray-400">
-                            {{ number_format($detail->gift_total_value) }} coin
-                        </span>
-
-                        @if ($detail->hotkey)
-                            <span class="absolute bottom-1.5 right-1.5 text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-600 text-white">
-                                {{ $detail->hotkey }}
-                            </span>
-                        @endif
                         </div>
-                    @endforeach
-                </div>
+                    @else
+                        <div wire:click="openEdit({{ $detail['id'] }})" role="button" tabindex="0"
+                            style="{{ $seatStyle }}"
+                            class="relative w-full h-full rounded-xl overflow-hidden border border-gray-700 bg-gray-900 flex flex-col items-center justify-center gap-1 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer">
+                            <span class="absolute top-1.5 left-1.5 flex items-center gap-1">
+                                <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/60 text-white">
+                                    #{{ $detail['position'] }}
+                                </span>
+                                @php
+                                    $previewColor = $detail['status'] === 'show' ? $detail['dominant_color'] : ($detail['active_hotkey_color'] ?: '#000000');
+                                @endphp
+                                <span class="w-3 h-3 rounded-full border border-white/60 shadow" style="background: {{ $previewColor }};" title="{{ $previewColor }}"></span>
+                            </span>
+
+                            <!-- Toggle status: klik langsung ubah tanpa buka modal -->
+                            <button type="button" wire:click.stop="toggleStatus({{ $detail['id'] }})"
+                                title="{{ $detail['status'] === 'show' ? 'Klik untuk Hide' : 'Klik untuk Show' }}"
+                                class="absolute top-1.5 right-1.5 flex items-center gap-1 rounded-full px-1 py-0.5 transition {{ $detail['status'] === 'show' ? 'bg-green-600' : 'bg-gray-600' }}">
+                                <span class="relative inline-flex h-3.5 w-6 items-center rounded-full bg-black/20">
+                                    <span class="inline-block h-2.5 w-2.5 transform rounded-full bg-white transition {{ $detail['status'] === 'show' ? 'translate-x-3' : 'translate-x-0.5' }}"></span>
+                                </span>
+                                <span class="text-[9px] font-semibold text-white pr-0.5">{{ $detail['status'] === 'show' ? 'Show' : 'Hide' }}</span>
+                            </button>
+
+                            @if ($detail['img_url'])
+                                <img src="{{ $detail['img_url'] }}" class="w-20 h-20 rounded-full object-cover" alt="{{ $detail['name'] }}">
+                            @else
+                                <div class="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center text-gray-400 text-2xl">
+                                    +
+                                </div>
+                            @endif
+
+                            <span class="text-xs font-medium text-gray-300 truncate max-w-[90%]">
+                                {{ $detail['name'] ?: 'Belum diisi' }}
+                            </span>
+
+                            <span class="text-[10px] text-gray-500">
+                                {{ number_format($detail['gift_total_value']) }} coin
+                            </span>
+
+                            @if ($detail['hotkey'])
+                                <span class="absolute bottom-1.5 right-1.5 text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-600 text-white">
+                                    {{ $detail['hotkey'] }}
+                                </span>
+                            @endif
+                        </div>
+                    @endif
+                @endforeach
             </div>
         </div>
     </div>
@@ -119,7 +144,7 @@
                 class="fixed inset-0 bg-black/60"></div>
 
             <div x-show="$wire.editingDetailId !== null" x-transition
-                class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 space-y-4">
+                class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 space-y-4 text-gray-900 dark:text-gray-100">
                 <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
                     Edit Kursi
                 </h3>
@@ -172,6 +197,20 @@
                             <x-input-error :messages="$errors->get('emptyLabel')" class="mt-2" />
                         </div>
 
+                        <div>
+                            <x-input-label value="Font Teks" />
+                            <div class="grid grid-cols-2 gap-1.5 mt-1">
+                                @foreach (\App\Enums\SeatFont::cases() as $option)
+                                    <button type="button" wire:click="$set('font', '{{ $option->value }}')"
+                                        style="font-family: {{ $option->cssFontFamily() }};"
+                                        class="px-2 py-1.5 text-sm rounded-md border transition {{ $font === $option->value ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                                        {{ $option->label() }}
+                                    </button>
+                                @endforeach
+                            </div>
+                            <x-input-error :messages="$errors->get('font')" class="mt-2" />
+                        </div>
+
                         <div x-data="{ preview: null }">
                             <x-input-label for="emptyIconFile" value="Icon" />
                             <div class="flex items-center gap-2 mt-1">
@@ -206,6 +245,23 @@
                             Warna latar kotak kosong sekarang diatur di halaman
                             <a href="{{ route('project-live.hotkey-color', $projectLive) }}" wire:navigate class="text-indigo-600 dark:text-indigo-400 hover:underline">Hotkey Warna</a>.
                         </p>
+                    </div>
+
+                    <div class="border-t border-gray-100 dark:border-gray-700 pt-4">
+                        <x-input-label for="borderColor" value="Warna Border Kotak" />
+                        <div class="flex items-center gap-2 mt-1">
+                            <input type="color" wire:model="borderColor" id="borderColor"
+                                value="{{ $borderColor ?: '#ffffff' }}"
+                                class="h-9 w-14 rounded-md border border-gray-200 dark:border-gray-600 cursor-pointer">
+                            <x-text-input wire:model="borderColor" class="block w-full" type="text" placeholder="Default (#ffffff26)" />
+                            @if ($borderColor)
+                                <button type="button" wire:click="$set('borderColor', '')"
+                                    class="flex-shrink-0 text-xs font-semibold text-gray-400 hover:text-red-500">
+                                    Reset
+                                </button>
+                            @endif
+                        </div>
+                        <x-input-error :messages="$errors->get('borderColor')" class="mt-2" />
                     </div>
 
                     <div>

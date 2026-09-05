@@ -44,4 +44,22 @@ class ProjectLiveBackground extends Model
     {
         return $this->file ? Storage::disk('public')->url($this->file) : null;
     }
+
+    /**
+     * Bentuk array yang dipakai bareng oleh App\Livewire\ProjectLive\LiveShow DAN
+     * App\Livewire\ProjectLive\PreviewLive (Preview render pakai partial seat-box.
+     * blade.php yang SAMA PERSIS dgn Live, lihat komentar App\Models\ProjectLiveDetail::
+     * toLiveArray()) - taruh di satu tempat ini biar keduanya tidak pernah beda bentuk.
+     */
+    public function toLiveArray(): array
+    {
+        return [
+            'type' => $this->type->value,
+            'url' => $this->fileUrl(),
+            'fit_mode' => $this->fit_mode->value,
+            'offset_x' => $this->offset_x,
+            'offset_y' => $this->offset_y,
+            'scale' => $this->scale,
+        ];
+    }
 }

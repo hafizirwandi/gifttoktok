@@ -32,6 +32,14 @@
         $boxStyle .= ' animation: gtt-seat-pulse '.$projectLive->frame_pulse_speed_ms.'ms ease-in-out infinite;';
         $bgBoxStyle .= ' animation: gtt-seat-pulse '.$projectLive->frame_pulse_speed_ms.'ms ease-in-out infinite;';
     }
+
+    // Warna border per-kursi (diatur admin lewat modal edit di Preview Live, lihat
+    // App\Models\ProjectLiveDetail::border_color) - null = pakai default bawaan
+    // (class border-white/15 di bawah tetap kepakai apa adanya, TIDAK ditimpa).
+    if (! empty($detail['border_color'])) {
+        $boxStyle .= ' border-color: '.$detail['border_color'].';';
+        $bgBoxStyle .= ' border-color: '.$detail['border_color'].';';
+    }
 @endphp
 @if ($detail['background'] ?? null)
     {{-- Kotak ini dijadikan BG custom (App\Livewire\ProjectLive\Background, placement=seat)
@@ -122,7 +130,7 @@
         @endif
 
         <!-- Ikon gift terakhir: pojok kanan atas, muncul sebentar (fade-in lalu fade-out
-             otomatis ~8 detik, lihat LiveShow::toArray()) — icon_url gift TUJUAN pemetaan
+             otomatis ~8 detik, lihat ProjectLiveDetail::toLiveArray()) — icon_url gift TUJUAN pemetaan
              (mis. Donat dipetakan ke gift "Lion") atau icon_url gift itu sendiri kalau
              belum dipetakan admin (lihat GiftMapping). -->
         @if (($detail['show_gift_badge'] ?? false) && ($detail['last_gift_icon_url'] ?? null))
@@ -177,7 +185,10 @@
                     +
                 @endif
             </div>
-            <span class="text-lg text-white/50 font-medium" style="transform: translateY({{ $projectLive->empty_label_offset_y }}px) scale({{ $projectLive->empty_label_size / 100 }}); display: inline-block;">{{ $detail['empty_label'] ?? '' ?: 'Request' }}</span>
+            {{-- Font teks kotak kosong per-kursi (App\Enums\SeatFont, diatur lewat modal
+                 edit di Preview Live) - null = pakai default (Figtree, ikut font-sans
+                 bawaan halaman, tidak perlu override apa pun). --}}
+            <span class="text-lg text-white/50 font-medium" style="transform: translateY({{ $projectLive->empty_label_offset_y }}px) scale({{ $projectLive->empty_label_size / 100 }}); display: inline-block; {{ ($detail['font'] ?? null) ? 'font-family: '.\App\Enums\SeatFont::from($detail['font'])->cssFontFamily().';' : '' }}">{{ $detail['empty_label'] ?? '' ?: 'Request' }}</span>
         @endif
     </div>
 @endif

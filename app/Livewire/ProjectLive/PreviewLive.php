@@ -31,18 +31,21 @@ class PreviewLive extends Component
 
     public string $emptyLabel = '';
 
+    /**
+     * Path GAMBAR yang lagi tersimpan di kursi ini (bukan file baru yang mau di-upload,
+     * lihat $emptyIconFile utk itu) - dulu ini emoji yang dipilih dari daftar tetap,
+     * sekarang diganti total jadi upload per kursi (lihat App\Models\ProjectLiveDetail::
+     * emptyIconUrl()). String kosong = belum ada, fallback ke '+' bawaan.
+     */
     public string $emptyIcon = '';
+
+    public $emptyIconFile = null;
 
     public string $hotkey = '';
 
     public string $status = 'hide';
 
     public bool $micEnabled = true;
-
-    /**
-     * Pilihan ikon (emoji) untuk kotak kursi yang masih kosong di layar Live.
-     */
-    public const EMPTY_ICON_CHOICES = ['+', '❤️', '⭐', '🎁', '🎤', '🔥', '👍', '❓'];
 
     public function mount(ProjectLive $projectLive): void
     {
@@ -73,7 +76,8 @@ class PreviewLive extends Component
         $this->name = (string) $detail->name;
         $this->coin = (string) $detail->gift_total_value;
         $this->emptyLabel = (string) $detail->empty_label;
-        $this->emptyIcon = (string) ($detail->empty_icon ?: '+');
+        $this->emptyIcon = (string) $detail->empty_icon;
+        $this->emptyIconFile = null;
         $this->hotkey = (string) $detail->hotkey;
         $this->status = $detail->status->value;
         $this->micEnabled = $detail->mic_visible;
@@ -82,7 +86,35 @@ class PreviewLive extends Component
 
     public function closeEdit(): void
     {
-        $this->reset(['editingDetailId', 'img', 'name', 'coin', 'emptyLabel', 'emptyIcon', 'hotkey', 'status', 'micEnabled']);
+        $this->reset(['editingDetailId', 'img', 'name', 'coin', 'emptyLabel', 'emptyIcon', 'emptyIconFile', 'hotkey', 'status', 'micEnabled']);
+    }
+
+    /**
+     * URL preview icon kotak kosong yang LAGI TERSIMPAN (bukan file baru yang belum
+     * di-upload) - dipakai modal edit buat nampilin thumbnail sebelum Simpan.
+     */
+    public function emptyIconUrl(): ?string
+    {
+        return $this->emptyIcon !== '' ? Storage::disk('public')->url($this->emptyIcon) : null;
+    }
+
+    /**
+     * Hapus icon kotak kosong yang lagi tersimpan, balik ke fallback default ('+') -
+     * langsung tereksekusi (beda dari upload baru yang nunggu tombol Simpan).
+     */
+    public function removeEmptyIcon(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $detail = $this->projectLive->details()->findOrFail($this->editingDetailId);
+
+        if ($detail->empty_icon) {
+            Storage::disk('public')->delete($detail->empty_icon);
+        }
+
+        $detail->update(['empty_icon' => null]);
+
+        $this->emptyIcon = '';
     }
 
     public function toggleStatus(int $detailId): void
@@ -118,7 +150,7 @@ class PreviewLive extends Component
             'name' => 'nullable|string|max:255',
             'coin' => 'required|integer|min:0',
             'emptyLabel' => 'nullable|string|max:30',
-            'emptyIcon' => ['nullable', 'string', Rule::in(self::EMPTY_ICON_CHOICES)],
+            'emptyIconFile' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:8192',
             'hotkey' => [
                 'nullable',
                 'string',
@@ -150,7 +182,6 @@ class PreviewLive extends Component
             'name' => $validated['name'],
             'gift_total_value' => $validated['coin'],
             'empty_label' => $validated['emptyLabel'] !== '' ? $validated['emptyLabel'] : null,
-            'empty_icon' => $validated['emptyIcon'] !== '' ? $validated['emptyIcon'] : null,
             'hotkey' => $validated['hotkey'] !== '' ? $validated['hotkey'] : null,
             'status' => $validated['status'],
             'mic_visible' => $validated['micEnabled'],
@@ -169,6 +200,16 @@ class PreviewLive extends Component
 
             if ($oldImg) {
                 Storage::disk('public')->delete($oldImg);
+            }
+        }
+
+        if ($this->emptyIconFile) {
+            $oldEmptyIcon = $detail->empty_icon;
+
+            $data['empty_icon'] = $this->emptyIconFile->store('project-live-details/'.$this->projectLive->id.'/empty-icons', 'public');
+
+            if ($oldEmptyIcon) {
+                Storage::disk('public')->delete($oldEmptyIcon);
             }
         }
 

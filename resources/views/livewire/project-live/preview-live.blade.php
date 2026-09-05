@@ -172,17 +172,34 @@
                             <x-input-error :messages="$errors->get('emptyLabel')" class="mt-2" />
                         </div>
 
-                        <div>
-                            <x-input-label value="Ikon" />
-                            <div class="flex flex-wrap gap-2 mt-1">
-                                @foreach (\App\Livewire\ProjectLive\PreviewLive::EMPTY_ICON_CHOICES as $icon)
-                                    <button type="button" wire:click="$set('emptyIcon', '{{ $icon }}')"
-                                        class="w-9 h-9 flex items-center justify-center text-lg rounded-md border transition {{ $emptyIcon === $icon ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30' : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
-                                        {{ $icon }}
+                        <div x-data="{ preview: null }">
+                            <x-input-label for="emptyIconFile" value="Icon" />
+                            <div class="flex items-center gap-2 mt-1">
+                                @if ($this->emptyIconUrl())
+                                    <img src="{{ $this->emptyIconUrl() }}" class="w-9 h-9 object-contain rounded-md border border-gray-200 dark:border-gray-600 flex-shrink-0">
+                                @endif
+                                <template x-if="preview">
+                                    <img :src="preview" class="w-9 h-9 object-contain rounded-md border border-gray-200 dark:border-gray-600 flex-shrink-0">
+                                </template>
+                                <input type="file" wire:model="emptyIconFile" id="emptyIconFile" accept="image/*"
+                                    x-on:change="
+                                        const file = $event.target.files[0];
+                                        if (! file) { preview = null; return; }
+                                        const reader = new FileReader();
+                                        reader.onload = (e) => preview = e.target.result;
+                                        reader.readAsDataURL(file);
+                                    "
+                                    class="block w-full text-sm text-gray-600 dark:text-gray-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/40 file:text-indigo-700 dark:file:text-indigo-300">
+                                @if ($this->emptyIconUrl())
+                                    <button type="button" wire:click="removeEmptyIcon"
+                                        class="flex-shrink-0 text-xs font-semibold text-gray-400 hover:text-red-500">
+                                        Hapus
                                     </button>
-                                @endforeach
+                                @endif
                             </div>
-                            <x-input-error :messages="$errors->get('emptyIcon')" class="mt-2" />
+                            <p class="text-xs text-gray-400 mt-1">JPG, PNG, atau WEBP, maksimal 8MB. Kosongkan (jangan pilih file) untuk fallback default (+).</p>
+                            <div wire:loading wire:target="emptyIconFile" class="text-xs text-gray-400 mt-1">Mengunggah...</div>
+                            <x-input-error :messages="$errors->get('emptyIconFile')" class="mt-2" />
                         </div>
 
                         <p class="text-xs text-gray-400">

@@ -195,6 +195,40 @@
                     </div>
                 </div>
 
+                <!-- Icon mic custom - satu utk SEMUA kotak kursi (beda dari icon kotak
+                     kosong di Preview Live yang per-kotak), lihat
+                     App\Models\ProjectLive::micIconUrl(). Ukuran/posisi tetap pakai
+                     "Icon mic" di grid Ukuran Konten & "Naik/Turun Icon Mic" di atas. -->
+                <div class="border-t border-gray-100 dark:border-gray-700 pt-3 space-y-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-xs font-semibold text-gray-600 dark:text-gray-300">Icon Mic Custom</p>
+                            <p class="text-[10px] text-gray-400">Ganti icon mic bawaan (SVG) dengan gambar sendiri, berlaku ke semua kotak.</p>
+                        </div>
+                        @if ($projectLive->mic_icon)
+                            <img src="{{ $projectLive->micIconUrl() }}" alt="Icon mic" class="w-8 h-8 object-contain flex-shrink-0">
+                        @endif
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <input type="file" wire:model="micIconFile" accept="image/*"
+                            class="block w-full text-sm text-gray-600 dark:text-gray-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/40 file:text-indigo-700 dark:file:text-indigo-300">
+                        <button type="button" wire:click="saveMicIcon"
+                            class="flex-shrink-0 inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700">
+                            Simpan
+                        </button>
+                        @if ($projectLive->mic_icon)
+                            <button type="button" wire:click="removeMicIcon" wire:confirm="Kembalikan ke icon mic bawaan?"
+                                class="flex-shrink-0 text-xs font-semibold text-gray-400 hover:text-red-500">
+                                Hapus
+                            </button>
+                        @endif
+                    </div>
+                    <p class="text-xs text-gray-400">JPG, PNG, atau WEBP, maksimal 8MB.</p>
+                    <div wire:loading wire:target="micIconFile" class="text-xs text-gray-400">Mengunggah...</div>
+                    <x-input-error :messages="$errors->get('micIconFile')" class="mt-1" />
+                </div>
+
                 <!-- Arah kotak kosong diisi gifter baru - lihat
                      App\Services\GiftLeaderboardService::recalculate(). -->
                 <div class="border-t border-gray-100 dark:border-gray-700 pt-3 space-y-2">

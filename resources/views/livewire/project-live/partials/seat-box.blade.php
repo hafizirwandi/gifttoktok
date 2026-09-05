@@ -107,11 +107,17 @@
              kotak. -->
         @if ($detail['mic_visible'] ?? true)
             <div class="absolute bottom-2 right-2 h-10 flex items-center justify-center" style="transform: translateY({{ $projectLive->mic_offset_y }}px) scale({{ $projectLive->mic_size / 100 }}); transform-origin: bottom right;">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="w-5 h-5 text-white/80 drop-shadow">
-                    <path d="M12 15a3 3 0 003-3V6a3 3 0 10-6 0v6a3 3 0 003 3z" stroke="currentColor" stroke-width="1.5"/>
-                    <path d="M5 10v2a7 7 0 0014 0v-2M12 19v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                    <path d="M4 4l16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                </svg>
+                {{-- Icon mic custom (App\Models\ProjectLive::micIconUrl(), satu utk semua
+                     kotak) - fallback ke SVG bawaan kalau belum ada yang di-upload. --}}
+                @if ($projectLive->micIconUrl())
+                    <img src="{{ $projectLive->micIconUrl() }}" alt="" class="w-5 h-5 object-contain drop-shadow">
+                @else
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" class="w-5 h-5 text-white/80 drop-shadow">
+                        <path d="M12 15a3 3 0 003-3V6a3 3 0 10-6 0v6a3 3 0 003 3z" stroke="currentColor" stroke-width="1.5"/>
+                        <path d="M5 10v2a7 7 0 0014 0v-2M12 19v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        <path d="M4 4l16 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                @endif
             </div>
         @endif
 
@@ -161,8 +167,15 @@
             {{-- Naik/turun icon & teks diatur TERPISAH (App\Livewire\ProjectLive\
                  DetailAdmin::BOX_STYLE_FIELDS empty_icon_offset_y/empty_label_offset_y),
                  masing-masing translateY sendiri, supaya independen satu sama lain. --}}
-            <div class="text-white/70 text-4xl leading-none" style="transform: translateY({{ $projectLive->empty_icon_offset_y }}px) scale({{ $projectLive->empty_icon_size / 100 }});">
-                {{ $detail['empty_icon'] ?? '' ?: '+' }}
+            <div class="text-white/70 text-4xl leading-none flex items-center justify-center" style="transform: translateY({{ $projectLive->empty_icon_offset_y }}px) scale({{ $projectLive->empty_icon_size / 100 }});">
+                {{-- Icon kotak kosong hasil upload per-kursi (App\Models\ProjectLiveDetail::
+                     emptyIconUrl(), lihat Preview Live) - fallback ke '+' kalau belum
+                     ada yang di-upload utk kursi ini. --}}
+                @if ($detail['empty_icon_url'] ?? null)
+                    <img src="{{ $detail['empty_icon_url'] }}" alt="" class="w-9 h-9 object-contain">
+                @else
+                    +
+                @endif
             </div>
             <span class="text-lg text-white/50 font-medium" style="transform: translateY({{ $projectLive->empty_label_offset_y }}px) scale({{ $projectLive->empty_label_size / 100 }}); display: inline-block;">{{ $detail['empty_label'] ?? '' ?: 'Request' }}</span>
         @endif

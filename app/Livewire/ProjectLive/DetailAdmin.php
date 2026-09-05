@@ -45,6 +45,13 @@ class DetailAdmin extends Component
     public string $customGiftIconUrl = '';
 
     /**
+     * Icon mic custom (App\Models\ProjectLive::micIconUrl()) - satu utk SEMUA kotak
+     * kursi project ini, menggantikan SVG mic bawaan di partials/seat-box.blade.php
+     * kalau di-upload. Ukuran/posisi tetap pakai mic_size/mic_offset_y yang sudah ada.
+     */
+    public $micIconFile = null;
+
+    /**
      * Elemen kotak kursi Live yang ukurannya bisa diatur admin (persen, 100 = default),
      * lihat kolom *_size di project_lives — diterapkan lewat transform:scale di
      * partials/seat-box.blade.php.
@@ -169,6 +176,43 @@ public function saveBoxStyle(): void
         }
 
         $this->saveBoxStyle();
+    }
+
+    public function saveMicIcon(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $validated = $this->validate([
+            'micIconFile' => 'required|image|mimes:jpg,jpeg,png,webp|max:8192',
+        ]);
+
+        $oldIcon = $this->projectLive->mic_icon;
+
+        $path = $this->micIconFile->store('project-lives/'.$this->projectLive->id, 'public');
+        $this->projectLive->update(['mic_icon' => $path]);
+
+        if ($oldIcon) {
+            Storage::disk('public')->delete($oldIcon);
+        }
+
+        $this->reset('micIconFile');
+        $this->projectLive->refresh();
+
+        $this->dispatch('notify', message: 'Icon mic berhasil disimpan.');
+    }
+
+    public function removeMicIcon(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        if ($this->projectLive->mic_icon) {
+            Storage::disk('public')->delete($this->projectLive->mic_icon);
+        }
+
+        $this->projectLive->update(['mic_icon' => null]);
+        $this->projectLive->refresh();
+
+        $this->dispatch('notify', message: 'Icon mic dikembalikan ke bawaan.');
     }
 
     /**

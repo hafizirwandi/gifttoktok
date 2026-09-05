@@ -62,4 +62,14 @@ class ProjectLiveDetail extends Model
     {
         return $this->img ? Storage::disk('public')->url($this->img) : null;
     }
+
+    /**
+     * empty_icon menyimpan PATH GAMBAR hasil upload (App\Livewire\ProjectLive\PreviewLive)
+     * - dulu menyimpan karakter emoji, sekarang diganti total jadi upload per kotak.
+     * Null kalau belum upload apa pun - seat-box.blade.php fallback ke '+'.
+     */
+    public function emptyIconUrl(): ?string
+    {
+        return $this->empty_icon ? Storage::disk('public')->url($this->empty_icon) : null;
+    }
 }

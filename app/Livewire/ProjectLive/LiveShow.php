@@ -25,7 +25,7 @@ class LiveShow extends Component
      * hotkey/klik. Status "hide" dari admin sebaliknya langsung tersinkron otomatis
      * (lihat syncFromDatabase()).
      *
-     * @var array<int, array{id:int, position:int, name:?string, hotkey:?string, status:string, dominant_color:string, img_url:?string, empty_label:?string, empty_icon:?string, active_hotkey_color:?string, last_gift_icon_url:?string, last_gift_at:?int, show_gift_badge:bool}>
+     * @var array<int, array{id:int, position:int, name:?string, hotkey:?string, status:string, dominant_color:string, img_url:?string, empty_label:?string, empty_icon_url:?string, active_hotkey_color:?string, last_gift_icon_url:?string, last_gift_at:?int, show_gift_badge:bool}>
      */
     public array $details = [];
 
@@ -115,7 +115,7 @@ class LiveShow extends Component
             'source' => null,
             'gift_total_value' => 0,
             'empty_label' => null,
-            'empty_icon' => null,
+            'empty_icon_url' => null,
             'mic_visible' => true,
             'background' => null,
             'active_hotkey_color' => null,
@@ -294,7 +294,7 @@ class LiveShow extends Component
             'source' => $detail->source->value,
             'gift_total_value' => $detail->gift_total_value,
             'empty_label' => $detail->empty_label,
-            'empty_icon' => $detail->empty_icon,
+            'empty_icon_url' => $detail->emptyIconUrl(),
             'mic_visible' => $detail->mic_visible,
             'background' => $detail->background ? $this->backgroundToArray($detail->background) : null,
             'active_hotkey_color' => $detail->active_hotkey_color,

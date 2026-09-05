@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class ProjectLive extends Model
 {
@@ -47,6 +48,7 @@ class ProjectLive extends Model
         'empty_icon_offset_y',
         'empty_label_offset_y',
         'mic_offset_y',
+        'mic_icon',
         'coin_offset_y',
         'name_offset_y',
         'gift_badge_offset_y',
@@ -130,6 +132,16 @@ class ProjectLive extends Model
             ->where('placement', BackgroundPlacement::Screen->value)
             ->where('is_active', true)
             ->first();
+    }
+
+    /**
+     * Icon mic custom (App\Livewire\ProjectLive\DetailAdmin::saveMicIcon()) - satu utk
+     * SEMUA kotak kursi project ini (beda dari background yg per-kotak). Null kalau
+     * belum upload apa pun - seat-box.blade.php fallback ke SVG mic bawaan.
+     */
+    public function micIconUrl(): ?string
+    {
+        return $this->mic_icon ? Storage::disk('public')->url($this->mic_icon) : null;
     }
 
     /**

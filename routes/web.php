@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\GiftSenders\Index as GiftSendersIndex;
+use App\Livewire\ProjectLive\Background;
 use App\Livewire\ProjectLive\DetailAdmin;
 use App\Livewire\ProjectLive\EventTrigger;
 use App\Livewire\ProjectLive\FrameHost;
@@ -47,6 +48,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/project-live/{projectLive}/hotkey-color', HotkeyColor::class)->name('project-live.hotkey-color');
     Route::get('/project-live/{projectLive}/event-trigger', EventTrigger::class)->name('project-live.event-trigger');
     Route::get('/project-live/{projectLive}/preview-live', PreviewLive::class)->name('project-live.preview-live');
+    Route::get('/project-live/{projectLive}/background', Background::class)->name('project-live.background');
 });
 
 require __DIR__.'/auth.php';

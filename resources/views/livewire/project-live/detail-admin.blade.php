@@ -17,6 +17,8 @@
                     class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Hotkey Warna</a>
                 <a href="{{ route('project-live.event-trigger', $projectLive) }}" wire:navigate
                     class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Event Trigger</a>
+                <a href="{{ route('project-live.background', $projectLive) }}" wire:navigate
+                    class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Background</a>
                 <a href="{{ route('project-live.preview-live', $projectLive) }}" target="_blank" rel="noopener"
                     class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Preview Live</a>
                 <a href="{{ route('project-live.live', $projectLive) }}" target="_blank" rel="noopener"

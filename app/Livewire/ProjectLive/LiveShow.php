@@ -4,6 +4,7 @@ namespace App\Livewire\ProjectLive;
 
 use App\Enums\DetailStatus;
 use App\Models\ProjectLive;
+use App\Models\ProjectLiveBackground;
 use App\Models\ProjectLiveDetail;
 use App\Services\GiftLeaderboardService;
 use Livewire\Attributes\Layout;
@@ -50,18 +51,48 @@ class LiveShow extends Component
 
     public ?string $resetCoinHotkey = null;
 
+    /**
+     * BG layar penuh yang lagi aktif (lihat App\Livewire\ProjectLive\Background) -
+     * null kalau tidak ada. Disimpan sbg array biasa (bukan Eloquent) sama alasannya
+     * dgn $details - lihat loadScreenBackground().
+     *
+     * @var array{type:string, url:string, fit_mode:string, offset_x:int, offset_y:int, scale:int}|null
+     */
+    public ?array $screenBackground = null;
+
     public function mount(ProjectLive $projectLive): void
     {
         $this->authorize('viewLive', $projectLive);
 
         $this->projectLive = $projectLive;
         $this->details = $this->projectLive->details()
+            ->with('background')
             ->orderBy('position')
             ->get()
             ->map(fn (ProjectLiveDetail $detail) => $this->toArray($detail))
             ->all();
 
         $this->syncColorHotkeys();
+        $this->loadScreenBackground();
+    }
+
+    private function loadScreenBackground(): void
+    {
+        $bg = $this->projectLive->activeScreenBackground();
+
+        $this->screenBackground = $bg ? $this->backgroundToArray($bg) : null;
+    }
+
+    private function backgroundToArray(ProjectLiveBackground $bg): array
+    {
+        return [
+            'type' => $bg->type->value,
+            'url' => $bg->fileUrl(),
+            'fit_mode' => $bg->fit_mode->value,
+            'offset_x' => $bg->offset_x,
+            'offset_y' => $bg->offset_y,
+            'scale' => $bg->scale,
+        ];
     }
 
     /**
@@ -86,6 +117,7 @@ class LiveShow extends Component
             'empty_label' => null,
             'empty_icon' => null,
             'mic_visible' => true,
+            'background' => null,
             'active_hotkey_color' => null,
             'last_gift_icon_url' => null,
             'last_gift_at' => null,
@@ -165,6 +197,7 @@ class LiveShow extends Component
         app(GiftLeaderboardService::class)->reset($this->projectLive);
 
         $this->details = $this->projectLive->details()
+            ->with('background')
             ->orderBy('position')
             ->get()
             ->map(fn (ProjectLiveDetail $detail) => $this->toArray($detail))
@@ -179,6 +212,7 @@ class LiveShow extends Component
         app(GiftLeaderboardService::class)->resetCoins($this->projectLive);
 
         $this->details = $this->projectLive->details()
+            ->with('background')
             ->orderBy('position')
             ->get()
             ->map(fn (ProjectLiveDetail $detail) => $this->toArray($detail))
@@ -231,8 +265,10 @@ class LiveShow extends Component
     {
         $this->projectLive->refresh();
         $this->syncColorHotkeys();
+        $this->loadScreenBackground();
 
         $this->details = $this->projectLive->details()
+            ->with('background')
             ->orderBy('position')
             ->get()
             ->map(fn (ProjectLiveDetail $detail) => $this->toArray($detail))
@@ -260,6 +296,7 @@ class LiveShow extends Component
             'empty_label' => $detail->empty_label,
             'empty_icon' => $detail->empty_icon,
             'mic_visible' => $detail->mic_visible,
+            'background' => $detail->background ? $this->backgroundToArray($detail->background) : null,
             'active_hotkey_color' => $detail->active_hotkey_color,
             'last_gift_icon_url' => $detail->last_gift_icon_url,
             'last_gift_at' => $detail->last_gift_at?->timestamp,

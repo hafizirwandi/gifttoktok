@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\BackgroundPlacement;
 use App\Enums\DetailStatus;
 use App\Enums\DisplayMode;
 use App\Enums\FrameOrientation;
@@ -112,6 +113,23 @@ class ProjectLive extends Model
     public function gifters(): HasMany
     {
         return $this->hasMany(ProjectLiveGifter::class);
+    }
+
+    public function backgrounds(): HasMany
+    {
+        return $this->hasMany(ProjectLiveBackground::class);
+    }
+
+    /**
+     * BG layar penuh yang lagi aktif (cuma boleh 1 sekaligus per project — lihat
+     * App\Livewire\ProjectLive\Background::activate()) - null kalau tidak ada.
+     */
+    public function activeScreenBackground(): ?ProjectLiveBackground
+    {
+        return $this->backgrounds()
+            ->where('placement', BackgroundPlacement::Screen->value)
+            ->where('is_active', true)
+            ->first();
     }
 
     /**

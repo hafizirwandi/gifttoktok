@@ -25,7 +25,24 @@
         $boxStyle .= ' animation: gtt-seat-pulse '.$projectLive->frame_pulse_speed_ms.'ms ease-in-out infinite;';
     }
 @endphp
-@if (($detail['status'] ?? 'hide') === 'show' && ($detail['name'] ?? null))
+@if ($detail['background'] ?? null)
+    {{-- Kotak ini dijadikan BG custom (App\Livewire\ProjectLive\Background, placement=seat)
+         - menggantikan SELURUH isi kotak normal (avatar/coin/nama/mic/gift-badge), bukan
+         cuma avatarnya. Kotak ini juga otomatis dikeluarkan dari auto-gift selama BG-nya
+         aktif (lihat App\Services\GiftLeaderboardService::recalculate()). --}}
+    @php $seatFit = \App\Enums\BackgroundFit::from($detail['background']['fit_mode'])->cssObjectFit(); @endphp
+    <div wire:key="seat-{{ $detail['id'] }}"
+        style="{{ $seatAreaStyle }} {{ $boxStyle }}"
+        class="relative w-full h-full overflow-hidden border-white/15">
+        @if ($detail['background']['type'] === 'video')
+            <video src="{{ $detail['background']['url'] }}" autoplay loop muted playsinline
+                style="width: 100%; height: 100%; object-fit: {{ $seatFit }}; transform: translate({{ $detail['background']['offset_x'] }}px, {{ $detail['background']['offset_y'] }}px) scale({{ $detail['background']['scale'] / 100 }});"></video>
+        @else
+            <img src="{{ $detail['background']['url'] }}" alt=""
+                style="width: 100%; height: 100%; object-fit: {{ $seatFit }}; transform: translate({{ $detail['background']['offset_x'] }}px, {{ $detail['background']['offset_y'] }}px) scale({{ $detail['background']['scale'] / 100 }});">
+        @endif
+    </div>
+@elseif (($detail['status'] ?? 'hide') === 'show' && ($detail['name'] ?? null))
     @php
         $coinDisplay = \App\Support\CoinFormatter::format($detail['gift_total_value'] ?? 0);
     @endphp

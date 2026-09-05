@@ -37,6 +37,10 @@ class GiftLeaderboardService
             $eligibleSeats = $projectLive->details()
                 ->lockForUpdate()
                 ->where('status', DetailStatus::Show->value)
+                // Kursi yang lagi dijadikan BG (lihat App\Livewire\ProjectLive\Background)
+                // dikeluarkan TOTAL sama seperti kursi Hide - tidak dihitung sbg slot yang
+                // bisa diisi, tidak ikut menentukan top-N, sampai BG-nya dinonaktifkan.
+                ->whereNull('background_id')
                 ->get();
 
             // round_value > 0 - gifter yang belum kontribusi apa pun tidak usah ikut ranking.

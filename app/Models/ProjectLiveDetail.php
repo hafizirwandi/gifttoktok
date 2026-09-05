@@ -24,6 +24,7 @@ class ProjectLiveDetail extends Model
         'empty_label',
         'empty_icon',
         'mic_visible',
+        'background_id',
         'active_hotkey_color',
         'source',
         'gift_total_value',
@@ -50,6 +51,11 @@ class ProjectLiveDetail extends Model
     public function gifter(): BelongsTo
     {
         return $this->belongsTo(ProjectLiveGifter::class, 'project_live_gifter_id');
+    }
+
+    public function background(): BelongsTo
+    {
+        return $this->belongsTo(ProjectLiveBackground::class, 'background_id');
     }
 
     public function imgUrl(): ?string

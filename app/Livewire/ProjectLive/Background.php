@@ -144,6 +144,17 @@ class Background extends Component
         $bg->fill($data);
         $bg->save();
 
+        // BUG YANG SUDAH KEJADIAN: kalau BG ini lagi AKTIF dan admin ganti seat_position
+        // (atau placement) lewat edit form ini (bukan activate()), link lama di
+        // project_live_details.background_id TIDAK PERNAH kebersihin - kotak LAMA tetap
+        // nampilin video yang sama persis kayak kotak BARU (dobel). syncSeatLink() di
+        // bawah selalu nyari link lama lewat background_id (bukan posisi), jadi benar
+        // walau seat_position row ini sudah berubah dari yang kepakai pas link lama itu
+        // dibuat.
+        if ($bg->is_active) {
+            $this->syncSeatLink($bg);
+        }
+
         $this->closeModal();
         $this->dispatch('notify', message: 'Background berhasil disimpan.');
     }
@@ -151,11 +162,7 @@ class Background extends Component
     /**
      * Aktifkan satu BG - kalau placement=screen, nonaktifkan BG screen lain (cuma 1
      * boleh aktif sekaligus). Kalau placement=seat, nonaktifkan BG lain di POSISI
-     * yang sama, lalu tandai kursi itu jadi slot BG (background_id) dan bersihkan
-     * data gifter lama yang mungkin masih nyangkut di situ (pola sama persis dgn
-     * App\Services\GiftLeaderboardService::emptySeat()) - kursi ini otomatis
-     * dikecualikan dari auto-gift selama background_id terisi (lihat
-     * GiftLeaderboardService::recalculate()).
+     * yang sama, lalu syncSeatLink() yang urus penautan ke project_live_details.
      */
     public function activate(int $id): void
     {
@@ -173,18 +180,11 @@ class Background extends Component
                     ->where('seat_position', $bg->seat_position)
                     ->where('id', '!=', $bg->id)
                     ->update(['is_active' => false]);
-
-                $this->projectLive->details()->where('position', $bg->seat_position)->update([
-                    'background_id' => $bg->id,
-                    'name' => null,
-                    'img' => null,
-                    'gift_total_value' => 0,
-                    'project_live_gifter_id' => null,
-                    'dominant_color' => '#111111',
-                ]);
             }
 
             $bg->update(['is_active' => true]);
+
+            $this->syncSeatLink($bg);
         });
 
         $this->dispatch('notify', message: 'Background diaktifkan.');
@@ -197,15 +197,46 @@ class Background extends Component
 
             $bg->update(['is_active' => false]);
 
-            if ($bg->placement === BackgroundPlacement::Seat) {
-                $this->projectLive->details()
-                    ->where('position', $bg->seat_position)
-                    ->where('background_id', $bg->id)
-                    ->update(['background_id' => null]);
-            }
+            $this->syncSeatLink($bg);
         });
 
         $this->dispatch('notify', message: 'Background dinonaktifkan.');
+    }
+
+    /**
+     * Satu-satunya tempat yang boleh mengubah project_live_details.background_id -
+     * dipanggil dari save()/activate()/deactivate() supaya link SELALU konsisten
+     * dgn state BG saat ini, apa pun jalan yang dipakai buat sampai ke situ.
+     *
+     * Langkah 1 SELALU jalan: lepas link LAMA dgn cari lewat background_id (BUKAN
+     * seat_position) - background_id di kursi adalah satu-satunya sumber kebenaran
+     * siapa yang BENERAN kepakai kotaknya sekarang, terlepas dari seat_position di
+     * baris BG ini yang mungkin sudah berubah sejak link lama itu dibuat (ini persis
+     * root cause bug "video dobel muncul di 2 kotak" yang sudah kejadian).
+     *
+     * Langkah 2 cuma jalan kalau BG-nya AKTIF & placement=seat: pasang link baru ke
+     * kursi sesuai seat_position TERKINI, sekalian bersihkan data gifter lama yang
+     * mungkin masih nyangkut di situ (pola sama persis dgn
+     * App\Services\GiftLeaderboardService::emptySeat()).
+     */
+    private function syncSeatLink(ProjectLiveBackground $bg): void
+    {
+        $this->projectLive->details()
+            ->where('background_id', $bg->id)
+            ->update(['background_id' => null]);
+
+        if (! $bg->is_active || $bg->placement !== BackgroundPlacement::Seat) {
+            return;
+        }
+
+        $this->projectLive->details()->where('position', $bg->seat_position)->update([
+            'background_id' => $bg->id,
+            'name' => null,
+            'img' => null,
+            'gift_total_value' => 0,
+            'project_live_gifter_id' => null,
+            'dominant_color' => '#111111',
+        ]);
     }
 
     public function delete(int $id): void

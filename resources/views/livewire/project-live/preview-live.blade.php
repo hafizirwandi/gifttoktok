@@ -93,7 +93,7 @@
                                  SENGAJA lebih mencolok (amber) drpd indikator lain, biar status "aktif
                                  dikunci" langsung kelihatan sekilas tanpa perlu buka modal. --}}
                             @if ($detail['is_pinned'])
-                                <span class="absolute bottom-1.5 left-1.5 z-10 flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-500 text-black shadow" title="Di-pin - tidak ikut reset/auto-gift">
+                                <span class="absolute bottom-1.5 left-1.5 z-10 flex items-center gap-0.5 text-[8px] font-semibold px-1 py-0.5 rounded-full bg-amber-500 text-black shadow" title="Di-pin - tidak ikut reset/auto-gift">
                                     📌 PIN
                                 </span>
                             @endif

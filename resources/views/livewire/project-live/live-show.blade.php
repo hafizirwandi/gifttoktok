@@ -104,10 +104,20 @@
                      ikut audio_enabled (halaman Live ASLI ini yang boleh keluar suara, beda
                      dari preview-live.blade.php yang selalu dipaksa senyap). --}}
                 @if ($screenBackground)
-                    @php $screenFit = \App\Enums\BackgroundFit::from($screenBackground['fit_mode'])->cssObjectFit(); @endphp
+                    @php
+                        $screenFit = \App\Enums\BackgroundFit::from($screenBackground['fit_mode'])->cssObjectFit();
+                        $screenVideoMuted = ! ($screenBackground['audio_enabled'] ?? false);
+                        // Sama kayak App\...\partials\seat-box.blade.php: attribute HTML "muted"
+                        // cuma dibaca browser SEKALI pas <video> pertama kali di-parse - toggle
+                        // audio_enabled belakangan yang cuma PATCH attribute lewat wire:poll tidak
+                        // pernah benar2 ke-apply ke video yang udah kepalang jalan. wire:key ikut
+                        // berubah nilai kalau status mute-nya berubah, biar Livewire bikin ulang
+                        // elemennya dari nol.
+                        $screenVideoKey = 'screenbg-'.($screenVideoMuted ? 'muted' : 'unmuted');
+                    @endphp
                     <div style="position: absolute; inset: 0; z-index: 0; overflow: hidden;">
                         @if ($screenBackground['type'] === 'video')
-                            <video src="{{ $screenBackground['url'] }}" autoplay loop playsinline {{ ($screenBackground['audio_enabled'] ?? false) ? '' : 'muted' }}
+                            <video wire:key="{{ $screenVideoKey }}" src="{{ $screenBackground['url'] }}" autoplay loop playsinline {{ $screenVideoMuted ? 'muted' : '' }}
                                 style="width: 100%; height: 100%; object-fit: {{ $screenFit }}; transform: translate({{ $screenBackground['offset_x'] }}px, {{ $screenBackground['offset_y'] }}px) scale({{ $screenBackground['scale'] / 100 }});"></video>
                         @else
                             <img src="{{ $screenBackground['url'] }}" alt=""

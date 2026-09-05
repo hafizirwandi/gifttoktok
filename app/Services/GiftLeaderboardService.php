@@ -34,6 +34,18 @@ class GiftLeaderboardService
     public function recalculate(ProjectLive $projectLive): void
     {
         DB::transaction(function () use ($projectLive) {
+            // Kursi yang di-PIN (lihat App\Livewire\ProjectLive\PreviewLive::togglePinned())
+            // dikeluarkan TOTAL dari sini, SAMA PERSIS spt kursi BG - datanya (nama/foto/
+            // coin) tidak boleh ditimpa/dikosongkan oleh sistem sampai admin unpin manual.
+            // Gifter yang kebetulan lagi nempatin kursi pin juga dikeluarkan dari daftar
+            // kandidat top-N (whereNotIn di bawah) - TANPA ini gifter yang sama bisa
+            // "dobel" muncul di kursi pin DAN kursi lain sekaligus kalau round_value-nya
+            // masih cukup tinggi utk masuk top-N.
+            $pinnedGifterIds = $projectLive->details()
+                ->where('is_pinned', true)
+                ->whereNotNull('project_live_gifter_id')
+                ->pluck('project_live_gifter_id');
+
             $eligibleSeats = $projectLive->details()
                 ->lockForUpdate()
                 ->where('status', DetailStatus::Show->value)
@@ -41,6 +53,7 @@ class GiftLeaderboardService
                 // dikeluarkan TOTAL sama seperti kursi Hide - tidak dihitung sbg slot yang
                 // bisa diisi, tidak ikut menentukan top-N, sampai BG-nya dinonaktifkan.
                 ->whereNull('background_id')
+                ->where('is_pinned', false)
                 ->get();
 
             // round_value > 0 - gifter yang belum kontribusi apa pun tidak usah ikut ranking.
@@ -57,6 +70,7 @@ class GiftLeaderboardService
                 // di detik yang SAMA PERSIS dengan klik reset harus tetap dihitung
                 // "ronde baru", bukan malah terbuang gara-gara technically "tidak lebih besar".
                 ->when($projectLive->round_reset_at, fn ($q) => $q->where('last_gift_at', '>=', $projectLive->round_reset_at))
+                ->when($pinnedGifterIds->isNotEmpty(), fn ($q) => $q->whereNotIn('id', $pinnedGifterIds))
                 ->orderByDesc('round_value')
                 ->orderBy('id')
                 ->limit($eligibleSeats->count())
@@ -112,13 +126,17 @@ class GiftLeaderboardService
      *
      * `status` (show/hide) SENGAJA tidak disentuh — itu preferensi tampilan admin,
      * bukan bagian dari state leaderboard, jadi reset tidak boleh mengubahnya.
+     *
+     * Kursi yang di-PIN (App\Livewire\ProjectLive\PreviewLive::togglePinned())
+     * DIKECUALIKAN dari reset ini - itu intinya fitur pin: datanya (nama/foto)
+     * dipertahankan apa pun yang terjadi ke leaderboard, sampai admin unpin manual.
      */
     public function reset(ProjectLive $projectLive): void
     {
         DB::transaction(function () use ($projectLive) {
             $projectLive->update(['round_reset_at' => now()]);
 
-            $projectLive->details()->update([
+            $projectLive->details()->where('is_pinned', false)->update([
                 'name' => null,
                 'img' => null,
                 'project_live_gifter_id' => null,
@@ -134,12 +152,24 @@ class GiftLeaderboardService
      * manual), TIDAK menghapus gifter/kursi. Nama & siapa yang lagi duduk di kursi
      * tetap sama, coin-nya aja balik ke 0. total_value (lifetime) tetap tidak
      * disentuh, sama seperti TikTokGiftEventProcessor.
+     *
+     * Kursi yang di-PIN & gifter yang lagi nempatinnya SENGAJA dikecualikan (sama
+     * alasannya dgn reset() di atas) - coin yang tampil di kursi pin tidak boleh
+     * ikut ke-nolkan.
      */
     public function resetCoins(ProjectLive $projectLive): void
     {
         DB::transaction(function () use ($projectLive) {
-            $projectLive->gifters()->update(['round_value' => 0]);
-            $projectLive->details()->update(['gift_total_value' => 0]);
+            $pinnedGifterIds = $projectLive->details()
+                ->where('is_pinned', true)
+                ->whereNotNull('project_live_gifter_id')
+                ->pluck('project_live_gifter_id');
+
+            $projectLive->gifters()
+                ->when($pinnedGifterIds->isNotEmpty(), fn ($q) => $q->whereNotIn('id', $pinnedGifterIds))
+                ->update(['round_value' => 0]);
+
+            $projectLive->details()->where('is_pinned', false)->update(['gift_total_value' => 0]);
         });
     }
 

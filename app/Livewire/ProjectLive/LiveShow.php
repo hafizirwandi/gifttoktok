@@ -100,6 +100,7 @@ class LiveShow extends Component
             'name' => null,
             'hotkey' => null,
             'status' => DetailStatus::Hide->value,
+            'is_pinned' => false,
             'dominant_color' => '#111111',
             'img_url' => null,
             'source' => null,

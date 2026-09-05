@@ -50,6 +50,15 @@ class PreviewLive extends Component
     public bool $micEnabled = true;
 
     /**
+     * Pin: kursi ini DIKECUALIKAN dari Reset Leaderboard/Reset Coin DAN dari
+     * pengisian otomatis auto-gift (lihat App\Services\GiftLeaderboardService) -
+     * nama/foto/coin-nya dipertahankan apa pun yang terjadi ke leaderboard, sampai
+     * admin unpin manual. Cocok utk kursi sponsor/tamu tetap yang tidak boleh
+     * ketiban-timpa gifter baru.
+     */
+    public bool $isPinned = false;
+
+    /**
      * Font teks kotak kosong (App\Enums\SeatFont) & warna border kustom kursi ini -
      * lihat App\Models\ProjectLiveDetail::font/border_color. borderColor string kosong
      * = pakai default bawaan (border-white/15), bukan hitam/putih literal.
@@ -110,12 +119,13 @@ class PreviewLive extends Component
         $this->micEnabled = $detail->mic_visible;
         $this->font = $detail->font?->value ?? SeatFont::Default->value;
         $this->borderColor = (string) $detail->border_color;
+        $this->isPinned = $detail->is_pinned;
         $this->img = null;
     }
 
     public function closeEdit(): void
     {
-        $this->reset(['editingDetailId', 'img', 'name', 'coin', 'emptyLabel', 'emptyIcon', 'emptyIconFile', 'hotkey', 'status', 'micEnabled', 'font', 'borderColor']);
+        $this->reset(['editingDetailId', 'img', 'name', 'coin', 'emptyLabel', 'emptyIcon', 'emptyIconFile', 'hotkey', 'status', 'micEnabled', 'font', 'borderColor', 'isPinned']);
     }
 
     /**
@@ -169,6 +179,11 @@ class PreviewLive extends Component
         $this->micEnabled = ! $this->micEnabled;
     }
 
+    public function toggleModalPinned(): void
+    {
+        $this->isPinned = ! $this->isPinned;
+    }
+
     public function save(): void
     {
         $this->authorize('viewLive', $this->projectLive);
@@ -201,6 +216,7 @@ class PreviewLive extends Component
             ],
             'status' => 'required|in:hide,show',
             'micEnabled' => 'boolean',
+            'isPinned' => 'boolean',
             'font' => ['required', Rule::in(array_column(SeatFont::cases(), 'value'))],
             'borderColor' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             // 2048 (2MB) sebelumnya kelewat kecil buat foto HP modern — upload gagal
@@ -216,6 +232,7 @@ class PreviewLive extends Component
             'hotkey' => $validated['hotkey'] !== '' ? $validated['hotkey'] : null,
             'status' => $validated['status'],
             'mic_visible' => $validated['micEnabled'],
+            'is_pinned' => $validated['isPinned'],
             'font' => $validated['font'] !== SeatFont::Default->value ? $validated['font'] : null,
             'border_color' => $validated['borderColor'] !== '' ? $validated['borderColor'] : null,
             // Edit manual selalu mengembalikan kursi ke source "manual", supaya tidak

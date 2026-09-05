@@ -96,6 +96,11 @@
                                     $previewColor = $detail['status'] === 'show' ? $detail['dominant_color'] : ($detail['active_hotkey_color'] ?: '#000000');
                                 @endphp
                                 <span class="w-3 h-3 rounded-full border border-white/60 shadow" style="background: {{ $previewColor }};" title="{{ $previewColor }}"></span>
+                                {{-- Pin (App\Services\GiftLeaderboardService) - datanya dikunci, tidak
+                                     ikut ter-reset/ditimpa auto-gift selama pin aktif. --}}
+                                @if ($detail['is_pinned'])
+                                    <span class="text-[10px] px-1 py-0.5 rounded bg-amber-500 text-black" title="Di-pin - tidak ikut reset/auto-gift">📌</span>
+                                @endif
                             </span>
 
                             <!-- Toggle status: klik langsung ubah tanpa buka modal -->
@@ -286,6 +291,21 @@
                             <span class="text-sm font-medium text-white">{{ $micEnabled ? 'Tampil' : 'Sembunyi' }}</span>
                         </button>
                         <x-input-error :messages="$errors->get('micEnabled')" class="mt-2" />
+                    </div>
+
+                    <div class="border-t border-gray-100 dark:border-gray-700 pt-4">
+                        <x-input-label value="Pin Kursi" />
+                        <button type="button" wire:click="toggleModalPinned"
+                            class="mt-1 inline-flex items-center gap-2 rounded-full pl-1 pr-3 py-1 transition {{ $isPinned ? 'bg-amber-500' : 'bg-gray-300 dark:bg-gray-600' }}">
+                            <span class="relative inline-flex h-6 w-11 items-center rounded-full bg-black/20">
+                                <span class="inline-block h-4 w-4 transform rounded-full bg-white transition {{ $isPinned ? 'translate-x-6' : 'translate-x-1' }}"></span>
+                            </span>
+                            <span class="text-sm font-medium text-white">{{ $isPinned ? 'Di-pin 📌' : 'Tidak di-pin' }}</span>
+                        </button>
+                        <p class="text-xs text-gray-400 mt-1">
+                            Kalau di-pin, nama/foto/coin kursi ini TIDAK ikut ke-reset oleh Reset Leaderboard/Reset Coin, dan tidak akan ditimpa gifter baru dari auto-gift. Cocok utk kursi sponsor/tamu tetap.
+                        </p>
+                        <x-input-error :messages="$errors->get('isPinned')" class="mt-2" />
                     </div>
 
                     <div class="flex justify-end gap-2 pt-2">

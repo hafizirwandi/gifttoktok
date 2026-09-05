@@ -29,6 +29,7 @@ class ProjectLiveDetail extends Model
         'name',
         'hotkey',
         'status',
+        'is_pinned',
         'dominant_color',
         'empty_label',
         'empty_icon',
@@ -50,6 +51,7 @@ class ProjectLiveDetail extends Model
             'status' => DetailStatus::class,
             'source' => DetailSource::class,
             'font' => SeatFont::class,
+            'is_pinned' => 'boolean',
             'mic_visible' => 'boolean',
             'last_gift_at' => 'datetime',
         ];
@@ -105,6 +107,7 @@ class ProjectLiveDetail extends Model
             'name' => $this->name,
             'hotkey' => $this->hotkey,
             'status' => $this->status->value,
+            'is_pinned' => $this->is_pinned,
             'dominant_color' => $this->dominant_color,
             'img_url' => $this->imgUrl(),
             'source' => $this->source->value,

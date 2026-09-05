@@ -68,11 +68,13 @@
                     @endphp
 
                     @if ($detail['background'] ?? null)
-                        {{-- Kotak ini jadi BG custom (App\Livewire\ProjectLive\Background) - diedit
-                             lewat halaman Background, bukan di sini, jadi tidak diklik. --}}
+                        {{-- Kotak ini jadi BG custom (App\Livewire\ProjectLive\Background) - klik
+                             buka dialog KHUSUS (openBgEdit, beda dari openEdit kursi normal) buat
+                             atur role Host/Co-Host, lihat App\Enums\SeatRole. --}}
                         @php $seatFit = \App\Enums\BackgroundFit::from($detail['background']['fit_mode'])->cssObjectFit(); @endphp
-                        <div style="{{ $seatStyle }}"
-                            class="relative w-full h-full rounded-xl overflow-hidden border border-gray-700">
+                        <div wire:click="openBgEdit({{ $detail['id'] }})" role="button" tabindex="0"
+                            style="{{ $seatStyle }}"
+                            class="relative w-full h-full rounded-xl overflow-hidden border border-gray-700 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer">
                             @if ($detail['background']['type'] === 'video')
                                 <video src="{{ $detail['background']['url'] }}" autoplay loop muted playsinline
                                     style="width: 100%; height: 100%; object-fit: {{ $seatFit }}; transform: translate({{ $detail['background']['offset_x'] }}px, {{ $detail['background']['offset_y'] }}px) scale({{ $detail['background']['scale'] / 100 }});"></video>
@@ -82,6 +84,11 @@
                             @endif
                             <span class="absolute top-1.5 left-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/60 text-white">
                                 #{{ $detail['position'] }} &middot; BG
+                                @if ($detail['background']['role'] === 'host')
+                                    &middot; Host
+                                @elseif ($detail['background']['role'] === 'co_host')
+                                    &middot; Co-Host
+                                @endif
                             </span>
                         </div>
                     @else
@@ -316,6 +323,120 @@
 
                     <div class="flex justify-end gap-2 pt-2">
                         <button type="button" wire:click="closeEdit"
+                            class="px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md hover:bg-gray-50 dark:hover:bg-gray-800">
+                            Batal
+                        </button>
+                        <x-primary-button>
+                            Simpan
+                        </x-primary-button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Kotak BG (App\Enums\SeatRole) - beda dari modal kursi normal di atas,
+         dipicu wire:click="openBgEdit(...)" dari kotak yang background_id-nya terisi. -->
+    <div x-show="$wire.editingBgDetailId !== null" x-cloak
+        class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div x-show="$wire.editingBgDetailId !== null" x-transition.opacity wire:click="closeBgEdit"
+                class="fixed inset-0 bg-black/60"></div>
+
+            <div x-show="$wire.editingBgDetailId !== null" x-transition
+                class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6 space-y-4 text-gray-900 dark:text-gray-100">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    Edit Kotak BG
+                </h3>
+
+                <form wire:submit="saveBgEdit" class="space-y-4">
+                    <div>
+                        <x-input-label value="Peran Kotak" />
+                        <div class="grid grid-cols-1 gap-1.5 mt-1">
+                            @foreach (\App\Enums\SeatRole::cases() as $option)
+                                <button type="button" wire:click="$set('bgRole', '{{ $option->value }}')"
+                                    class="text-left px-3 py-2 rounded-md border text-xs font-medium transition {{ $bgRole === $option->value ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                                    {{ $option->label() }}
+                                </button>
+                            @endforeach
+                        </div>
+                        <x-input-error :messages="$errors->get('bgRole')" class="mt-2" />
+                    </div>
+
+                    @if ($bgRole === 'host')
+                        <div class="border-t border-gray-100 dark:border-gray-700 pt-4 space-y-3">
+                            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">Style Badge "Host"</p>
+
+                            <div class="flex items-center justify-center py-2">
+                                {{-- Preview live pakai nilai yang lagi di-staging (belum Simpan) --}}
+                                <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1"
+                                    style="background: {{ $hostBadgeBgColor }}; transform: scale({{ $hostBadgeSize / 100 }});">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{{ $hostBadgeTextColor }}" class="w-4 h-4">
+                                        <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"/>
+                                    </svg>
+                                    <span style="color: {{ $hostBadgeTextColor }};" class="text-sm font-semibold">Host</span>
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <x-input-label for="hostBadgeBgColor" value="Warna Latar" />
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <input type="color" wire:model="hostBadgeBgColor" id="hostBadgeBgColor"
+                                            class="h-9 w-12 rounded-md border border-gray-200 dark:border-gray-600 cursor-pointer">
+                                        <x-text-input wire:model="hostBadgeBgColor" class="block w-full text-xs" type="text" />
+                                    </div>
+                                    <x-input-error :messages="$errors->get('hostBadgeBgColor')" class="mt-1" />
+                                </div>
+                                <div>
+                                    <x-input-label for="hostBadgeTextColor" value="Warna Icon/Teks" />
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <input type="color" wire:model="hostBadgeTextColor" id="hostBadgeTextColor"
+                                            class="h-9 w-12 rounded-md border border-gray-200 dark:border-gray-600 cursor-pointer">
+                                        <x-text-input wire:model="hostBadgeTextColor" class="block w-full text-xs" type="text" />
+                                    </div>
+                                    <x-input-error :messages="$errors->get('hostBadgeTextColor')" class="mt-1" />
+                                </div>
+                            </div>
+
+                            <div>
+                                <x-input-label for="hostBadgeSize" value="Ukuran Badge (%)" />
+                                <x-text-input wire:model="hostBadgeSize" id="hostBadgeSize" class="block mt-1 w-full" type="number" min="50" max="200" />
+                                <x-input-error :messages="$errors->get('hostBadgeSize')" class="mt-2" />
+                            </div>
+                        </div>
+                    @elseif ($bgRole === 'co_host')
+                        <div class="border-t border-gray-100 dark:border-gray-700 pt-4 space-y-3">
+                            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">Kotak ini akan tampil seperti kursi normal (nama, coin, mic) di atas media BG-nya.</p>
+
+                            <div>
+                                <x-input-label for="coHostName" value="Nama" />
+                                <x-text-input wire:model="name" id="coHostName" class="block mt-1 w-full" type="text" />
+                                <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                            </div>
+
+                            <div>
+                                <x-input-label for="coHostCoin" value="Coin" />
+                                <x-text-input wire:model="coin" id="coHostCoin" class="block mt-1 w-full" type="number" min="0" placeholder="0" />
+                                <x-input-error :messages="$errors->get('coin')" class="mt-2" />
+                            </div>
+
+                            <div>
+                                <x-input-label value="Icon Mic" />
+                                <button type="button" wire:click="toggleModalMic"
+                                    class="mt-1 inline-flex items-center gap-2 rounded-full pl-1 pr-3 py-1 transition {{ $micEnabled ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                    <span class="relative inline-flex h-6 w-11 items-center rounded-full bg-black/20">
+                                        <span class="inline-block h-4 w-4 transform rounded-full bg-white transition {{ $micEnabled ? 'translate-x-6' : 'translate-x-1' }}"></span>
+                                    </span>
+                                    <span class="text-sm font-medium text-white">{{ $micEnabled ? 'Tampil' : 'Sembunyi' }}</span>
+                                </button>
+                                <x-input-error :messages="$errors->get('micEnabled')" class="mt-2" />
+                            </div>
+                        </div>
+                    @endif
+
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button type="button" wire:click="closeBgEdit"
                             class="px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md hover:bg-gray-50 dark:hover:bg-gray-800">
                             Batal
                         </button>

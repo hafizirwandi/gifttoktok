@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\BackgroundFit;
 use App\Enums\BackgroundPlacement;
 use App\Enums\BackgroundType;
+use App\Enums\SeatRole;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
@@ -23,6 +24,10 @@ class ProjectLiveBackground extends Model
         'offset_y',
         'scale',
         'is_active',
+        'role',
+        'host_badge_bg_color',
+        'host_badge_text_color',
+        'host_badge_size',
     ];
 
     protected function casts(): array
@@ -32,6 +37,7 @@ class ProjectLiveBackground extends Model
             'placement' => BackgroundPlacement::class,
             'fit_mode' => BackgroundFit::class,
             'is_active' => 'boolean',
+            'role' => SeatRole::class,
         ];
     }
 
@@ -60,6 +66,10 @@ class ProjectLiveBackground extends Model
             'offset_x' => $this->offset_x,
             'offset_y' => $this->offset_y,
             'scale' => $this->scale,
+            'role' => $this->role->value,
+            'host_badge_bg_color' => $this->host_badge_bg_color,
+            'host_badge_text_color' => $this->host_badge_text_color,
+            'host_badge_size' => $this->host_badge_size,
         ];
     }
 }

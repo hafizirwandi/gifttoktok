@@ -5,6 +5,7 @@ namespace App\Livewire\ProjectLive;
 use App\Enums\DetailSource;
 use App\Enums\DetailStatus;
 use App\Enums\SeatFont;
+use App\Enums\SeatRole;
 use App\Models\ProjectLive;
 use App\Models\ProjectLiveDetail;
 use App\Services\DominantColorExtractor;
@@ -74,6 +75,25 @@ class PreviewLive extends Component
      * @var array<string, mixed>|null
      */
     public ?array $screenBackground = null;
+
+    /**
+     * Dialog edit KHUSUS kotak yang jadi BG (App\Livewire\ProjectLive\Background) -
+     * beda dari $editingDetailId (modal edit kursi normal) krn yang diedit di sini
+     * adalah baris project_live_backgrounds-nya (role + style badge Host), BUKAN
+     * project_live_details langsung - $name/$coin/$micEnabled DIPAKAI BARENG dgn
+     * modal normal di atas krn co-host butuh field yang sama persis (nama/coin/mic).
+     */
+    public ?int $editingBgDetailId = null;
+
+    public ?int $editingBgId = null;
+
+    public string $bgRole = 'none';
+
+    public string $hostBadgeBgColor = '#f59e0b';
+
+    public string $hostBadgeTextColor = '#000000';
+
+    public int $hostBadgeSize = 100;
 
     public function mount(ProjectLive $projectLive): void
     {
@@ -266,6 +286,76 @@ class PreviewLive extends Component
         $detail->update($data);
 
         $this->closeEdit();
+
+        $this->dispatch('notify', message: 'Kursi berhasil disimpan.');
+    }
+
+    /**
+     * Buka dialog edit KHUSUS kotak yang jadi BG (dipanggil dari preview-live.blade.php
+     * SEBAGAI GANTI openEdit() kalau kotak yang diklik punya background_id terisi) -
+     * yang diedit di sini role-nya (App\Enums\SeatRole) + style badge Host, plus
+     * nama/coin/mic kalau role-nya co-host (field yang SAMA dgn modal kursi normal).
+     */
+    public function openBgEdit(int $detailId): void
+    {
+        $detail = $this->projectLive->details()->with('background')->findOrFail($detailId);
+
+        if (! $detail->background) {
+            return;
+        }
+
+        $bg = $detail->background;
+
+        $this->editingBgDetailId = $detail->id;
+        $this->editingBgId = $bg->id;
+        $this->bgRole = $bg->role->value;
+        $this->hostBadgeBgColor = $bg->host_badge_bg_color;
+        $this->hostBadgeTextColor = $bg->host_badge_text_color;
+        $this->hostBadgeSize = $bg->host_badge_size;
+
+        // Field co-host - SAMA PERSIS dgn openEdit() normal, dipakai bareng.
+        $this->name = (string) $detail->name;
+        $this->coin = (string) $detail->gift_total_value;
+        $this->micEnabled = $detail->mic_visible;
+    }
+
+    public function closeBgEdit(): void
+    {
+        $this->reset(['editingBgDetailId', 'editingBgId', 'bgRole', 'hostBadgeBgColor', 'hostBadgeTextColor', 'hostBadgeSize', 'name', 'coin', 'micEnabled']);
+    }
+
+    public function saveBgEdit(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $validated = $this->validate([
+            'bgRole' => ['required', Rule::in(array_column(SeatRole::cases(), 'value'))],
+            'hostBadgeBgColor' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'hostBadgeTextColor' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'hostBadgeSize' => 'required|integer|min:50|max:200',
+            'name' => 'nullable|string|max:255',
+            'coin' => 'required|integer|min:0',
+            'micEnabled' => 'boolean',
+        ]);
+
+        $bg = $this->projectLive->backgrounds()->findOrFail($this->editingBgId);
+        $bg->update([
+            'role' => $validated['bgRole'],
+            'host_badge_bg_color' => $validated['hostBadgeBgColor'],
+            'host_badge_text_color' => $validated['hostBadgeTextColor'],
+            'host_badge_size' => $validated['hostBadgeSize'],
+        ]);
+
+        // name/coin/mic cuma relevan kalau role-nya co-host, tapi disimpan apa adanya
+        // regardless - kalau nanti role-nya di-ganti balik ke Host/Biasa, nilainya
+        // cuma tidak dirender (lihat seat-box.blade.php), tidak perlu dikosongkan di sini.
+        $this->projectLive->details()->whereKey($this->editingBgDetailId)->update([
+            'name' => $validated['name'],
+            'gift_total_value' => $validated['coin'],
+            'mic_visible' => $validated['micEnabled'],
+        ]);
+
+        $this->closeBgEdit();
 
         $this->dispatch('notify', message: 'Kursi berhasil disimpan.');
     }

@@ -117,7 +117,29 @@ class LiveShow extends Component
             'show_gift_badge' => false,
         ];
 
-        $this->details = array_map(fn (array $detail) => $detail + $defaults, $this->details);
+        // background itu sendiri PUNYA bentuk (lihat ProjectLiveBackground::toLiveArray())
+        // yang bisa nambah key baru juga (mis. role/host_badge_* barusan) - $detail+$defaults
+        // di atas cuma nge-backfill level PALING LUAR, TIDAK masuk ke dalam array nested
+        // $detail['background'] itu sendiri. Kalau snapshot lama punya background NON-NULL
+        // (kursi lagi jadi BG-slot) tapi tanpa key baru itu, seat-box.blade.php tetap bakal
+        // "Undefined array key" pas baca $detail['background']['role'] - jadi di-backfill
+        // terpisah di sini.
+        $backgroundDefaults = [
+            'role' => 'none',
+            'host_badge_bg_color' => '#f59e0b',
+            'host_badge_text_color' => '#000000',
+            'host_badge_size' => 100,
+        ];
+
+        $this->details = array_map(function (array $detail) use ($defaults, $backgroundDefaults) {
+            $detail += $defaults;
+
+            if (is_array($detail['background'])) {
+                $detail['background'] += $backgroundDefaults;
+            }
+
+            return $detail;
+        }, $this->details);
     }
 
     /**

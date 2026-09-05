@@ -99,13 +99,15 @@
             ">
                 {{-- BG layar penuh (App\Livewire\ProjectLive\Background, placement=screen) -
                      SENGAJA di belakang grid kursi (position:absolute + z-index:0 vs grid yg
-                     z-index:1), bukan overlay penutup. Video autoplay+muted+loop krn ini
-                     browser source OBS/Chromium, aman diputar otomatis tanpa interaksi user. --}}
+                     z-index:1), bukan overlay penutup. Video autoplay+loop krn ini browser
+                     source OBS/Chromium, aman diputar otomatis tanpa interaksi user - muted
+                     ikut audio_enabled (halaman Live ASLI ini yang boleh keluar suara, beda
+                     dari preview-live.blade.php yang selalu dipaksa senyap). --}}
                 @if ($screenBackground)
                     @php $screenFit = \App\Enums\BackgroundFit::from($screenBackground['fit_mode'])->cssObjectFit(); @endphp
                     <div style="position: absolute; inset: 0; z-index: 0; overflow: hidden;">
                         @if ($screenBackground['type'] === 'video')
-                            <video src="{{ $screenBackground['url'] }}" autoplay loop muted playsinline
+                            <video src="{{ $screenBackground['url'] }}" autoplay loop playsinline {{ ($screenBackground['audio_enabled'] ?? false) ? '' : 'muted' }}
                                 style="width: 100%; height: 100%; object-fit: {{ $screenFit }}; transform: translate({{ $screenBackground['offset_x'] }}px, {{ $screenBackground['offset_y'] }}px) scale({{ $screenBackground['scale'] / 100 }});"></video>
                         @else
                             <img src="{{ $screenBackground['url'] }}" alt=""
@@ -124,7 +126,7 @@
                     @if ($mode->gridTemplateAreas()) grid-template-areas: {{ $mode->gridTemplateAreas() }}; @endif
                 ">
                     @foreach ($details as $detail)
-                        @include('livewire.project-live.partials.seat-box', ['detail' => $detail, 'mode' => $mode])
+                        @include('livewire.project-live.partials.seat-box', ['detail' => $detail, 'mode' => $mode, 'allowAudio' => true])
                     @endforeach
                 </div>
             </div>

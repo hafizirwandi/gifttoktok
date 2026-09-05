@@ -28,6 +28,7 @@ class ProjectLiveBackground extends Model
         'host_badge_bg_color',
         'host_badge_text_color',
         'host_badge_size',
+        'audio_enabled',
     ];
 
     protected function casts(): array
@@ -38,6 +39,7 @@ class ProjectLiveBackground extends Model
             'fit_mode' => BackgroundFit::class,
             'is_active' => 'boolean',
             'role' => SeatRole::class,
+            'audio_enabled' => 'boolean',
         ];
     }
 
@@ -70,6 +72,7 @@ class ProjectLiveBackground extends Model
             'host_badge_bg_color' => $this->host_badge_bg_color,
             'host_badge_text_color' => $this->host_badge_text_color,
             'host_badge_size' => $this->host_badge_size,
+            'audio_enabled' => $this->audio_enabled,
         ];
     }
 }

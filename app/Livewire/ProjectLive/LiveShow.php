@@ -129,6 +129,7 @@ class LiveShow extends Component
             'host_badge_bg_color' => '#f59e0b',
             'host_badge_text_color' => '#000000',
             'host_badge_size' => 100,
+            'audio_enabled' => false,
         ];
 
         $this->details = array_map(function (array $detail) use ($defaults, $backgroundDefaults) {
@@ -140,6 +141,16 @@ class LiveShow extends Component
 
             return $detail;
         }, $this->details);
+
+        // $screenBackground bentuknya SAMA PERSIS (ProjectLiveBackground::toLiveArray())
+        // dan SAMA rentannya - method SELAIN mount()/syncFromDatabase() (mis. hotkey warna)
+        // tidak menyentuh properti ini sama sekali, jadi snapshot lama yang direstore lewat
+        // hydrate() bisa saja masih kepakai di render() SEBELUM tick poll berikutnya sempat
+        // memperbaruinya - dibackfill juga di sini biar tidak "Undefined array key" persis
+        // spt kasus $details di atas.
+        if (is_array($this->screenBackground)) {
+            $this->screenBackground += $backgroundDefaults;
+        }
     }
 
     /**

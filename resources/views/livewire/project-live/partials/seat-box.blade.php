@@ -40,6 +40,14 @@
         $boxStyle .= ' border-color: '.$detail['border_color'].';';
         $bgBoxStyle .= ' border-color: '.$detail['border_color'].';';
     }
+
+    // Suara video BG (App\Models\ProjectLiveBackground::audio_enabled) CUMA boleh
+    // kedengaran kalau (1) admin nyalakan DI BG-nya sendiri, DAN (2) partial ini lagi
+    // dirender di halaman Live ASLI, bukan Preview - $allowAudio dikirim eksplisit tiap
+    // include (true dari live-show.blade.php, false dari preview-live.blade.php) SUPAYA
+    // Preview Live tidak pernah keluar suara apa pun nilai audio_enabled-nya. Default
+    // false kalau ada pemanggil yg lupa kirim param ini (fail-safe ke arah senyap).
+    $videoMuted = ! (($allowAudio ?? false) && ($detail['background']['audio_enabled'] ?? false));
 @endphp
 @if (($detail['background']['role'] ?? 'none') === 'co_host')
     {{-- Co-Host (App\Enums\SeatRole) - kotak yang jadi BG tapi TAMPIL SPT KURSI NORMAL
@@ -57,7 +65,7 @@
         class="relative w-full h-full overflow-hidden border-white/15">
         <!-- Background: video/gambar BG yang sama, diblur & digelapkan sedikit -->
         @if ($coHostIsVideo)
-            <video src="{{ $detail['background']['url'] }}" autoplay loop muted playsinline aria-hidden="true"
+            <video src="{{ $detail['background']['url'] }}" autoplay loop playsinline {{ $videoMuted ? 'muted' : '' }} aria-hidden="true"
                 class="absolute inset-0 w-full h-full object-cover scale-125 blur-md brightness-[0.45]"></video>
         @else
             <img src="{{ $detail['background']['url'] }}" alt="" aria-hidden="true"
@@ -67,7 +75,7 @@
         <!-- Avatar (bulat) - video/gambar BG yang sama, versi utuh (bukan blur) -->
         <div class="absolute inset-0 flex items-center justify-center">
             @if ($coHostIsVideo)
-                <video src="{{ $detail['background']['url'] }}" autoplay loop muted playsinline
+                <video src="{{ $detail['background']['url'] }}" autoplay loop playsinline {{ $videoMuted ? 'muted' : '' }}
                     class="w-[62%] aspect-square rounded-full object-cover ring-2 ring-white/20" style="transform: scale({{ $projectLive->avatar_size / 100 }});"></video>
             @else
                 <img src="{{ $detail['background']['url'] }}" alt="{{ $detail['name'] ?? '' }}" class="w-[62%] aspect-square rounded-full object-cover ring-2 ring-white/20" style="transform: scale({{ $projectLive->avatar_size / 100 }});">
@@ -116,7 +124,7 @@
         style="{{ $seatAreaStyle }} {{ $bgBoxStyle }}"
         class="relative w-full h-full overflow-hidden border-white/15">
         @if ($detail['background']['type'] === 'video')
-            <video src="{{ $detail['background']['url'] }}" autoplay loop muted playsinline
+            <video src="{{ $detail['background']['url'] }}" autoplay loop playsinline {{ $videoMuted ? 'muted' : '' }}
                 style="width: 100%; height: 100%; object-fit: {{ $seatFit }}; transform: translate({{ $detail['background']['offset_x'] }}px, {{ $detail['background']['offset_y'] }}px) scale({{ $detail['background']['scale'] / 100 }});"></video>
         @else
             <img src="{{ $detail['background']['url'] }}" alt=""

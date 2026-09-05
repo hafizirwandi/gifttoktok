@@ -101,6 +101,23 @@
                         <x-input-error :messages="$errors->get('file')" class="mt-2" />
                     </div>
 
+                    @if ($type === 'video')
+                        <div>
+                            <x-input-label value="Suara Video" />
+                            <button type="button" wire:click="toggleAudioEnabled"
+                                class="mt-1 inline-flex items-center gap-2 rounded-full pl-1 pr-3 py-1 transition {{ $audioEnabled ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                <span class="relative inline-flex h-6 w-11 items-center rounded-full bg-black/20">
+                                    <span class="inline-block h-4 w-4 transform rounded-full bg-white transition {{ $audioEnabled ? 'translate-x-6' : 'translate-x-1' }}"></span>
+                                </span>
+                                <span class="text-sm font-medium text-white">{{ $audioEnabled ? 'Nyala' : 'Senyap' }}</span>
+                            </button>
+                            <p class="text-xs text-gray-400 mt-1">
+                                Kalau dinyalakan, suara video ini CUMA terdengar di halaman Live asli (browser source OBS) - Preview Live selalu senyap apa pun pengaturan ini.
+                            </p>
+                            <x-input-error :messages="$errors->get('audioEnabled')" class="mt-2" />
+                        </div>
+                    @endif
+
                     <div>
                         <x-input-label value="Penempatan" />
                         <div class="flex gap-2 mt-1">

@@ -44,6 +44,14 @@ class Background extends Component
 
     public int $scale = 100;
 
+    /**
+     * Cuma relevan kalau type=video - lihat komentar migrasi
+     * add_audio_enabled_to_project_live_backgrounds_table kenapa suaranya CUMA nyala
+     * di halaman Live asli, tidak pernah di Preview Live (partials/seat-box.blade.php
+     * & live-show.blade.php/preview-live.blade.php, param $allowAudio).
+     */
+    public bool $audioEnabled = false;
+
     public function mount(ProjectLive $projectLive): void
     {
         $this->authorize('viewLive', $projectLive);
@@ -59,6 +67,7 @@ class Background extends Component
         $this->seatPosition = null;
         $this->fitMode = BackgroundFit::Cover->value;
         $this->scale = 100;
+        $this->audioEnabled = false;
         $this->showModal = true;
     }
 
@@ -75,6 +84,7 @@ class Background extends Component
         $this->offsetX = $bg->offset_x;
         $this->offsetY = $bg->offset_y;
         $this->scale = $bg->scale;
+        $this->audioEnabled = $bg->audio_enabled;
         $this->file = null;
         $this->showModal = true;
     }
@@ -89,6 +99,12 @@ class Background extends Component
         $this->placement = BackgroundPlacement::Screen->value;
         $this->fitMode = BackgroundFit::Cover->value;
         $this->scale = 100;
+        $this->audioEnabled = false;
+    }
+
+    public function toggleAudioEnabled(): void
+    {
+        $this->audioEnabled = ! $this->audioEnabled;
     }
 
     public function save(): void
@@ -104,6 +120,7 @@ class Background extends Component
             'offsetX' => 'integer',
             'offsetY' => 'integer',
             'scale' => 'integer|min:10|max:300',
+            'audioEnabled' => 'boolean',
             // Rule array TIDAK dipecah otomatis di tanda "|" per elemen (beda dari rule
             // string biasa) - tiap rule harus jadi elemen array terpisah sendiri-sendiri,
             // makanya di-spread pakai [...] bukan digabung jadi 1 string panjang.
@@ -125,6 +142,10 @@ class Background extends Component
             'offset_x' => $validated['offsetX'],
             'offset_y' => $validated['offsetY'],
             'scale' => $validated['scale'],
+            // Cuma benar2 kepakai kalau type=video (lihat seat-box.blade.php/live-show.
+            // blade.php) - dibiarkan tersimpan apa adanya walau type=image, tidak
+            // ngefek apa pun.
+            'audio_enabled' => $validated['audioEnabled'],
         ];
 
         $bg = $this->editingId

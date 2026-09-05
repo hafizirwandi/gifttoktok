@@ -98,7 +98,7 @@
                                 </span>
                             @endif
                             <span class="absolute top-1.5 left-1.5 flex items-center gap-1">
-                                <span class="text-[8px] font-semibold px-1 py-0.5 rounded bg-black/60 text-white">
+                                <span class="text-[7px] font-semibold px-1 py-0.5 rounded bg-black/60 text-white">
                                     #{{ $detail['position'] }}
                                 </span>
                                 @php
@@ -111,10 +111,10 @@
                             <button type="button" wire:click.stop="toggleStatus({{ $detail['id'] }})"
                                 title="{{ $detail['status'] === 'show' ? 'Klik untuk Hide' : 'Klik untuk Show' }}"
                                 class="absolute top-1.5 right-1.5 flex items-center gap-0.5 rounded-full px-0.5 py-0.5 transition {{ $detail['status'] === 'show' ? 'bg-green-600' : 'bg-gray-600' }}">
-                                <span class="relative inline-flex h-3 w-5 items-center rounded-full bg-black/20">
-                                    <span class="inline-block h-2 w-2 transform rounded-full bg-white transition {{ $detail['status'] === 'show' ? 'translate-x-2' : 'translate-x-0.5' }}"></span>
+                                <span class="relative inline-flex h-2.5 w-4 items-center rounded-full bg-black/20">
+                                    <span class="inline-block h-1.5 w-1.5 transform rounded-full bg-white transition {{ $detail['status'] === 'show' ? 'translate-x-1.5' : 'translate-x-0.5' }}"></span>
                                 </span>
-                                <span class="text-[8px] font-semibold text-white pr-0.5">{{ $detail['status'] === 'show' ? 'Show' : 'Hide' }}</span>
+                                <span class="text-[7px] font-semibold text-white pr-0.5">{{ $detail['status'] === 'show' ? 'Show' : 'Hide' }}</span>
                             </button>
 
                             @if ($detail['img_url'])
@@ -125,7 +125,7 @@
                                 </div>
                             @endif
 
-                            <div class="flex flex-col items-center gap-0 leading-tight">
+                            <div class="flex flex-col items-center gap-0 leading-tight mt-1">
                                 <span class="text-[9px] font-medium text-gray-300 truncate max-w-[90%]">
                                     {{ $detail['name'] ?: 'Belum diisi' }}
                                 </span>

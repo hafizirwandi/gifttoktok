@@ -97,48 +97,6 @@ if "!QUEUE_ALREADY_RUNNING!"=="0" (
     )
 )
 
-REM Web server Laravel (php artisan serve) - dipakai GANTI Apache/XAMPP vhost.
-REM Vhost Apache TERBUKTI kadang gagal baca .env sama sekali di beberapa komputer
-REM (APP_ENV/DB_CONNECTION/APP_KEY semuanya balik ke default Laravel walau .env-nya
-REM benar - lihat riwayat MissingAppKeyException & error SQLite) padahal isi .env
-REM sudah pasti benar; masalahnya hilang total begitu pindah ke `php artisan serve`.
-REM Jalan di background tersembunyi (pola sama dgn queue worker di atas), Chrome
-REM dibuka otomatis begitu server-nya siap supaya user tidak perlu tahu port/URL-nya.
-set "WEB_ALREADY_RUNNING=0"
-
-if exist web-server.pid (
-    set "OLD_WEB_PID="
-    set /p OLD_WEB_PID=<web-server.pid
-    if not "!OLD_WEB_PID!"=="" (
-        tasklist /FI "PID eq !OLD_WEB_PID!" /FI "IMAGENAME eq php.exe" 2>nul | findstr /I "php.exe" >nul
-        if not errorlevel 1 (
-            echo Web server sudah jalan ^(PID !OLD_WEB_PID!^), tidak dijalankan ulang.
-            set "WEB_ALREADY_RUNNING=1"
-        ) else (
-            echo web-server.pid lama ditemukan tapi PID !OLD_WEB_PID! sudah tidak jalan ^(basi^), dibersihkan otomatis.
-        )
-    )
-    if "!WEB_ALREADY_RUNNING!"=="0" del web-server.pid
-)
-
-if "!WEB_ALREADY_RUNNING!"=="0" (
-    echo Menjalankan web server Laravel ^(php artisan serve^) di background...
-    powershell -NoProfile -Command "$p = Start-Process -FilePath 'php' -ArgumentList 'artisan serve' -WorkingDirectory '%~dp0..\..\' -WindowStyle Hidden -PassThru; $p.Id | Out-File -Encoding ascii 'web-server.pid'"
-
-    if not exist web-server.pid (
-        echo Gagal menjalankan web server. Pastikan PHP ada di PATH ^(cek: php -v^) - buka manual pakai XAMPP/Apache dulu.
-    ) else (
-        echo Web server jalan di background ^(tersembunyi, tanpa jendela - alamat http://127.0.0.1:8000^).
-        REM Kasih waktu sebentar biar php artisan serve selesai boot sebelum Chrome dibuka.
-        timeout /t 2 /nobreak >nul
-    )
-)
-
-if exist web-server.pid (
-    echo Membuka GiftTokTok di Chrome...
-    start chrome "http://127.0.0.1:8000"
-)
-
 echo.
 echo Service jalan di jendela baru - log live tampil di situ, sama seperti npm start.
 echo JANGAN tutup jendela log itu selama live berlangsung.

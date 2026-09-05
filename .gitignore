@@ -18,7 +18,7 @@ services/tiktok-gift-listener/listener.pid
 services/tiktok-gift-listener/listener.log
 services/tiktok-gift-listener/listener.err.log
 services/tiktok-gift-listener/queue-worker.pid
-services/tiktok-gift-listener/web-server.pid
+/web-server.pid
 /public/build
 /public/hot
 /public/storage

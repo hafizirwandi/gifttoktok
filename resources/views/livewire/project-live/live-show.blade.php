@@ -86,37 +86,47 @@
                 }
             </style>
         @endif
-        <div class="w-screen overflow-hidden flex items-start justify-center px-3 pt-4" style="height: 97vh; position: relative;">
-            {{-- BG layar penuh (App\Livewire\ProjectLive\Background, placement=screen) - SENGAJA
-                 di belakang grid kursi (position:absolute + z-index:0 vs grid yg z-index:1 di
-                 bawah), bukan overlay penutup. Video autoplay+muted+loop krn ini browser source
-                 OBS/Chromium, aman diputar otomatis tanpa interaksi user. --}}
-            @if ($screenBackground)
-                @php $screenFit = \App\Enums\BackgroundFit::from($screenBackground['fit_mode'])->cssObjectFit(); @endphp
-                <div style="position: absolute; inset: 0; z-index: 0; overflow: hidden;">
-                    @if ($screenBackground['type'] === 'video')
-                        <video src="{{ $screenBackground['url'] }}" autoplay loop muted playsinline
-                            style="width: 100%; height: 100%; object-fit: {{ $screenFit }}; transform: translate({{ $screenBackground['offset_x'] }}px, {{ $screenBackground['offset_y'] }}px) scale({{ $screenBackground['scale'] / 100 }});"></video>
-                    @else
-                        <img src="{{ $screenBackground['url'] }}" alt=""
-                            style="width: 100%; height: 100%; object-fit: {{ $screenFit }}; transform: translate({{ $screenBackground['offset_x'] }}px, {{ $screenBackground['offset_y'] }}px) scale({{ $screenBackground['scale'] / 100 }});">
-                    @endif
-                </div>
-            @endif
-            <div class="grid" style="
+        <div class="w-screen overflow-hidden flex items-start justify-center px-3 pt-4" style="height: 97vh;">
+            {{-- Kotak mobile-first max 480px ini SATU-SATUNYA acuan ukuran/posisi baik utk
+                 grid kursi MAUPUN BG layar penuh - BG SENGAJA dibatasi di dalam kotak ini
+                 (position:relative di sini), BUKAN selebar layar PC (w-screen di wrapper
+                 luar itu cuma buat nge-center kotak ini, bukan area BG). --}}
+            <div style="
                 --seat-w: min(100vw, 93vh * {{ $mode->ratioW() }} / {{ $mode->ratioH() }}, 480px);
                 width: var(--seat-w);
                 height: {{ $mode->intrinsicHeight() ? 'auto' : 'calc(var(--seat-w) * '.$mode->ratioH().' / '.$mode->ratioW().')' }};
-                grid-template-columns: {{ $mode->gridTemplateColumns() }};
-                grid-template-rows: {{ $mode->gridTemplateRows() }};
-                gap: {{ $projectLive->seat_gap }}px;
                 position: relative;
-                z-index: 1;
-                @if ($mode->gridTemplateAreas()) grid-template-areas: {{ $mode->gridTemplateAreas() }}; @endif
             ">
-                @foreach ($details as $detail)
-                    @include('livewire.project-live.partials.seat-box', ['detail' => $detail, 'mode' => $mode])
-                @endforeach
+                {{-- BG layar penuh (App\Livewire\ProjectLive\Background, placement=screen) -
+                     SENGAJA di belakang grid kursi (position:absolute + z-index:0 vs grid yg
+                     z-index:1), bukan overlay penutup. Video autoplay+muted+loop krn ini
+                     browser source OBS/Chromium, aman diputar otomatis tanpa interaksi user. --}}
+                @if ($screenBackground)
+                    @php $screenFit = \App\Enums\BackgroundFit::from($screenBackground['fit_mode'])->cssObjectFit(); @endphp
+                    <div style="position: absolute; inset: 0; z-index: 0; overflow: hidden;">
+                        @if ($screenBackground['type'] === 'video')
+                            <video src="{{ $screenBackground['url'] }}" autoplay loop muted playsinline
+                                style="width: 100%; height: 100%; object-fit: {{ $screenFit }}; transform: translate({{ $screenBackground['offset_x'] }}px, {{ $screenBackground['offset_y'] }}px) scale({{ $screenBackground['scale'] / 100 }});"></video>
+                        @else
+                            <img src="{{ $screenBackground['url'] }}" alt=""
+                                style="width: 100%; height: 100%; object-fit: {{ $screenFit }}; transform: translate({{ $screenBackground['offset_x'] }}px, {{ $screenBackground['offset_y'] }}px) scale({{ $screenBackground['scale'] / 100 }});">
+                        @endif
+                    </div>
+                @endif
+                <div class="grid" style="
+                    width: 100%;
+                    height: 100%;
+                    grid-template-columns: {{ $mode->gridTemplateColumns() }};
+                    grid-template-rows: {{ $mode->gridTemplateRows() }};
+                    gap: {{ $projectLive->seat_gap }}px;
+                    position: relative;
+                    z-index: 1;
+                    @if ($mode->gridTemplateAreas()) grid-template-areas: {{ $mode->gridTemplateAreas() }}; @endif
+                ">
+                    @foreach ($details as $detail)
+                        @include('livewire.project-live.partials.seat-box', ['detail' => $detail, 'mode' => $mode])
+                    @endforeach
+                </div>
             </div>
         </div>
     @endif

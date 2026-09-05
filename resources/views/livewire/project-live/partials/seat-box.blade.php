@@ -16,6 +16,13 @@
     // App\Enums\DisplayMode: class yg cuma ada di PHP tidak pernah ke-generate).
     $boxStyle = 'padding: '.$projectLive->seat_padding.'px; border-width: '.$projectLive->seat_border_width.'px; border-radius: '.$projectLive->seat_border_radius.'px;';
 
+    // BG custom (App\Livewire\ProjectLive\Background, placement=seat) SENGAJA TANPA
+    // padding - beda dari $boxStyle di atas yg padding-nya buat kasih jarak avatar dari
+    // tepi kotak. BG harus penuh EDGE-TO-EDGE (itu maksudnya jadi "background"), padding
+    // 'seat_padding' yg sama malah bikin video/gambar cuma ngisi tengah doang dgn celah
+    // kosong di 4 sisi - border/radius tetap dipakai biar konsisten visual sama kotak lain.
+    $bgBoxStyle = 'border-width: '.$projectLive->seat_border_width.'px; border-radius: '.$projectLive->seat_border_radius.'px;';
+
     // Efek pulse kursi: kotak yg POSISI-nya ada di seat_pulse_positions (checklist,
     // bisa lebih dari 1 kotak sekaligus) yang dapat animasi (keyframe-nya
     // didefinisikan sekali di live-show.blade.php, bukan di sini) - kecepatannya
@@ -23,6 +30,7 @@
     // - lihat App\Livewire\ProjectLive\FrameHost::updatedSeatPulsePositions().
     if ($projectLive->seat_pulse_enabled && in_array((int) $detail['position'], $projectLive->seat_pulse_positions ?? [], true)) {
         $boxStyle .= ' animation: gtt-seat-pulse '.$projectLive->frame_pulse_speed_ms.'ms ease-in-out infinite;';
+        $bgBoxStyle .= ' animation: gtt-seat-pulse '.$projectLive->frame_pulse_speed_ms.'ms ease-in-out infinite;';
     }
 @endphp
 @if ($detail['background'] ?? null)
@@ -32,7 +40,7 @@
          aktif (lihat App\Services\GiftLeaderboardService::recalculate()). --}}
     @php $seatFit = \App\Enums\BackgroundFit::from($detail['background']['fit_mode'])->cssObjectFit(); @endphp
     <div wire:key="seat-{{ $detail['id'] }}"
-        style="{{ $seatAreaStyle }} {{ $boxStyle }}"
+        style="{{ $seatAreaStyle }} {{ $bgBoxStyle }}"
         class="relative w-full h-full overflow-hidden border-white/15">
         @if ($detail['background']['type'] === 'video')
             <video src="{{ $detail['background']['url'] }}" autoplay loop muted playsinline

@@ -84,6 +84,12 @@ class DetailAdmin extends Component
         'coin_offset_y' => ['label' => 'Naik/Turun Badge Coin (Elevator)', 'min' => -100, 'max' => 100, 'default' => 0],
         'name_offset_y' => ['label' => 'Naik/Turun Badge Nama (Elevator)', 'min' => -100, 'max' => 100, 'default' => 0],
         'gift_badge_offset_y' => ['label' => 'Naik/Turun Icon Gift Pemetaan (Elevator)', 'min' => -100, 'max' => 100, 'default' => 0],
+        // Geser kiri/kanan (X) - pendamping *_offset_y di atas, cuma buat 4 elemen yang
+        // sama (coin/nama/mic/gift pemetaan). Negatif = geser kiri, positif = geser kanan.
+        'coin_offset_x' => ['label' => 'Geser Kiri/Kanan Badge Coin', 'min' => -100, 'max' => 100, 'default' => 0],
+        'name_offset_x' => ['label' => 'Geser Kiri/Kanan Badge Nama', 'min' => -100, 'max' => 100, 'default' => 0],
+        'mic_offset_x' => ['label' => 'Geser Kiri/Kanan Icon Mic', 'min' => -100, 'max' => 100, 'default' => 0],
+        'gift_badge_offset_x' => ['label' => 'Geser Kiri/Kanan Icon Gift Pemetaan', 'min' => -100, 'max' => 100, 'default' => 0],
     ];
 
     public array $boxStyle = [];

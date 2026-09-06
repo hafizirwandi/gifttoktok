@@ -68,34 +68,33 @@
                     @endphp
 
                     @if (($detail['background']['role'] ?? 'none') === 'co_host')
-                        {{-- Co-Host (App\Enums\SeatRole) - di Live asli tampil PERSIS spt kursi
-                             normal (avatar/nama/coin), jadi kartu preview-nya juga disamakan ke
-                             ukuran established kartu kursi biasa di bawah (avatar w-12 h-12, nama
-                             text-[9px], coin text-[8px], badge posisi text-[7px]) - sebelumnya
-                             kartu ini cuma dapat label generik "BG · Co-Host" text-[10px] warisan
-                             dari kartu Host/BG polos, makanya kelihatan beda ukuran/style dari
-                             kursi lain. Klik tetap buka dialog role BG (openBgEdit), bukan
+                        {{-- Co-Host (App\Enums\SeatRole) - di Live asli medianya tampil PENUH
+                             edge-to-edge (spt role Host, BUKAN avatar lingkaran lagi), jadi kartu
+                             preview-nya disamakan juga: media BG jadi latar penuh kartu, nama/coin
+                             dioverlay di bawah pakai gradient supaya tetap kebaca (ukuran teks
+                             tetap established: nama text-[9px], coin text-[8px], badge posisi
+                             text-[7px]). Klik tetap buka dialog role BG (openBgEdit), bukan
                              openEdit - nama/coin/mic kursi ini diedit lewat dialog itu. --}}
                         @php $coHostIsVideo = $detail['background']['type'] === 'video'; @endphp
                         <div wire:click="openBgEdit({{ $detail['id'] }})" role="button" tabindex="0"
                             style="{{ $seatStyle }}"
-                            class="relative w-full h-full rounded-xl overflow-hidden bg-gray-900 flex flex-col items-center justify-center gap-1 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer border border-gray-700">
+                            class="relative w-full h-full rounded-xl overflow-hidden border border-gray-700 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer">
+                            @if ($coHostIsVideo)
+                                <video src="{{ $detail['background']['url'] }}" class="absolute inset-0 w-full h-full object-cover" muted playsinline></video>
+                            @else
+                                <img src="{{ $detail['background']['url'] }}" class="absolute inset-0 w-full h-full object-cover" alt="{{ $detail['name'] }}">
+                            @endif
+
                             <span class="absolute top-1.5 left-1.5 text-[7px] font-semibold px-1 py-0.5 rounded bg-black/60 text-white">
                                 #{{ $detail['position'] }} &middot; Co-Host
                             </span>
 
-                            @if ($coHostIsVideo)
-                                <video src="{{ $detail['background']['url'] }}" class="w-12 h-12 rounded-full object-cover" muted playsinline></video>
-                            @else
-                                <img src="{{ $detail['background']['url'] }}" class="w-12 h-12 rounded-full object-cover" alt="{{ $detail['name'] }}">
-                            @endif
-
-                            <div class="flex flex-col items-center gap-0 leading-tight mt-1">
-                                <span class="text-[9px] font-medium text-gray-300 truncate max-w-[90%]">
+                            <div class="absolute inset-x-0 bottom-0 flex flex-col items-center gap-0 leading-tight py-1 bg-gradient-to-t from-black/80 to-transparent">
+                                <span class="text-[9px] font-medium text-gray-100 truncate max-w-[90%]">
                                     {{ $detail['name'] ?: 'Belum diisi' }}
                                 </span>
 
-                                <span class="text-[8px] text-gray-500">
+                                <span class="text-[8px] text-gray-300">
                                     {{ number_format($detail['gift_total_value']) }} coin
                                 </span>
                             </div>

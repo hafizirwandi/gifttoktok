@@ -62,37 +62,32 @@
     $videoKey = 'bgvideo-'.$detail['id'].'-'.($videoMuted ? 'muted' : 'unmuted');
 @endphp
 @if (($detail['background']['role'] ?? 'none') === 'co_host')
-    {{-- Co-Host (App\Enums\SeatRole) - kotak yang jadi BG tapi TAMPIL SPT KURSI NORMAL
-         (avatar/coin/nama/mic di bawah), bedanya avatarnya diambil dari media BG (video
-         ATAU gambar) bukan img_url biasa, dan kursi ini TETAP dikecualikan dari auto-gift
-         selama background_id terisi (lihat GiftLeaderboardService::recalculate()) - nama/
+    {{-- Co-Host (App\Enums\SeatRole) - kotak yang jadi BG, media-nya (video/gambar) tampil
+         PENUH edge-to-edge sama persis kayak role "Host" (BUKAN dikecilkan jadi avatar
+         lingkaran spt versi sebelumnya) - tapi TETAP dikasih overlay coin/nama/mic spt
+         kursi normal di atasnya. Kursi ini TETAP dikecualikan dari auto-gift selama
+         background_id terisi (lihat GiftLeaderboardService::recalculate()) - nama/
          coin/mic diisi manual admin lewat Preview Live (App\Livewire\ProjectLive\
          PreviewLive::saveBgEdit()), bukan otomatis dari gift TikTok. --}}
     @php
         $coHostIsVideo = $detail['background']['type'] === 'video';
         $coinDisplay = \App\Support\CoinFormatter::format($detail['gift_total_value'] ?? 0);
+        $seatFit = \App\Enums\BackgroundFit::from($detail['background']['fit_mode'])->cssObjectFit();
     @endphp
     <div wire:key="seat-{{ $detail['id'] }}"
-        style="{{ $seatAreaStyle }} {{ $boxStyle }}"
+        style="{{ $seatAreaStyle }} {{ $bgBoxStyle }}"
         class="relative w-full h-full overflow-hidden border-white/15">
-        <!-- Background: video/gambar BG yang sama, diblur & digelapkan sedikit -->
+        {{-- Media BG penuh (sama persis dgn cabang "elseif ($detail['background'])" di
+             bawah utk role Host/polos) - fit_mode/offset/scale diatur admin lewat
+             App\Livewire\ProjectLive\Background, BUKAN lagi avatar_size (setting itu
+             cuma relevan buat avatar lingkaran kursi normal). --}}
         @if ($coHostIsVideo)
-            <video wire:key="{{ $videoKey }}-blur" src="{{ $detail['background']['url'] }}" autoplay loop playsinline {{ $videoMuted ? 'muted' : '' }} aria-hidden="true"
-                class="absolute inset-0 w-full h-full object-cover scale-125 blur-md brightness-[0.45]"></video>
+            <video wire:key="{{ $videoKey }}-full" src="{{ $detail['background']['url'] }}" autoplay loop playsinline {{ $videoMuted ? 'muted' : '' }}
+                style="width: 100%; height: 100%; object-fit: {{ $seatFit }}; transform: translate({{ $detail['background']['offset_x'] }}px, {{ $detail['background']['offset_y'] }}px) scale({{ $detail['background']['scale'] / 100 }});"></video>
         @else
-            <img src="{{ $detail['background']['url'] }}" alt="" aria-hidden="true"
-                class="absolute inset-0 w-full h-full object-cover scale-125 blur-md brightness-[0.45]">
+            <img src="{{ $detail['background']['url'] }}" alt="{{ $detail['name'] ?? '' }}"
+                style="width: 100%; height: 100%; object-fit: {{ $seatFit }}; transform: translate({{ $detail['background']['offset_x'] }}px, {{ $detail['background']['offset_y'] }}px) scale({{ $detail['background']['scale'] / 100 }});">
         @endif
-
-        <!-- Avatar (bulat) - video/gambar BG yang sama, versi utuh (bukan blur) -->
-        <div class="absolute inset-0 flex items-center justify-center">
-            @if ($coHostIsVideo)
-                <video wire:key="{{ $videoKey }}-avatar" src="{{ $detail['background']['url'] }}" autoplay loop playsinline {{ $videoMuted ? 'muted' : '' }}
-                    class="w-[62%] aspect-square rounded-full object-cover ring-2 ring-white/20" style="transform: scale({{ $projectLive->avatar_size / 100 }});"></video>
-            @else
-                <img src="{{ $detail['background']['url'] }}" alt="{{ $detail['name'] ?? '' }}" class="w-[62%] aspect-square rounded-full object-cover ring-2 ring-white/20" style="transform: scale({{ $projectLive->avatar_size / 100 }});">
-            @endif
-        </div>
 
         <!-- Badge coin -->
         <div class="absolute top-2 left-2 flex items-center gap-1.5 bg-black/60 rounded-full pl-1.5 pr-2.5 py-1" style="transform: translateY({{ $projectLive->coin_offset_y }}px) scale({{ $projectLive->coin_size / 100 }}); transform-origin: top left;">

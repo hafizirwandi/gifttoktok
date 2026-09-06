@@ -256,9 +256,18 @@ class PreviewLive extends Component
             'font' => $validated['font'] !== SeatFont::Default->value ? $validated['font'] : null,
             'border_color' => $validated['borderColor'] !== '' ? $validated['borderColor'] : null,
             // Edit manual selalu mengembalikan kursi ke source "manual", supaya tidak
-            // langsung ketiban timpa oleh recalculation leaderboard auto-mode berikutnya.
+            // langsung ketiban timpa oleh recalculation leaderboard auto-mode berikutnya -
+            // KECUALI kalau lagi di-PIN: link ke project_live_gifter_id SENGAJA
+            // dipertahankan (bukan dinolkan) supaya GiftLeaderboardService::recalculate()
+            // masih bisa (1) mengenali gifter aslinya biar tidak "dobel" nongol lagi di
+            // kursi lain kalau dia ngasih gift baru, dan (2) tetap nambahin
+            // gift_total_value kursi ini seiring round_value gifter itu terus naik
+            // (lihat recalculate()). BUG YANG SUDAH KEJADIAN: sebelum ini field-nya
+            // SELALU dinolkan tanpa syarat cuma gara2 admin buka modal edit buat toggle
+            // pin - gifter aslinya jadi "lepas ikatan" dari kursi pin ini dan otomatis
+            // dianggap gifter baru begitu ngasih gift lagi, nyasar bikin kursi baru.
             'source' => DetailSource::Manual->value,
-            'project_live_gifter_id' => null,
+            'project_live_gifter_id' => $validated['isPinned'] ? $detail->project_live_gifter_id : null,
         ];
 
         if ($this->img) {

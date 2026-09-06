@@ -35,16 +35,34 @@ class GiftLeaderboardService
     {
         DB::transaction(function () use ($projectLive) {
             // Kursi yang di-PIN (lihat App\Livewire\ProjectLive\PreviewLive::togglePinned())
-            // dikeluarkan TOTAL dari sini, SAMA PERSIS spt kursi BG - datanya (nama/foto/
-            // coin) tidak boleh ditimpa/dikosongkan oleh sistem sampai admin unpin manual.
+            // dikeluarkan TOTAL dari sini, SAMA PERSIS spt kursi BG - nama/foto/posisinya
+            // tidak boleh ditimpa/dikosongkan oleh sistem sampai admin unpin manual.
             // Gifter yang kebetulan lagi nempatin kursi pin juga dikeluarkan dari daftar
             // kandidat top-N (whereNotIn di bawah) - TANPA ini gifter yang sama bisa
             // "dobel" muncul di kursi pin DAN kursi lain sekaligus kalau round_value-nya
-            // masih cukup tinggi utk masuk top-N.
-            $pinnedGifterIds = $projectLive->details()
+            // masih cukup tinggi utk masuk top-N. Ini cuma benar2 kejadi kalau link
+            // project_live_gifter_id kursi pin ini masih ada (lihat PreviewLive::save() -
+            // link ini SENGAJA dipertahankan pas admin nge-pin, BUKAN dinolkan spt edit
+            // manual biasa).
+            $pinnedSeats = $projectLive->details()
                 ->where('is_pinned', true)
                 ->whereNotNull('project_live_gifter_id')
-                ->pluck('project_live_gifter_id');
+                ->with('gifter')
+                ->get();
+
+            $pinnedGifterIds = $pinnedSeats->pluck('project_live_gifter_id');
+
+            // Coin kursi PIN TETAP disinkron mengikuti round_value gifter aslinya di
+            // SETIAP recalculate() - supaya kalau orang yang SAMA (masih itu2 juga)
+            // ngasih gift baru, angkanya lanjut nambah di kursi pin ini, BUKAN malah
+            // dianggap gifter baru dan nyasar bikin kursi baru sendiri (nama/foto/posisi
+            // kursi pin ini sendiri TETAP tidak disentuh - cuma gift_total_value yang
+            // ikut disinkron, biar tetap kelihatan "hidup" pas ditonton).
+            foreach ($pinnedSeats as $seat) {
+                if ($seat->gifter && $seat->gifter->round_value !== $seat->gift_total_value) {
+                    $seat->update(['gift_total_value' => $seat->gifter->round_value]);
+                }
+            }
 
             $eligibleSeats = $projectLive->details()
                 ->lockForUpdate()

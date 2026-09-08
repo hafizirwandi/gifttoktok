@@ -33,6 +33,8 @@ class ProjectLiveBackground extends Model
         'host_badge_offset_y',
         'host_badge_visible',
         'host_name_visible',
+        'host_badge_text',
+        'host_badge_font',
         'audio_enabled',
     ];
 
@@ -80,6 +82,9 @@ class ProjectLiveBackground extends Model
             'host_badge_bg_color' => $this->host_badge_bg_color,
             'host_badge_text_color' => $this->host_badge_text_color,
             'host_badge_size' => $this->host_badge_size,
+            // null = ikut default GLOBAL (project_lives.host_badge_offset_x/y) -
+            // angka eksplisit (termasuk 0) = posisi LOKAL kotak BG ini. Lihat komentar
+            // migrasi add_host_badge_text_font_to_project_live_backgrounds_table.
             'host_badge_offset_x' => $this->host_badge_offset_x,
             'host_badge_offset_y' => $this->host_badge_offset_y,
             // null = ikut default GLOBAL (project_lives.host_badge_visible/
@@ -87,6 +92,9 @@ class ProjectLiveBackground extends Model
             // partials/seat-box.blade.php.
             'host_badge_visible' => $this->host_badge_visible,
             'host_name_visible' => $this->host_name_visible,
+            // null = ikut default GLOBAL (project_lives.host_badge_text/font).
+            'host_badge_text' => $this->host_badge_text,
+            'host_badge_font' => $this->host_badge_font,
             'audio_enabled' => $this->audio_enabled,
         ];
     }

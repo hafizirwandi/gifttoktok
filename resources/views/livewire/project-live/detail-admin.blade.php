@@ -230,11 +230,14 @@
                                     </select>
                                 </div>
 
-                                {{-- Tulisan "Host" (badge, bukan Nama Host) - tidak punya kartu
-                                     ELEMENT_GROUPS sendiri (stylingnya per-BG, bukan global), jadi
-                                     tombol Tampil/Sembunyi GLOBAL-nya ditaruh di sini, berdampingan
-                                     dgn Nama Host. --}}
-                                <div class="border-t border-gray-100 dark:border-gray-700 pt-2">
+                                {{-- Tulisan "Host" (badge pojok kiri ATAS, beda dari Nama Host di
+                                     kiri BAWAH) - tidak punya kartu ELEMENT_GROUPS sendiri
+                                     (warna/ukuran badge-nya TETAP per-BG doang, tidak ada versi
+                                     global), jadi teks/font/posisi/Tampil-Sembunyi GLOBAL-nya
+                                     ditaruh di sini, berdampingan dgn Nama Host. Posisi
+                                     (host_badge_offset_x/y) tetap lewat $boxStyle spt elemen lain
+                                     (ada di BOX_STYLE_FIELDS), cuma teks & font-nya field baru. --}}
+                                <div class="border-t border-gray-100 dark:border-gray-700 pt-2 space-y-1.5">
                                     <div class="flex items-center justify-between gap-2">
                                         <span class="text-[10px] font-semibold text-gray-500 dark:text-gray-400">Tulisan "Host"</span>
                                         <button type="button" wire:click="toggleVisibilityDraft('host_badge')"
@@ -245,6 +248,34 @@
                                             <span class="text-[10px] font-semibold text-white">{{ ($visibility['host_badge'] ?? true) ? 'Tampil' : 'Sembunyi' }}</span>
                                         </button>
                                     </div>
+
+                                    <div>
+                                        <x-input-label for="hostBadgeText" value="Teks (kosongkan = &quot;Host&quot;)" class="text-[10px]" />
+                                        <x-text-input wire:model="hostBadgeText" id="hostBadgeText" class="block mt-0.5 w-full text-sm" type="text" placeholder="Host" maxlength="50" />
+                                        <x-input-error :messages="$errors->get('hostBadgeText')" class="mt-1" />
+                                    </div>
+
+                                    <div>
+                                        <x-input-label for="hostBadgeFont" value="Font" class="text-[10px]" />
+                                        <select wire:model="hostBadgeFont" id="hostBadgeFont"
+                                            class="block mt-0.5 w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 shadow-sm text-xs">
+                                            @foreach (\App\Enums\SeatFont::cases() as $option)
+                                                <option value="{{ $option->value }}">{{ $option->label() }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <x-input-label value="Kiri/Kanan" class="text-[10px]" />
+                                            <x-text-input wire:model="boxStyle.host_badge_offset_x" type="number" min="-100" max="100" class="block w-full text-sm mt-0.5" />
+                                        </div>
+                                        <div>
+                                            <x-input-label value="Naik/Turun" class="text-[10px]" />
+                                            <x-text-input wire:model="boxStyle.host_badge_offset_y" type="number" min="-100" max="100" class="block w-full text-sm mt-0.5" />
+                                        </div>
+                                    </div>
+                                    <p class="text-[10px] text-gray-400">Teks/font/posisi bisa di-custom per kotak BG lewat toggle "Tulisan Host" di Preview Live.</p>
                                 </div>
                             @endif
                         </div>

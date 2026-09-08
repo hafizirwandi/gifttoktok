@@ -112,9 +112,21 @@ class PreviewLive extends Component
 
     public int $hostBadgeSize = 100;
 
-    public int $hostBadgeOffsetX = 0;
+    /**
+     * Teks/font/posisi tulisan badge "Host" KOTAK BG INI SAJA - null (SEMUA empat
+     * properti ini SELALU null/non-null BARENG-BARENG, satu bundel) = ikut default
+     * GLOBAL (project_lives.host_badge_text/font/offset_x/offset_y - Admin), diisi
+     * = override LOKAL. Beda dari $hostBadgeBgColor/$hostBadgeTextColor/
+     * $hostBadgeSize di atas yang SELALU per-BG (tidak ada tingkat GLOBAL). Lihat
+     * toggleHostBadgeCustom().
+     */
+    public ?string $hostBadgeText = null;
 
-    public int $hostBadgeOffsetY = 0;
+    public ?string $hostBadgeFont = null;
+
+    public ?int $hostBadgeOffsetX = null;
+
+    public ?int $hostBadgeOffsetY = null;
 
     /**
      * Tampil/Sembunyi badge "Host" & Nama Host KOTAK BG INI SAJA - string kosong =
@@ -370,6 +382,8 @@ class PreviewLive extends Component
         $this->hostBadgeBgColor = $bg->host_badge_bg_color;
         $this->hostBadgeTextColor = $bg->host_badge_text_color;
         $this->hostBadgeSize = $bg->host_badge_size;
+        $this->hostBadgeText = $bg->host_badge_text;
+        $this->hostBadgeFont = $bg->host_badge_font;
         $this->hostBadgeOffsetX = $bg->host_badge_offset_x;
         $this->hostBadgeOffsetY = $bg->host_badge_offset_y;
         $this->hostBadgeVisible = $bg->host_badge_visible === null ? '' : ($bg->host_badge_visible ? '1' : '0');
@@ -386,7 +400,30 @@ class PreviewLive extends Component
 
     public function closeBgEdit(): void
     {
-        $this->reset(['editingBgDetailId', 'editingBgId', 'bgRole', 'hostBadgeBgColor', 'hostBadgeTextColor', 'hostBadgeSize', 'hostBadgeOffsetX', 'hostBadgeOffsetY', 'hostBadgeVisible', 'hostNameVisible', 'name', 'coin', 'micEnabled']);
+        $this->reset(['editingBgDetailId', 'editingBgId', 'bgRole', 'hostBadgeBgColor', 'hostBadgeTextColor', 'hostBadgeSize', 'hostBadgeText', 'hostBadgeFont', 'hostBadgeOffsetX', 'hostBadgeOffsetY', 'hostBadgeVisible', 'hostNameVisible', 'name', 'coin', 'micEnabled']);
+    }
+
+    /**
+     * Teks/font/posisi tulisan badge "Host" - satu bundel (lihat komentar properti
+     * $hostBadgeText dkk) - null = ikut GLOBAL, diisi = override LOKAL. Nyalain
+     * override diisi dari nilai GLOBAL yang lagi aktif biar admin mulai dari
+     * tampilan yang sama sebelum di-tweak, sama pola dgn toggleBorderColor().
+     */
+    public function toggleHostBadgeCustom(): void
+    {
+        if ($this->hostBadgeOffsetX !== null) {
+            $this->hostBadgeText = null;
+            $this->hostBadgeFont = null;
+            $this->hostBadgeOffsetX = null;
+            $this->hostBadgeOffsetY = null;
+
+            return;
+        }
+
+        $this->hostBadgeText = $this->projectLive->host_badge_text ?? 'Host';
+        $this->hostBadgeFont = $this->projectLive->host_badge_font ?? SeatFont::Default->value;
+        $this->hostBadgeOffsetX = $this->projectLive->host_badge_offset_x;
+        $this->hostBadgeOffsetY = $this->projectLive->host_badge_offset_y;
     }
 
     /**
@@ -419,8 +456,10 @@ class PreviewLive extends Component
             'hostBadgeBgColor' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'hostBadgeTextColor' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'hostBadgeSize' => 'required|integer|min:50|max:200',
-            'hostBadgeOffsetX' => 'required|integer|min:-100|max:100',
-            'hostBadgeOffsetY' => 'required|integer|min:-100|max:100',
+            'hostBadgeText' => 'nullable|string|max:50',
+            'hostBadgeFont' => ['nullable', Rule::in(array_column(SeatFont::cases(), 'value'))],
+            'hostBadgeOffsetX' => 'nullable|integer|min:-100|max:100',
+            'hostBadgeOffsetY' => 'nullable|integer|min:-100|max:100',
             'hostBadgeVisible' => ['nullable', Rule::in(['', '0', '1'])],
             'hostNameVisible' => ['nullable', Rule::in(['', '0', '1'])],
             'name' => 'nullable|string|max:255',
@@ -434,6 +473,8 @@ class PreviewLive extends Component
             'host_badge_bg_color' => $validated['hostBadgeBgColor'],
             'host_badge_text_color' => $validated['hostBadgeTextColor'],
             'host_badge_size' => $validated['hostBadgeSize'],
+            'host_badge_text' => $validated['hostBadgeText'],
+            'host_badge_font' => $validated['hostBadgeFont'],
             'host_badge_offset_x' => $validated['hostBadgeOffsetX'],
             'host_badge_offset_y' => $validated['hostBadgeOffsetY'],
             'host_badge_visible' => $validated['hostBadgeVisible'] !== '' ? $validated['hostBadgeVisible'] === '1' : null,

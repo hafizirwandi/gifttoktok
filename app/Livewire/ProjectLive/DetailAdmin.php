@@ -126,6 +126,12 @@ class DetailAdmin extends Component
         // name_offset_x/y krn stylenya beda total (bukan badge pil).
         'host_name_offset_y' => ['label' => 'Naik/Turun Nama Host', 'min' => -100, 'max' => 100, 'default' => 0],
         'host_name_offset_x' => ['label' => 'Geser Kiri/Kanan Nama Host', 'min' => -100, 'max' => 100, 'default' => 0],
+        // Tulisan badge "Host" (App\Enums\SeatRole::Host, pojok kiri ATAS - beda dari
+        // Nama Host di atas yang di kiri BAWAH tanpa badge) - warna/ukuran badge-nya
+        // TETAP per-BG doang (project_live_backgrounds.host_badge_bg_color dkk, tidak
+        // ada versi global), cuma posisi yang dapat tingkat GLOBAL di sini.
+        'host_badge_offset_y' => ['label' => 'Naik/Turun Tulisan Host', 'min' => -100, 'max' => 100, 'default' => 0],
+        'host_badge_offset_x' => ['label' => 'Geser Kiri/Kanan Tulisan Host', 'min' => -100, 'max' => 100, 'default' => 0],
     ];
 
     public array $boxStyle = [];
@@ -143,6 +149,17 @@ class DetailAdmin extends Component
      * font, diatur lewat tombol "Custom" di Preview Live).
      */
     public string $emptyLabelFont = 'default';
+
+    /**
+     * Teks & font GLOBAL tulisan badge "Host" (App\Models\ProjectLive::
+     * host_badge_text/host_badge_font) - fallback kalau kotak BG tidak punya
+     * override LOKAL sendiri (project_live_backgrounds.host_badge_text/font,
+     * diatur lewat toggle "Tulisan Host" di Preview Live). Teks kosong = pakai
+     * literal "Host" (perilaku default lama).
+     */
+    public string $hostBadgeText = '';
+
+    public string $hostBadgeFont = 'default';
 
     /**
      * Warna GLOBAL border kotak & BG kotak kosong - fallback kalau override LOKAL
@@ -185,6 +202,8 @@ class DetailAdmin extends Component
         $this->resetCoinHotkey = (string) $projectLive->reset_coin_hotkey;
         $this->hostNameFont = $projectLive->host_name_font ?? 'default';
         $this->emptyLabelFont = $projectLive->empty_label_font ?? 'default';
+        $this->hostBadgeText = (string) $projectLive->host_badge_text;
+        $this->hostBadgeFont = $projectLive->host_badge_font ?? 'default';
         $this->seatBorderColor = (string) $projectLive->seat_border_color;
         $this->seatEmptyBgColor = (string) $projectLive->seat_empty_bg_color;
 
@@ -235,6 +254,8 @@ class DetailAdmin extends Component
         $rules['seatEmptyBgColor'] = ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'];
         $rules['hostNameFont'] = ['required', Rule::in(array_column(SeatFont::cases(), 'value'))];
         $rules['emptyLabelFont'] = ['required', Rule::in(array_column(SeatFont::cases(), 'value'))];
+        $rules['hostBadgeText'] = 'nullable|string|max:50';
+        $rules['hostBadgeFont'] = ['required', Rule::in(array_column(SeatFont::cases(), 'value'))];
         $rules['micIconFile'] = 'nullable|image|mimes:jpg,jpeg,png,webp|max:8192';
         $rules['emptyIconFile'] = 'nullable|image|mimes:jpg,jpeg,png,webp|max:8192';
 
@@ -258,6 +279,8 @@ class DetailAdmin extends Component
         $data['seat_empty_bg_color'] = $validated['seatEmptyBgColor'] !== '' ? $validated['seatEmptyBgColor'] : null;
         $data['host_name_font'] = $validated['hostNameFont'] !== SeatFont::Default->value ? $validated['hostNameFont'] : null;
         $data['empty_label_font'] = $validated['emptyLabelFont'] !== SeatFont::Default->value ? $validated['emptyLabelFont'] : null;
+        $data['host_badge_text'] = $validated['hostBadgeText'] !== '' ? $validated['hostBadgeText'] : null;
+        $data['host_badge_font'] = $validated['hostBadgeFont'] !== SeatFont::Default->value ? $validated['hostBadgeFont'] : null;
 
         if ($this->micIconFile) {
             $oldIcon = $this->projectLive->mic_icon;

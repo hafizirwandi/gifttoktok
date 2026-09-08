@@ -432,13 +432,16 @@
                             @endif
 
                             <div class="flex items-center justify-center py-2">
-                                {{-- Preview live pakai nilai yang lagi di-staging (belum Simpan) --}}
+                                {{-- Preview live pakai nilai yang lagi di-staging (belum Simpan) -
+                                     teks/font/posisi ambil dari properti bundel Tulisan Host di
+                                     bawah kalau lagi Lokal (bisa null saat Global, makanya ada
+                                     fallback), warna/ukuran tetap dari properti di section ini. --}}
                                 <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1"
-                                    style="background: {{ $hostBadgeBgColor }}; transform: translate({{ $hostBadgeOffsetX }}px, {{ $hostBadgeOffsetY }}px) scale({{ $hostBadgeSize / 100 }});">
+                                    style="background: {{ $hostBadgeBgColor }}; transform: translate({{ $hostBadgeOffsetX ?? 0 }}px, {{ $hostBadgeOffsetY ?? 0 }}px) scale({{ $hostBadgeSize / 100 }});">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{{ $hostBadgeTextColor }}" class="w-4 h-4">
                                         <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"/>
                                     </svg>
-                                    <span style="color: {{ $hostBadgeTextColor }};" class="text-sm font-semibold">Host</span>
+                                    <span style="color: {{ $hostBadgeTextColor }};" class="text-sm font-semibold">{{ $hostBadgeText ?: 'Host' }}</span>
                                 </span>
                             </div>
 
@@ -468,20 +471,59 @@
                                 <x-text-input wire:model="hostBadgeSize" id="hostBadgeSize" class="block mt-1 w-full" type="number" min="50" max="200" />
                                 <x-input-error :messages="$errors->get('hostBadgeSize')" class="mt-2" />
                             </div>
+                        </div>
 
-                            <div>
-                                <x-input-label value="Posisi Badge" />
-                                <div class="grid grid-cols-2 gap-3 mt-1">
-                                    <div>
-                                        <x-text-input wire:model="hostBadgeOffsetX" class="block w-full text-sm" type="number" min="-100" max="100" placeholder="Kiri/Kanan" />
-                                        <x-input-error :messages="$errors->get('hostBadgeOffsetX')" class="mt-1" />
+                        {{-- Teks/font/posisi tulisan "Host" - satu bundel toggle Lokal/Global
+                             (App\Livewire\ProjectLive\PreviewLive::toggleHostBadgeCustom()),
+                             TERPISAH dari warna/ukuran di atas yang selalu per-BG (tidak ada
+                             versi global). --}}
+                        <div class="border-t border-gray-100 dark:border-gray-700 pt-4 space-y-3">
+                            <div class="flex items-center justify-between gap-2">
+                                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">Teks, Font &amp; Posisi Tulisan "Host"</p>
+                                <button type="button" wire:click="toggleHostBadgeCustom"
+                                    class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full pl-1 pr-2 py-0.5 transition {{ $hostBadgeOffsetX !== null ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                    <span class="relative inline-flex h-4 w-7 items-center rounded-full bg-black/20">
+                                        <span class="inline-block h-3 w-3 transform rounded-full bg-white transition {{ $hostBadgeOffsetX !== null ? 'translate-x-3.5' : 'translate-x-0.5' }}"></span>
+                                    </span>
+                                    <span class="text-[10px] font-semibold text-white">{{ $hostBadgeOffsetX !== null ? 'Lokal' : 'Global' }}</span>
+                                </button>
+                            </div>
+
+                            @if ($hostBadgeOffsetX !== null)
+                                <div>
+                                    <x-input-label for="hostBadgeTextInput" value="Teks (kosongkan = &quot;Host&quot;)" />
+                                    <x-text-input wire:model="hostBadgeText" id="hostBadgeTextInput" class="block mt-1 w-full" type="text" placeholder="Host" maxlength="50" />
+                                    <x-input-error :messages="$errors->get('hostBadgeText')" class="mt-2" />
+                                </div>
+
+                                <div>
+                                    <x-input-label value="Font" />
+                                    <div class="grid grid-cols-2 gap-1.5 mt-1">
+                                        @foreach (\App\Enums\SeatFont::cases() as $option)
+                                            <button type="button" wire:click="$set('hostBadgeFont', '{{ $option->value }}')"
+                                                style="font-family: {{ $option->cssFontFamily() }};"
+                                                class="px-2 py-1.5 text-sm rounded-md border transition {{ $hostBadgeFont === $option->value ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                                                {{ $option->label() }}
+                                            </button>
+                                        @endforeach
                                     </div>
-                                    <div>
-                                        <x-text-input wire:model="hostBadgeOffsetY" class="block w-full text-sm" type="number" min="-100" max="100" placeholder="Naik/Turun" />
-                                        <x-input-error :messages="$errors->get('hostBadgeOffsetY')" class="mt-1" />
+                                    <x-input-error :messages="$errors->get('hostBadgeFont')" class="mt-2" />
+                                </div>
+
+                                <div>
+                                    <x-input-label value="Posisi Badge" />
+                                    <div class="grid grid-cols-2 gap-3 mt-1">
+                                        <div>
+                                            <x-text-input wire:model="hostBadgeOffsetX" class="block w-full text-sm" type="number" min="-100" max="100" placeholder="Kiri/Kanan" />
+                                            <x-input-error :messages="$errors->get('hostBadgeOffsetX')" class="mt-1" />
+                                        </div>
+                                        <div>
+                                            <x-text-input wire:model="hostBadgeOffsetY" class="block w-full text-sm" type="number" min="-100" max="100" placeholder="Naik/Turun" />
+                                            <x-input-error :messages="$errors->get('hostBadgeOffsetY')" class="mt-1" />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            @endif
                         </div>
                     @elseif ($bgRole === 'co_host')
                         <div class="border-t border-gray-100 dark:border-gray-700 pt-4 space-y-3">

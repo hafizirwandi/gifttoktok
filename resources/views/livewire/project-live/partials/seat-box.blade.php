@@ -108,6 +108,15 @@
     // regardless krn null-safe.
     $hostBadgeVisible = ($detail['background']['host_badge_visible'] ?? null) ?? $projectLive->host_badge_visible;
     $hostNameVisible = ($detail['background']['host_name_visible'] ?? null) ?? $projectLive->host_name_visible;
+    // Teks/font/posisi tulisan badge "Host" - LOKAL per-BG (project_live_backgrounds.
+    // host_badge_text/font/offset_x/offset_y, satu bundel - null semua = belum
+    // di-override) atau GLOBAL (project_lives) kalau tidak - fallback akhir teks ke
+    // literal "Host" kalau dua-duanya kosong. Lihat App\Livewire\ProjectLive\
+    // PreviewLive::toggleHostBadgeCustom().
+    $hostBadgeText = ($detail['background']['host_badge_text'] ?? null) ?: ($projectLive->host_badge_text ?: 'Host');
+    $hostBadgeFont = ($detail['background']['host_badge_font'] ?? null) ?: $projectLive->host_badge_font;
+    $hostBadgeOffsetX = ($detail['background']['host_badge_offset_x'] ?? null) ?? $projectLive->host_badge_offset_x;
+    $hostBadgeOffsetY = ($detail['background']['host_badge_offset_y'] ?? null) ?? $projectLive->host_badge_offset_y;
 @endphp
 @if (($detail['background']['role'] ?? 'none') === 'co_host')
     {{-- Co-Host (App\Enums\SeatRole) - kotak yang jadi BG, media-nya (video/gambar) tampil
@@ -228,11 +237,11 @@
         @if (($detail['background']['role'] ?? 'none') === 'host')
             @if ($hostBadgeVisible)
                 <span class="absolute top-2 left-2 flex items-center gap-1 rounded-full px-2.5 py-1"
-                    style="background: {{ $detail['background']['host_badge_bg_color'] }}; transform: translate({{ $detail['background']['host_badge_offset_x'] }}px, {{ $detail['background']['host_badge_offset_y'] }}px) scale({{ $detail['background']['host_badge_size'] / 100 }}); transform-origin: top left;">
+                    style="background: {{ $detail['background']['host_badge_bg_color'] }}; transform: translate({{ $hostBadgeOffsetX }}px, {{ $hostBadgeOffsetY }}px) scale({{ $detail['background']['host_badge_size'] / 100 }}); transform-origin: top left;">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{{ $detail['background']['host_badge_text_color'] }}" class="w-4 h-4">
                         <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"/>
                     </svg>
-                    <span style="color: {{ $detail['background']['host_badge_text_color'] }};" class="text-sm font-semibold">Host</span>
+                    <span style="color: {{ $detail['background']['host_badge_text_color'] }}; {{ $hostBadgeFont ? 'font-family: '.\App\Enums\SeatFont::from($hostBadgeFont)->cssFontFamily().';' : '' }}" class="text-sm font-semibold">{{ $hostBadgeText }}</span>
                 </span>
             @endif
 

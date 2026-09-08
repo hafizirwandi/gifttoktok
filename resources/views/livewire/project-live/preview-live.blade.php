@@ -436,11 +436,8 @@
                                      teks/font/posisi ambil dari properti bundel Tulisan Host di
                                      bawah kalau lagi Lokal (bisa null saat Global, makanya ada
                                      fallback), warna/ukuran tetap dari properti di section ini. --}}
-                                <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1"
+                                <span class="inline-flex items-center rounded-full px-2.5 py-1"
                                     style="background: {{ $hostBadgeBgColor }}; transform: translate({{ $hostBadgeOffsetX ?? 0 }}px, {{ $hostBadgeOffsetY ?? 0 }}px) scale({{ $hostBadgeSize / 100 }});">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{{ $hostBadgeTextColor }}" class="w-4 h-4">
-                                        <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"/>
-                                    </svg>
                                     <span style="color: {{ $hostBadgeTextColor }};" class="text-sm font-semibold">{{ $hostBadgeText ?: 'Host' }}</span>
                                 </span>
                             </div>
@@ -456,7 +453,7 @@
                                     <x-input-error :messages="$errors->get('hostBadgeBgColor')" class="mt-1" />
                                 </div>
                                 <div>
-                                    <x-input-label for="hostBadgeTextColor" value="Warna Icon/Teks" />
+                                    <x-input-label for="hostBadgeTextColor" value="Warna Teks" />
                                     <div class="flex items-center gap-2 mt-1">
                                         <input type="color" wire:model="hostBadgeTextColor" id="hostBadgeTextColor"
                                             class="h-9 w-12 rounded-md border border-gray-200 dark:border-gray-600 cursor-pointer">

@@ -86,13 +86,19 @@
                 }
             </style>
         @endif
-        <div class="w-screen overflow-hidden flex items-start justify-center px-3 pt-4" style="height: 97vh;">
+        {{-- BUG YANG SUDAH KEJADIAN: dulu items-start + pt-4 TANPA padding-bottom bikin
+             kotak mentok pas di tepi ATAS/BAWAH layar OBS begitu di-crop sbg browser
+             source (px-3 doang, tidak ada jarak vertikal sama sekali) - sekarang
+             items-center + py-6 simetris atas-bawah, dan --seat-w di bawah ikut
+             dikurangi py-6 itu (48px) dari 100vh biar kotaknya SENDIRI yang menyusut
+             menyesuaikan, bukan cuma ke-overflow-hidden diam-diam. --}}
+        <div class="w-screen overflow-hidden flex items-center justify-center px-3 py-6" style="height: 100vh;">
             {{-- Kotak mobile-first max 480px ini SATU-SATUNYA acuan ukuran/posisi baik utk
                  grid kursi MAUPUN BG layar penuh - BG SENGAJA dibatasi di dalam kotak ini
                  (position:relative di sini), BUKAN selebar layar PC (w-screen di wrapper
                  luar itu cuma buat nge-center kotak ini, bukan area BG). --}}
             <div style="
-                --seat-w: min(100vw, 93vh * {{ $mode->ratioW() }} / {{ $mode->ratioH() }}, 480px);
+                --seat-w: min(100vw, (100vh - 48px) * {{ $mode->ratioW() }} / {{ $mode->ratioH() }}, 480px);
                 width: var(--seat-w);
                 height: {{ $mode->intrinsicHeight() ? 'auto' : 'calc(var(--seat-w) * '.$mode->ratioH().' / '.$mode->ratioW().')' }};
                 position: relative;
@@ -116,7 +122,20 @@
                         $screenVideoKey = 'screenbg-'.($screenVideoMuted ? 'muted' : 'unmuted');
                     @endphp
                     <div style="position: absolute; inset: 0; z-index: 0; overflow: hidden;">
-                        @if ($screenBackground['type'] === 'video')
+                        @if ($screenBackground['fit_mode'] === 'circle')
+                            {{-- Lingkaran di tengah (App\Enums\BackgroundFit::Circle) - lihat
+                                 komentar detail di partials/seat-box.blade.php, markupnya sama. --}}
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="aspect-square rounded-full overflow-hidden" style="width: {{ $screenBackground['scale'] }}%; transform: translate({{ $screenBackground['offset_x'] }}px, {{ $screenBackground['offset_y'] }}px);">
+                                    @if ($screenBackground['type'] === 'video')
+                                        <video wire:key="{{ $screenVideoKey }}-circle" src="{{ $screenBackground['url'] }}" autoplay loop playsinline {{ $screenVideoMuted ? 'muted' : '' }}
+                                            class="w-full h-full object-cover"></video>
+                                    @else
+                                        <img src="{{ $screenBackground['url'] }}" alt="" class="w-full h-full object-cover">
+                                    @endif
+                                </div>
+                            </div>
+                        @elseif ($screenBackground['type'] === 'video')
                             <video wire:key="{{ $screenVideoKey }}" src="{{ $screenBackground['url'] }}" autoplay loop playsinline {{ $screenVideoMuted ? 'muted' : '' }}
                                 style="width: 100%; height: 100%; object-fit: {{ $screenFit }}; transform: translate({{ $screenBackground['offset_x'] }}px, {{ $screenBackground['offset_y'] }}px) scale({{ $screenBackground['scale'] / 100 }});"></video>
                         @else

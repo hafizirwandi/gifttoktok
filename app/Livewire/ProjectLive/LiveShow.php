@@ -110,6 +110,8 @@ class LiveShow extends Component
             'font' => null,
             'border_color' => null,
             'mic_visible' => true,
+            'mic_offset_x' => null,
+            'mic_offset_y' => null,
             'background' => null,
             'active_hotkey_color' => null,
             'last_gift_icon_url' => null,

@@ -140,6 +140,7 @@
                         'empty_label' => 'Teks kotak kosong',
                         'gift_badge' => 'Icon pemetaan gift',
                         'mic' => 'Icon mic',
+                        'host_name' => 'Nama Host (bold)',
                     ] as $field => $label)
                         <div>
                             <x-input-label :for="'size-'.$field" :value="$label" />
@@ -150,6 +151,9 @@
                             <x-input-error :messages="$errors->get('sizes.'.$field)" class="mt-1" />
                             @if ($field === 'mic')
                                 <p class="text-[10px] text-gray-400 mt-1">Nyala/mati mic diatur per kotak di Preview Live.</p>
+                            @endif
+                            @if ($field === 'host_name')
+                                <p class="text-[10px] text-gray-400 mt-1">Nama kotak yang jadi Host (isi teksnya diatur per kotak di Preview Live).</p>
                             @endif
                         </div>
                     @endforeach
@@ -192,6 +196,24 @@
                             class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700">
                             Simpan Padding &amp; Border
                         </button>
+                    </div>
+                </div>
+
+                <!-- Font Nama Host - GLOBAL utk semua kotak yang jadi Host (App\Enums\
+                     SeatRole::Host), teksnya sendiri (siapa namanya) & ukuran/posisi
+                     diatur terpisah (grid Ukuran Konten "Nama Host" & Padding/Border di
+                     atas, isi teks per kotak di Preview Live). -->
+                <div class="border-t border-gray-100 dark:border-gray-700 pt-3 space-y-2">
+                    <p class="text-xs font-semibold text-gray-600 dark:text-gray-300">Font Nama Host</p>
+                    <p class="text-[10px] text-gray-400">Font teks nama Host (bold, tanpa badge) di pojok kiri bawah kotak.</p>
+                    <div class="grid grid-cols-2 gap-1.5">
+                        @foreach (\App\Enums\SeatFont::cases() as $option)
+                            <button type="button" wire:click="updateHostNameFont('{{ $option->value }}')"
+                                style="font-family: {{ $option->cssFontFamily() }};"
+                                class="px-2 py-1.5 text-sm rounded-md border transition {{ $hostNameFont === $option->value ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                                {{ $option->label() }}
+                            </button>
+                        @endforeach
                     </div>
                 </div>
 

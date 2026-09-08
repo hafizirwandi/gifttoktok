@@ -56,7 +56,7 @@ class DetailAdmin extends Component
      * lihat kolom *_size di project_lives — diterapkan lewat transform:scale di
      * partials/seat-box.blade.php.
      */
-    public const SIZE_FIELDS = ['coin', 'name', 'avatar', 'empty_icon', 'empty_label', 'gift_badge', 'mic'];
+    public const SIZE_FIELDS = ['coin', 'name', 'avatar', 'empty_icon', 'empty_label', 'gift_badge', 'mic', 'host_name'];
 
     public array $sizes = [];
 
@@ -90,9 +90,21 @@ class DetailAdmin extends Component
         'name_offset_x' => ['label' => 'Geser Kiri/Kanan Badge Nama', 'min' => -100, 'max' => 100, 'default' => 0],
         'mic_offset_x' => ['label' => 'Geser Kiri/Kanan Icon Mic', 'min' => -100, 'max' => 100, 'default' => 0],
         'gift_badge_offset_x' => ['label' => 'Geser Kiri/Kanan Icon Gift Pemetaan', 'min' => -100, 'max' => 100, 'default' => 0],
+        // Nama Host (App\Enums\SeatRole::Host) - teks bold tanpa badge di pojok kiri
+        // bawah kotak, lihat partials/seat-box.blade.php. Terpisah dari
+        // name_offset_x/y krn stylenya beda total (bukan badge pil).
+        'host_name_offset_y' => ['label' => 'Naik/Turun Nama Host', 'min' => -100, 'max' => 100, 'default' => 0],
+        'host_name_offset_x' => ['label' => 'Geser Kiri/Kanan Nama Host', 'min' => -100, 'max' => 100, 'default' => 0],
     ];
 
     public array $boxStyle = [];
+
+    /**
+     * Font teks Nama Host (App\Enums\SeatFont) - GLOBAL utk semua kotak yang jadi
+     * Host, beda dari 'font' per-kursi di PreviewLive (itu cuma buat teks kotak
+     * kosong). Null = pakai default (Figtree).
+     */
+    public string $hostNameFont = 'default';
 
     /**
      * Hotkey yang dipencet di halaman LIVE (bukan di sini) buat langsung memicu Reset
@@ -111,6 +123,7 @@ class DetailAdmin extends Component
         $this->tiktokUsername = (string) $projectLive->tiktok_username;
         $this->resetLeaderboardHotkey = (string) $projectLive->reset_leaderboard_hotkey;
         $this->resetCoinHotkey = (string) $projectLive->reset_coin_hotkey;
+        $this->hostNameFont = $projectLive->host_name_font ?? 'default';
 
         foreach (self::SIZE_FIELDS as $field) {
             $this->sizes[$field] = $projectLive->{$field.'_size'};
@@ -182,6 +195,21 @@ public function saveBoxStyle(): void
         }
 
         $this->saveBoxStyle();
+    }
+
+    public function updateHostNameFont(string $value): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $font = \App\Enums\SeatFont::from($value);
+
+        $this->hostNameFont = $font->value;
+
+        $this->projectLive->update([
+            'host_name_font' => $font === \App\Enums\SeatFont::Default ? null : $font->value,
+        ]);
+
+        $this->projectLive->refresh();
     }
 
     public function saveMicIcon(): void

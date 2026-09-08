@@ -116,7 +116,7 @@ class Background extends Component
             'type' => 'required|in:image,video',
             'placement' => 'required|in:screen,seat',
             'seatPosition' => 'required_if:placement,seat|nullable|integer|min:1|max:'.$seatCount,
-            'fitMode' => 'required|in:cover,contain,stretch',
+            'fitMode' => 'required|in:cover,contain,stretch,circle',
             'offsetX' => 'integer',
             'offsetY' => 'integer',
             'scale' => 'integer|min:10|max:300',

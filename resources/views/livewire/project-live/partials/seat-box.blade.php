@@ -60,6 +60,15 @@
     // sbg elemen BEDA dan bikin ulang <video>-nya dari nol (bukan cuma patch atribut) -
     // video-nya restart sebentar, tapi status mute-nya jadi benar2 ke-apply.
     $videoKey = 'bgvideo-'.$detail['id'].'-'.($videoMuted ? 'muted' : 'unmuted');
+
+    // Posisi icon mic - kotak ini boleh override lewat project_live_details.
+    // mic_offset_x/y (modal edit di Preview Live), null (belum di-override) = pakai
+    // settingan global project_lives.mic_offset_x/y apa adanya. Dipakai bareng oleh
+    // kursi normal & Co-Host (dua-duanya nampilin icon mic yang sama).
+    $micOffsetX = $detail['mic_offset_x'] ?? null;
+    $micOffsetX = $micOffsetX !== null ? $micOffsetX : $projectLive->mic_offset_x;
+    $micOffsetY = $detail['mic_offset_y'] ?? null;
+    $micOffsetY = $micOffsetY !== null ? $micOffsetY : $projectLive->mic_offset_y;
 @endphp
 @if (($detail['background']['role'] ?? 'none') === 'co_host')
     {{-- Co-Host (App\Enums\SeatRole) - kotak yang jadi BG, media-nya (video/gambar) tampil
@@ -80,8 +89,24 @@
         {{-- Media BG penuh (sama persis dgn cabang "elseif ($detail['background'])" di
              bawah utk role Host/polos) - fit_mode/offset/scale diatur admin lewat
              App\Livewire\ProjectLive\Background, BUKAN lagi avatar_size (setting itu
-             cuma relevan buat avatar lingkaran kursi normal). --}}
-        @if ($coHostIsVideo)
+             cuma relevan buat avatar lingkaran kursi normal). Fit "circle" (App\Enums\
+             BackgroundFit) beda total dari cover/contain/stretch: medianya TIDAK
+             ngisi kotak edge-to-edge, cuma tampil sbg lingkaran di TENGAH kotak
+             (kotaknya sendiri tetap transparan/hitam) - 'scale' dipakai sbg diameter
+             lingkaran dalam % lebar kotak (bukan zoom), offset_x/y menggeser posisi
+             lingkarannya. --}}
+        @if ($detail['background']['fit_mode'] === 'circle')
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="aspect-square rounded-full overflow-hidden" style="width: {{ $detail['background']['scale'] }}%; transform: translate({{ $detail['background']['offset_x'] }}px, {{ $detail['background']['offset_y'] }}px);">
+                    @if ($coHostIsVideo)
+                        <video wire:key="{{ $videoKey }}-circle" src="{{ $detail['background']['url'] }}" autoplay loop playsinline {{ $videoMuted ? 'muted' : '' }}
+                            class="w-full h-full object-cover"></video>
+                    @else
+                        <img src="{{ $detail['background']['url'] }}" alt="{{ $detail['name'] ?? '' }}" class="w-full h-full object-cover">
+                    @endif
+                </div>
+            </div>
+        @elseif ($coHostIsVideo)
             <video wire:key="{{ $videoKey }}-full" src="{{ $detail['background']['url'] }}" autoplay loop playsinline {{ $videoMuted ? 'muted' : '' }}
                 style="width: 100%; height: 100%; object-fit: {{ $seatFit }}; transform: translate({{ $detail['background']['offset_x'] }}px, {{ $detail['background']['offset_y'] }}px) scale({{ $detail['background']['scale'] / 100 }});"></video>
         @else
@@ -106,7 +131,7 @@
         </div>
 
         @if ($detail['mic_visible'] ?? true)
-            <div class="absolute bottom-2 right-2 h-10 flex items-center justify-center" style="transform: translate({{ $projectLive->mic_offset_x }}px, {{ $projectLive->mic_offset_y }}px) scale({{ $projectLive->mic_size / 100 }}); transform-origin: bottom right;">
+            <div class="absolute bottom-2 right-2 h-10 flex items-center justify-center" style="transform: translate({{ $micOffsetX }}px, {{ $micOffsetY }}px) scale({{ $projectLive->mic_size / 100 }}); transform-origin: bottom right;">
                 @if ($projectLive->micIconUrl())
                     <img src="{{ $projectLive->micIconUrl() }}" alt="" class="w-5 h-5 object-contain drop-shadow">
                 @else
@@ -130,7 +155,21 @@
     <div wire:key="seat-{{ $detail['id'] }}"
         style="{{ $seatAreaStyle }} {{ $bgBoxStyle }}"
         class="relative w-full h-full overflow-hidden border-white/15">
-        @if ($detail['background']['type'] === 'video')
+        @if ($detail['background']['fit_mode'] === 'circle')
+            {{-- Lingkaran di tengah kotak (App\Enums\BackgroundFit::Circle) - lihat
+                 komentar lebih detail di cabang "co_host" di atas, markup-nya sama
+                 persis. --}}
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="aspect-square rounded-full overflow-hidden" style="width: {{ $detail['background']['scale'] }}%; transform: translate({{ $detail['background']['offset_x'] }}px, {{ $detail['background']['offset_y'] }}px);">
+                    @if ($detail['background']['type'] === 'video')
+                        <video wire:key="{{ $videoKey }}-circle" src="{{ $detail['background']['url'] }}" autoplay loop playsinline {{ $videoMuted ? 'muted' : '' }}
+                            class="w-full h-full object-cover"></video>
+                    @else
+                        <img src="{{ $detail['background']['url'] }}" alt="" class="w-full h-full object-cover">
+                    @endif
+                </div>
+            </div>
+        @elseif ($detail['background']['type'] === 'video')
             <video wire:key="{{ $videoKey }}-full" src="{{ $detail['background']['url'] }}" autoplay loop playsinline {{ $videoMuted ? 'muted' : '' }}
                 style="width: 100%; height: 100%; object-fit: {{ $seatFit }}; transform: translate({{ $detail['background']['offset_x'] }}px, {{ $detail['background']['offset_y'] }}px) scale({{ $detail['background']['scale'] / 100 }});"></video>
         @else
@@ -146,6 +185,18 @@
                 </svg>
                 <span style="color: {{ $detail['background']['host_badge_text_color'] }};" class="text-sm font-semibold">Host</span>
             </span>
+
+            {{-- Nama Host: teks BOLD tanpa badge/pil putih (beda dari Badge Nama kursi
+                 normal/Co-Host) di pojok kiri BAWAH, sesuai tampilan asli TikTok LIVE -
+                 font/ukuran/posisi GLOBAL lewat App\Livewire\ProjectLive\DetailAdmin
+                 (host_name_*), isi teksnya sendiri per kotak lewat PreviewLive::
+                 saveBgEdit() ($detail['name'], field yang sama dgn Co-Host). --}}
+            @if ($detail['name'] ?? null)
+                <span class="absolute bottom-2 left-2 font-bold text-white"
+                    style="text-shadow: 0 1px 3px rgba(0,0,0,.85); transform: translate({{ $projectLive->host_name_offset_x }}px, {{ $projectLive->host_name_offset_y }}px) scale({{ $projectLive->host_name_size / 100 }}); transform-origin: bottom left; {{ $projectLive->host_name_font ? 'font-family: '.\App\Enums\SeatFont::from($projectLive->host_name_font)->cssFontFamily().';' : '' }}">
+                    {{ $detail['name'] }}
+                </span>
+            @endif
         @endif
     </div>
 @elseif (($detail['status'] ?? 'hide') === 'show' && ($detail['name'] ?? null))
@@ -204,7 +255,7 @@
              mic_visible), beda dari mic_size yg tetap satu setting global buat semua
              kotak. -->
         @if ($detail['mic_visible'] ?? true)
-            <div class="absolute bottom-2 right-2 h-10 flex items-center justify-center" style="transform: translate({{ $projectLive->mic_offset_x }}px, {{ $projectLive->mic_offset_y }}px) scale({{ $projectLive->mic_size / 100 }}); transform-origin: bottom right;">
+            <div class="absolute bottom-2 right-2 h-10 flex items-center justify-center" style="transform: translate({{ $micOffsetX }}px, {{ $micOffsetY }}px) scale({{ $projectLive->mic_size / 100 }}); transform-origin: bottom right;">
                 {{-- Icon mic custom (App\Models\ProjectLive::micIconUrl(), satu utk semua
                      kotak) - fallback ke SVG bawaan kalau belum ada yang di-upload. --}}
                 @if ($projectLive->micIconUrl())

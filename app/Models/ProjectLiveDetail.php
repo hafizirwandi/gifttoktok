@@ -36,6 +36,8 @@ class ProjectLiveDetail extends Model
         'font',
         'border_color',
         'mic_visible',
+        'mic_offset_x',
+        'mic_offset_y',
         'background_id',
         'active_hotkey_color',
         'source',
@@ -117,6 +119,10 @@ class ProjectLiveDetail extends Model
             'font' => $this->font?->value,
             'border_color' => $this->border_color,
             'mic_visible' => $this->mic_visible,
+            // Override posisi mic PER KOTAK - null = pakai settingan global project_lives.
+            // mic_offset_x/y apa adanya (lihat partials/seat-box.blade.php).
+            'mic_offset_x' => $this->mic_offset_x,
+            'mic_offset_y' => $this->mic_offset_y,
             'background' => $this->background ? $this->background->toLiveArray() : null,
             'active_hotkey_color' => $this->active_hotkey_color,
             'last_gift_icon_url' => $this->last_gift_icon_url,

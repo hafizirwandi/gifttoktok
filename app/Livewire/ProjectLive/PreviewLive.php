@@ -51,6 +51,17 @@ class PreviewLive extends Component
     public bool $micEnabled = true;
 
     /**
+     * Override posisi icon mic KOTAK INI SAJA (App\Models\ProjectLiveDetail::
+     * mic_offset_x/y) - string kosong = tidak di-override, pakai settingan global
+     * project_lives.mic_offset_x/y apa adanya (lihat partials/seat-box.blade.php).
+     * Dipakai bareng oleh modal edit kursi normal DAN modal BG co-host, sama seperti
+     * $name/$coin/$micEnabled di atas.
+     */
+    public string $micOffsetX = '';
+
+    public string $micOffsetY = '';
+
+    /**
      * Pin: kursi ini DIKECUALIKAN dari Reset Leaderboard/Reset Coin DAN dari
      * pengisian otomatis auto-gift (lihat App\Services\GiftLeaderboardService) -
      * nama/foto/coin-nya dipertahankan apa pun yang terjadi ke leaderboard, sampai
@@ -137,6 +148,8 @@ class PreviewLive extends Component
         $this->hotkey = (string) $detail->hotkey;
         $this->status = $detail->status->value;
         $this->micEnabled = $detail->mic_visible;
+        $this->micOffsetX = $detail->mic_offset_x !== null ? (string) $detail->mic_offset_x : '';
+        $this->micOffsetY = $detail->mic_offset_y !== null ? (string) $detail->mic_offset_y : '';
         $this->font = $detail->font?->value ?? SeatFont::Default->value;
         $this->borderColor = (string) $detail->border_color;
         $this->isPinned = $detail->is_pinned;
@@ -145,7 +158,7 @@ class PreviewLive extends Component
 
     public function closeEdit(): void
     {
-        $this->reset(['editingDetailId', 'img', 'name', 'coin', 'emptyLabel', 'emptyIcon', 'emptyIconFile', 'hotkey', 'status', 'micEnabled', 'font', 'borderColor', 'isPinned']);
+        $this->reset(['editingDetailId', 'img', 'name', 'coin', 'emptyLabel', 'emptyIcon', 'emptyIconFile', 'hotkey', 'status', 'micEnabled', 'micOffsetX', 'micOffsetY', 'font', 'borderColor', 'isPinned']);
     }
 
     /**
@@ -236,6 +249,8 @@ class PreviewLive extends Component
             ],
             'status' => 'required|in:hide,show',
             'micEnabled' => 'boolean',
+            'micOffsetX' => 'nullable|integer|min:-100|max:100',
+            'micOffsetY' => 'nullable|integer|min:-100|max:100',
             'isPinned' => 'boolean',
             'font' => ['required', Rule::in(array_column(SeatFont::cases(), 'value'))],
             'borderColor' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
@@ -252,6 +267,8 @@ class PreviewLive extends Component
             'hotkey' => $validated['hotkey'] !== '' ? $validated['hotkey'] : null,
             'status' => $validated['status'],
             'mic_visible' => $validated['micEnabled'],
+            'mic_offset_x' => $validated['micOffsetX'] !== '' && $validated['micOffsetX'] !== null ? (int) $validated['micOffsetX'] : null,
+            'mic_offset_y' => $validated['micOffsetY'] !== '' && $validated['micOffsetY'] !== null ? (int) $validated['micOffsetY'] : null,
             'is_pinned' => $validated['isPinned'],
             'font' => $validated['font'] !== SeatFont::Default->value ? $validated['font'] : null,
             'border_color' => $validated['borderColor'] !== '' ? $validated['borderColor'] : null,
@@ -322,15 +339,20 @@ class PreviewLive extends Component
         $this->hostBadgeTextColor = $bg->host_badge_text_color;
         $this->hostBadgeSize = $bg->host_badge_size;
 
-        // Field co-host - SAMA PERSIS dgn openEdit() normal, dipakai bareng.
+        // Field co-host - SAMA PERSIS dgn openEdit() normal, dipakai bareng. $name JUGA
+        // dipakai role Host (nama Host, teks bold tanpa badge - lihat
+        // partials/seat-box.blade.php), makanya diisi regardless of role, bukan cuma
+        // pas co_host.
         $this->name = (string) $detail->name;
         $this->coin = (string) $detail->gift_total_value;
         $this->micEnabled = $detail->mic_visible;
+        $this->micOffsetX = $detail->mic_offset_x !== null ? (string) $detail->mic_offset_x : '';
+        $this->micOffsetY = $detail->mic_offset_y !== null ? (string) $detail->mic_offset_y : '';
     }
 
     public function closeBgEdit(): void
     {
-        $this->reset(['editingBgDetailId', 'editingBgId', 'bgRole', 'hostBadgeBgColor', 'hostBadgeTextColor', 'hostBadgeSize', 'name', 'coin', 'micEnabled']);
+        $this->reset(['editingBgDetailId', 'editingBgId', 'bgRole', 'hostBadgeBgColor', 'hostBadgeTextColor', 'hostBadgeSize', 'name', 'coin', 'micEnabled', 'micOffsetX', 'micOffsetY']);
     }
 
     public function saveBgEdit(): void
@@ -345,6 +367,8 @@ class PreviewLive extends Component
             'name' => 'nullable|string|max:255',
             'coin' => 'required|integer|min:0',
             'micEnabled' => 'boolean',
+            'micOffsetX' => 'nullable|integer|min:-100|max:100',
+            'micOffsetY' => 'nullable|integer|min:-100|max:100',
         ]);
 
         $bg = $this->projectLive->backgrounds()->findOrFail($this->editingBgId);
@@ -355,13 +379,16 @@ class PreviewLive extends Component
             'host_badge_size' => $validated['hostBadgeSize'],
         ]);
 
-        // name/coin/mic cuma relevan kalau role-nya co-host, tapi disimpan apa adanya
-        // regardless - kalau nanti role-nya di-ganti balik ke Host/Biasa, nilainya
-        // cuma tidak dirender (lihat seat-box.blade.php), tidak perlu dikosongkan di sini.
+        // name/coin/mic cuma relevan kalau role-nya co-host (name JUGA relevan kalau
+        // role-nya host, lihat komentar openBgEdit()), tapi disimpan apa adanya
+        // regardless - kalau nanti role-nya di-ganti balik ke Biasa, nilainya cuma
+        // tidak dirender (lihat seat-box.blade.php), tidak perlu dikosongkan di sini.
         $this->projectLive->details()->whereKey($this->editingBgDetailId)->update([
             'name' => $validated['name'],
             'gift_total_value' => $validated['coin'],
             'mic_visible' => $validated['micEnabled'],
+            'mic_offset_x' => $validated['micOffsetX'] !== '' && $validated['micOffsetX'] !== null ? (int) $validated['micOffsetX'] : null,
+            'mic_offset_y' => $validated['micOffsetY'] !== '' && $validated['micOffsetY'] !== null ? (int) $validated['micOffsetY'] : null,
         ]);
 
         $this->closeBgEdit();

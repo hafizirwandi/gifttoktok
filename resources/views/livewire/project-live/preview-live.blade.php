@@ -336,6 +336,21 @@
                         <x-input-error :messages="$errors->get('micEnabled')" class="mt-2" />
                     </div>
 
+                    <div>
+                        <x-input-label value="Posisi Mic Kotak Ini (opsional)" />
+                        <p class="text-[10px] text-gray-400 mt-1">Kosongkan = pakai settingan global (Admin &rarr; Ukuran Konten Kotak Live).</p>
+                        <div class="grid grid-cols-2 gap-2 mt-1">
+                            <div>
+                                <x-text-input wire:model="micOffsetX" class="block w-full text-sm" type="number" min="-100" max="100" placeholder="Kiri/Kanan" />
+                                <x-input-error :messages="$errors->get('micOffsetX')" class="mt-1" />
+                            </div>
+                            <div>
+                                <x-text-input wire:model="micOffsetY" class="block w-full text-sm" type="number" min="-100" max="100" placeholder="Naik/Turun" />
+                                <x-input-error :messages="$errors->get('micOffsetY')" class="mt-1" />
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="border-t border-gray-100 dark:border-gray-700 pt-4">
                         <x-input-label value="Pin Kursi" />
                         <button type="button" wire:click="toggleModalPinned"
@@ -394,6 +409,27 @@
                     </div>
 
                     @if ($bgRole === 'host')
+                        <div class="border-t border-gray-100 dark:border-gray-700 pt-4 space-y-3">
+                            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">Nama Host</p>
+                            <p class="text-[10px] text-gray-400">
+                                Tampil bold di pojok kiri bawah kotak (tanpa badge). Font/ukuran/posisi
+                                diatur global di halaman
+                                <a href="{{ route('project-live.admin', $projectLive) }}" wire:navigate class="text-indigo-600 dark:text-indigo-400 hover:underline">Admin</a>.
+                            </p>
+
+                            <div>
+                                <span class="inline-block font-bold text-white" style="text-shadow: 0 1px 3px rgba(0,0,0,.8);">
+                                    {{ $name !== '' ? $name : 'Nama Host' }}
+                                </span>
+                            </div>
+
+                            <div>
+                                <x-input-label for="hostName" value="Nama" />
+                                <x-text-input wire:model="name" id="hostName" class="block mt-1 w-full" type="text" placeholder="mis. Opa Mauro" />
+                                <x-input-error :messages="$errors->get('name')" class="mt-2" />
+                            </div>
+                        </div>
+
                         <div class="border-t border-gray-100 dark:border-gray-700 pt-4 space-y-3">
                             <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">Style Badge "Host"</p>
 
@@ -461,6 +497,21 @@
                                     <span class="text-sm font-medium text-white">{{ $micEnabled ? 'Tampil' : 'Sembunyi' }}</span>
                                 </button>
                                 <x-input-error :messages="$errors->get('micEnabled')" class="mt-2" />
+                            </div>
+
+                            <div>
+                                <x-input-label value="Posisi Mic Kotak Ini (opsional)" />
+                                <p class="text-[10px] text-gray-400 mt-1">Kosongkan = pakai settingan global (Admin &rarr; Ukuran Konten Kotak Live).</p>
+                                <div class="grid grid-cols-2 gap-2 mt-1">
+                                    <div>
+                                        <x-text-input wire:model="micOffsetX" class="block w-full text-sm" type="number" min="-100" max="100" placeholder="Kiri/Kanan" />
+                                        <x-input-error :messages="$errors->get('micOffsetX')" class="mt-1" />
+                                    </div>
+                                    <div>
+                                        <x-text-input wire:model="micOffsetY" class="block w-full text-sm" type="number" min="-100" max="100" placeholder="Naik/Turun" />
+                                        <x-input-error :messages="$errors->get('micOffsetY')" class="mt-1" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     @endif

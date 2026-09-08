@@ -85,19 +85,22 @@
     @endphp
     <div wire:key="seat-{{ $detail['id'] }}"
         style="{{ $seatAreaStyle }} {{ $bgBoxStyle }}"
-        class="relative w-full h-full overflow-hidden border-white/15">
+        class="relative w-full h-full overflow-hidden border-white/15 {{ $detail['background']['fit_mode'] === 'circle' ? 'bg-gray-700' : '' }}">
         {{-- Media BG penuh (sama persis dgn cabang "elseif ($detail['background'])" di
              bawah utk role Host/polos) - fit_mode/offset/scale diatur admin lewat
              App\Livewire\ProjectLive\Background, BUKAN lagi avatar_size (setting itu
              cuma relevan buat avatar lingkaran kursi normal). Fit "circle" (App\Enums\
              BackgroundFit) beda total dari cover/contain/stretch: medianya TIDAK
-             ngisi kotak edge-to-edge, cuma tampil sbg lingkaran di TENGAH kotak
-             (kotaknya sendiri tetap transparan/hitam) - 'scale' dipakai sbg diameter
-             lingkaran dalam % lebar kotak (bukan zoom), offset_x/y menggeser posisi
-             lingkarannya. --}}
+             ngisi kotak edge-to-edge, cuma tampil sbg lingkaran di TENGAH kotak - luar
+             lingkaran dikasih bg-gray-700 (SAMA persis dgn abu2 avatar placeholder
+             kursi kosong di bawah), bukan transparan/hitam polos. Diameter default
+             62% dari lebar kotak (base yang SAMA dgn avatar_size normal `w-[62%]` di
+             bawah, biar tidak kegedean edge-to-edge kalau admin belum sempat
+             nge-tweak) - 'scale' 100% (default) = 62%, scale-nya jadi FAKTOR PENGALI
+             (bukan literal %), offset_x/y menggeser posisi lingkarannya. --}}
         @if ($detail['background']['fit_mode'] === 'circle')
             <div class="absolute inset-0 flex items-center justify-center">
-                <div class="aspect-square rounded-full overflow-hidden" style="width: {{ $detail['background']['scale'] }}%; transform: translate({{ $detail['background']['offset_x'] }}px, {{ $detail['background']['offset_y'] }}px);">
+                <div class="aspect-square rounded-full overflow-hidden" style="width: {{ $detail['background']['scale'] * 0.62 }}%; transform: translate({{ $detail['background']['offset_x'] }}px, {{ $detail['background']['offset_y'] }}px);">
                     @if ($coHostIsVideo)
                         <video wire:key="{{ $videoKey }}-circle" src="{{ $detail['background']['url'] }}" autoplay loop playsinline {{ $videoMuted ? 'muted' : '' }}
                             class="w-full h-full object-cover"></video>
@@ -154,13 +157,13 @@
     @php $seatFit = \App\Enums\BackgroundFit::from($detail['background']['fit_mode'])->cssObjectFit(); @endphp
     <div wire:key="seat-{{ $detail['id'] }}"
         style="{{ $seatAreaStyle }} {{ $bgBoxStyle }}"
-        class="relative w-full h-full overflow-hidden border-white/15">
+        class="relative w-full h-full overflow-hidden border-white/15 {{ $detail['background']['fit_mode'] === 'circle' ? 'bg-gray-700' : '' }}">
         @if ($detail['background']['fit_mode'] === 'circle')
             {{-- Lingkaran di tengah kotak (App\Enums\BackgroundFit::Circle) - lihat
                  komentar lebih detail di cabang "co_host" di atas, markup-nya sama
-                 persis. --}}
+                 persis (bg-gray-700 di luar lingkaran, diameter default 62% x scale). --}}
             <div class="absolute inset-0 flex items-center justify-center">
-                <div class="aspect-square rounded-full overflow-hidden" style="width: {{ $detail['background']['scale'] }}%; transform: translate({{ $detail['background']['offset_x'] }}px, {{ $detail['background']['offset_y'] }}px);">
+                <div class="aspect-square rounded-full overflow-hidden" style="width: {{ $detail['background']['scale'] * 0.62 }}%; transform: translate({{ $detail['background']['offset_x'] }}px, {{ $detail['background']['offset_y'] }}px);">
                     @if ($detail['background']['type'] === 'video')
                         <video wire:key="{{ $videoKey }}-circle" src="{{ $detail['background']['url'] }}" autoplay loop playsinline {{ $videoMuted ? 'muted' : '' }}
                             class="w-full h-full object-cover"></video>
@@ -179,7 +182,7 @@
 
         @if (($detail['background']['role'] ?? 'none') === 'host')
             <span class="absolute top-2 left-2 flex items-center gap-1 rounded-full px-2.5 py-1"
-                style="background: {{ $detail['background']['host_badge_bg_color'] }}; transform: scale({{ $detail['background']['host_badge_size'] / 100 }}); transform-origin: top left;">
+                style="background: {{ $detail['background']['host_badge_bg_color'] }}; transform: translate({{ $detail['background']['host_badge_offset_x'] }}px, {{ $detail['background']['host_badge_offset_y'] }}px) scale({{ $detail['background']['host_badge_size'] / 100 }}); transform-origin: top left;">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{{ $detail['background']['host_badge_text_color'] }}" class="w-4 h-4">
                     <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"/>
                 </svg>

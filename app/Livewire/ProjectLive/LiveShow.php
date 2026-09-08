@@ -131,6 +131,8 @@ class LiveShow extends Component
             'host_badge_bg_color' => '#f59e0b',
             'host_badge_text_color' => '#000000',
             'host_badge_size' => 100,
+            'host_badge_offset_x' => 0,
+            'host_badge_offset_y' => 0,
             'audio_enabled' => false,
         ];
 

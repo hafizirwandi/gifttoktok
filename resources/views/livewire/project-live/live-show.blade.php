@@ -121,12 +121,13 @@
                         // elemennya dari nol.
                         $screenVideoKey = 'screenbg-'.($screenVideoMuted ? 'muted' : 'unmuted');
                     @endphp
-                    <div style="position: absolute; inset: 0; z-index: 0; overflow: hidden;">
+                    <div style="position: absolute; inset: 0; z-index: 0; overflow: hidden;" class="{{ $screenBackground['fit_mode'] === 'circle' ? 'bg-gray-700' : '' }}">
                         @if ($screenBackground['fit_mode'] === 'circle')
                             {{-- Lingkaran di tengah (App\Enums\BackgroundFit::Circle) - lihat
-                                 komentar detail di partials/seat-box.blade.php, markupnya sama. --}}
+                                 komentar detail di partials/seat-box.blade.php, markupnya sama
+                                 (bg-gray-700 di luar lingkaran, diameter default 62% x scale). --}}
                             <div class="absolute inset-0 flex items-center justify-center">
-                                <div class="aspect-square rounded-full overflow-hidden" style="width: {{ $screenBackground['scale'] }}%; transform: translate({{ $screenBackground['offset_x'] }}px, {{ $screenBackground['offset_y'] }}px);">
+                                <div class="aspect-square rounded-full overflow-hidden" style="width: {{ $screenBackground['scale'] * 0.62 }}%; transform: translate({{ $screenBackground['offset_x'] }}px, {{ $screenBackground['offset_y'] }}px);">
                                     @if ($screenBackground['type'] === 'video')
                                         <video wire:key="{{ $screenVideoKey }}-circle" src="{{ $screenBackground['url'] }}" autoplay loop playsinline {{ $screenVideoMuted ? 'muted' : '' }}
                                             class="w-full h-full object-cover"></video>

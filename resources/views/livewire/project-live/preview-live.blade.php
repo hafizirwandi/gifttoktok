@@ -78,8 +78,21 @@
                         @php $coHostIsVideo = $detail['background']['type'] === 'video'; @endphp
                         <div wire:click="openBgEdit({{ $detail['id'] }})" role="button" tabindex="0"
                             style="{{ $seatStyle }}"
-                            class="relative w-full h-full rounded-xl overflow-hidden border border-gray-700 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer">
-                            @if ($coHostIsVideo)
+                            class="relative w-full h-full rounded-xl overflow-hidden border border-gray-700 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer {{ $detail['background']['fit_mode'] === 'circle' ? 'bg-gray-700' : '' }}">
+                            @if ($detail['background']['fit_mode'] === 'circle')
+                                {{-- Lingkaran di tengah kartu (App\Enums\BackgroundFit::Circle) -
+                                     samain dgn Live asli (partials/seat-box.blade.php), biar Preview
+                                     tidak menyesatkan admin soal tampilan aslinya. --}}
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <div class="aspect-square rounded-full overflow-hidden" style="width: {{ $detail['background']['scale'] * 0.62 }}%;">
+                                        @if ($coHostIsVideo)
+                                            <video src="{{ $detail['background']['url'] }}" class="w-full h-full object-cover" muted playsinline></video>
+                                        @else
+                                            <img src="{{ $detail['background']['url'] }}" class="w-full h-full object-cover" alt="{{ $detail['name'] }}">
+                                        @endif
+                                    </div>
+                                </div>
+                            @elseif ($coHostIsVideo)
                                 <video src="{{ $detail['background']['url'] }}" class="absolute inset-0 w-full h-full object-cover" muted playsinline></video>
                             @else
                                 <img src="{{ $detail['background']['url'] }}" class="absolute inset-0 w-full h-full object-cover" alt="{{ $detail['name'] }}">
@@ -106,8 +119,20 @@
                         @php $seatFit = \App\Enums\BackgroundFit::from($detail['background']['fit_mode'])->cssObjectFit(); @endphp
                         <div wire:click="openBgEdit({{ $detail['id'] }})" role="button" tabindex="0"
                             style="{{ $seatStyle }}"
-                            class="relative w-full h-full rounded-xl overflow-hidden border border-gray-700 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer">
-                            @if ($detail['background']['type'] === 'video')
+                            class="relative w-full h-full rounded-xl overflow-hidden border border-gray-700 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer {{ $detail['background']['fit_mode'] === 'circle' ? 'bg-gray-700' : '' }}">
+                            @if ($detail['background']['fit_mode'] === 'circle')
+                                {{-- Lingkaran di tengah kartu - samain dgn Live asli, lihat komentar
+                                     detail di partials/seat-box.blade.php. --}}
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <div class="aspect-square rounded-full overflow-hidden" style="width: {{ $detail['background']['scale'] * 0.62 }}%;">
+                                        @if ($detail['background']['type'] === 'video')
+                                            <video src="{{ $detail['background']['url'] }}" autoplay loop muted playsinline class="w-full h-full object-cover"></video>
+                                        @else
+                                            <img src="{{ $detail['background']['url'] }}" alt="" class="w-full h-full object-cover">
+                                        @endif
+                                    </div>
+                                </div>
+                            @elseif ($detail['background']['type'] === 'video')
                                 <video src="{{ $detail['background']['url'] }}" autoplay loop muted playsinline
                                     style="width: 100%; height: 100%; object-fit: {{ $seatFit }}; transform: translate({{ $detail['background']['offset_x'] }}px, {{ $detail['background']['offset_y'] }}px) scale({{ $detail['background']['scale'] / 100 }});"></video>
                             @else
@@ -120,6 +145,16 @@
                                     &middot; Host
                                 @endif
                             </span>
+
+                            {{-- Nama Host - kartu preview ikut nampilin begitu sudah diisi lewat
+                                 modal openBgEdit(), biar admin bisa cek tanpa buka Live asli. --}}
+                            @if ($detail['background']['role'] === 'host' && $detail['name'])
+                                <div class="absolute inset-x-0 bottom-0 flex items-center px-1.5 py-1 bg-gradient-to-t from-black/80 to-transparent">
+                                    <span class="text-[9px] font-bold text-gray-100 truncate max-w-[90%]">
+                                        {{ $detail['name'] }}
+                                    </span>
+                                </div>
+                            @endif
                         </div>
                     @else
                         <div wire:click="openEdit({{ $detail['id'] }})" role="button" tabindex="0"
@@ -436,7 +471,7 @@
                             <div class="flex items-center justify-center py-2">
                                 {{-- Preview live pakai nilai yang lagi di-staging (belum Simpan) --}}
                                 <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1"
-                                    style="background: {{ $hostBadgeBgColor }}; transform: scale({{ $hostBadgeSize / 100 }});">
+                                    style="background: {{ $hostBadgeBgColor }}; transform: translate({{ $hostBadgeOffsetX }}px, {{ $hostBadgeOffsetY }}px) scale({{ $hostBadgeSize / 100 }});">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{{ $hostBadgeTextColor }}" class="w-4 h-4">
                                         <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.42 0-8 2.24-8 5v1h16v-1c0-2.76-3.58-5-8-5z"/>
                                     </svg>
@@ -469,6 +504,20 @@
                                 <x-input-label for="hostBadgeSize" value="Ukuran Badge (%)" />
                                 <x-text-input wire:model="hostBadgeSize" id="hostBadgeSize" class="block mt-1 w-full" type="number" min="50" max="200" />
                                 <x-input-error :messages="$errors->get('hostBadgeSize')" class="mt-2" />
+                            </div>
+
+                            <div>
+                                <x-input-label value="Posisi Badge" />
+                                <div class="grid grid-cols-2 gap-3 mt-1">
+                                    <div>
+                                        <x-text-input wire:model="hostBadgeOffsetX" class="block w-full text-sm" type="number" min="-100" max="100" placeholder="Kiri/Kanan" />
+                                        <x-input-error :messages="$errors->get('hostBadgeOffsetX')" class="mt-1" />
+                                    </div>
+                                    <div>
+                                        <x-text-input wire:model="hostBadgeOffsetY" class="block w-full text-sm" type="number" min="-100" max="100" placeholder="Naik/Turun" />
+                                        <x-input-error :messages="$errors->get('hostBadgeOffsetY')" class="mt-1" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     @elseif ($bgRole === 'co_host')

@@ -28,6 +28,8 @@ class ProjectLiveBackground extends Model
         'host_badge_bg_color',
         'host_badge_text_color',
         'host_badge_size',
+        'host_badge_offset_x',
+        'host_badge_offset_y',
         'audio_enabled',
     ];
 
@@ -72,6 +74,8 @@ class ProjectLiveBackground extends Model
             'host_badge_bg_color' => $this->host_badge_bg_color,
             'host_badge_text_color' => $this->host_badge_text_color,
             'host_badge_size' => $this->host_badge_size,
+            'host_badge_offset_x' => $this->host_badge_offset_x,
+            'host_badge_offset_y' => $this->host_badge_offset_y,
             'audio_enabled' => $this->audio_enabled,
         ];
     }

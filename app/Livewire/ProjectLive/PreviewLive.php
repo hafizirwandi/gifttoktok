@@ -106,6 +106,10 @@ class PreviewLive extends Component
 
     public int $hostBadgeSize = 100;
 
+    public int $hostBadgeOffsetX = 0;
+
+    public int $hostBadgeOffsetY = 0;
+
     public function mount(ProjectLive $projectLive): void
     {
         $this->authorize('viewLive', $projectLive);
@@ -338,6 +342,8 @@ class PreviewLive extends Component
         $this->hostBadgeBgColor = $bg->host_badge_bg_color;
         $this->hostBadgeTextColor = $bg->host_badge_text_color;
         $this->hostBadgeSize = $bg->host_badge_size;
+        $this->hostBadgeOffsetX = $bg->host_badge_offset_x;
+        $this->hostBadgeOffsetY = $bg->host_badge_offset_y;
 
         // Field co-host - SAMA PERSIS dgn openEdit() normal, dipakai bareng. $name JUGA
         // dipakai role Host (nama Host, teks bold tanpa badge - lihat
@@ -352,7 +358,7 @@ class PreviewLive extends Component
 
     public function closeBgEdit(): void
     {
-        $this->reset(['editingBgDetailId', 'editingBgId', 'bgRole', 'hostBadgeBgColor', 'hostBadgeTextColor', 'hostBadgeSize', 'name', 'coin', 'micEnabled', 'micOffsetX', 'micOffsetY']);
+        $this->reset(['editingBgDetailId', 'editingBgId', 'bgRole', 'hostBadgeBgColor', 'hostBadgeTextColor', 'hostBadgeSize', 'hostBadgeOffsetX', 'hostBadgeOffsetY', 'name', 'coin', 'micEnabled', 'micOffsetX', 'micOffsetY']);
     }
 
     public function saveBgEdit(): void
@@ -364,6 +370,8 @@ class PreviewLive extends Component
             'hostBadgeBgColor' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'hostBadgeTextColor' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'hostBadgeSize' => 'required|integer|min:50|max:200',
+            'hostBadgeOffsetX' => 'required|integer|min:-100|max:100',
+            'hostBadgeOffsetY' => 'required|integer|min:-100|max:100',
             'name' => 'nullable|string|max:255',
             'coin' => 'required|integer|min:0',
             'micEnabled' => 'boolean',
@@ -377,6 +385,8 @@ class PreviewLive extends Component
             'host_badge_bg_color' => $validated['hostBadgeBgColor'],
             'host_badge_text_color' => $validated['hostBadgeTextColor'],
             'host_badge_size' => $validated['hostBadgeSize'],
+            'host_badge_offset_x' => $validated['hostBadgeOffsetX'],
+            'host_badge_offset_y' => $validated['hostBadgeOffsetY'],
         ]);
 
         // name/coin/mic cuma relevan kalau role-nya co-host (name JUGA relevan kalau

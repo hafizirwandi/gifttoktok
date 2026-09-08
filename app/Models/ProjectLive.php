@@ -56,6 +56,8 @@ class ProjectLive extends Model
         'mic_offset_y',
         'mic_icon',
         'empty_icon',
+        'host_badge_logo',
+        'host_badge_logo_visible',
         'coin_offset_y',
         'name_offset_y',
         'gift_badge_offset_y',
@@ -132,6 +134,7 @@ class ProjectLive extends Model
             'empty_label_visible' => 'boolean',
             'host_badge_visible' => 'boolean',
             'host_name_visible' => 'boolean',
+            'host_badge_logo_visible' => 'boolean',
             'auto_gift_mode' => 'boolean',
             'gift_listener_connected_at' => 'datetime',
             'round_reset_at' => 'datetime',
@@ -189,6 +192,18 @@ class ProjectLive extends Model
     public function emptyIconUrl(): ?string
     {
         return $this->empty_icon ? Storage::disk('public')->url($this->empty_icon) : null;
+    }
+
+    /**
+     * Logo/icon custom GLOBAL di samping tulisan badge "Host" (App\Livewire\
+     * ProjectLive\DetailAdmin::saveGlobalSettings()) - fallback kalau kotak BG
+     * tidak punya logo LOKAL sendiri (project_live_backgrounds.host_badge_logo).
+     * Null kalau belum upload apa pun - seat-box.blade.php cukup tidak nampilin
+     * logo apa pun (beda dari mic/empty icon yang punya fallback SVG/'+').
+     */
+    public function hostBadgeLogoUrl(): ?string
+    {
+        return $this->host_badge_logo ? Storage::disk('public')->url($this->host_badge_logo) : null;
     }
 
     /**

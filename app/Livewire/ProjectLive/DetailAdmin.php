@@ -61,6 +61,13 @@ class DetailAdmin extends Component
     public $emptyIconFile = null;
 
     /**
+     * Logo/icon custom GLOBAL di samping tulisan badge "Host" (App\Models\
+     * ProjectLive::hostBadgeLogoUrl()) - fallback kalau kotak BG tidak punya logo
+     * LOKAL sendiri (diatur lewat toggle "Style Badge Host" di Preview Live).
+     */
+    public $hostBadgeLogoFile = null;
+
+    /**
      * Elemen kotak kursi Live yang ukurannya bisa diatur admin (persen, 100 = default),
      * lihat kolom *_size di project_lives — diterapkan lewat transform:scale di
      * partials/seat-box.blade.php.
@@ -179,7 +186,7 @@ class DetailAdmin extends Component
      * diaktifkan). Key SAMA persis dgn nama kolom project_lives sebelum
      * "_visible". Lihat App\Support\SeatStyleResolver::isVisible().
      */
-    public const VISIBILITY_FIELDS = ['coin', 'name', 'gift_badge', 'mic', 'empty_icon', 'empty_label', 'host_badge', 'host_name'];
+    public const VISIBILITY_FIELDS = ['coin', 'name', 'gift_badge', 'mic', 'empty_icon', 'empty_label', 'host_badge', 'host_name', 'host_badge_logo'];
 
     public array $visibility = [];
 
@@ -258,6 +265,7 @@ class DetailAdmin extends Component
         $rules['hostBadgeFont'] = ['required', Rule::in(array_column(SeatFont::cases(), 'value'))];
         $rules['micIconFile'] = 'nullable|image|mimes:jpg,jpeg,png,webp|max:8192';
         $rules['emptyIconFile'] = 'nullable|image|mimes:jpg,jpeg,png,webp|max:8192';
+        $rules['hostBadgeLogoFile'] = 'nullable|image|mimes:jpg,jpeg,png,webp|max:8192';
 
         foreach (self::VISIBILITY_FIELDS as $field) {
             $rules["visibility.{$field}"] = 'boolean';
@@ -300,9 +308,18 @@ class DetailAdmin extends Component
             }
         }
 
+        if ($this->hostBadgeLogoFile) {
+            $oldLogo = $this->projectLive->host_badge_logo;
+            $data['host_badge_logo'] = $this->hostBadgeLogoFile->store('project-lives/'.$this->projectLive->id, 'public');
+
+            if ($oldLogo) {
+                Storage::disk('public')->delete($oldLogo);
+            }
+        }
+
         $this->projectLive->update($data);
         $this->projectLive->refresh();
-        $this->reset(['micIconFile', 'emptyIconFile']);
+        $this->reset(['micIconFile', 'emptyIconFile', 'hostBadgeLogoFile']);
 
         $this->dispatch('notify', message: 'Settingan global berhasil disimpan.');
     }
@@ -348,6 +365,20 @@ class DetailAdmin extends Component
         $this->projectLive->refresh();
 
         $this->dispatch('notify', message: 'Icon kotak kosong dikembalikan ke bawaan.');
+    }
+
+    public function removeHostBadgeLogoGlobal(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        if ($this->projectLive->host_badge_logo) {
+            Storage::disk('public')->delete($this->projectLive->host_badge_logo);
+        }
+
+        $this->projectLive->update(['host_badge_logo' => null]);
+        $this->projectLive->refresh();
+
+        $this->dispatch('notify', message: 'Logo badge Host dihapus.');
     }
 
     /**

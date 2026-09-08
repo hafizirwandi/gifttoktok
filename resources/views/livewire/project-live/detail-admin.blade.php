@@ -277,6 +277,39 @@
                                     </div>
                                     <p class="text-[10px] text-gray-400">Teks/font/posisi bisa di-custom per kotak BG lewat toggle "Tulisan Host" di Preview Live.</p>
                                 </div>
+
+                                {{-- Logo di samping tulisan "Host" (gantiin icon orang bawaan yang
+                                     sudah dihapus) - visible-nya kolom TERPISAH dari host_badge
+                                     (itu ngatur SELURUH badge), biar logo doang bisa dimatiin tanpa
+                                     matiin tulisannya. --}}
+                                <div class="border-t border-gray-100 dark:border-gray-700 pt-2 space-y-1.5">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="text-[10px] font-semibold text-gray-500 dark:text-gray-400">Logo di Samping Tulisan Host</span>
+                                        <button type="button" wire:click="toggleVisibilityDraft('host_badge_logo')"
+                                            class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full pl-1 pr-2 py-0.5 transition {{ ($visibility['host_badge_logo'] ?? true) ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                            <span class="relative inline-flex h-4 w-7 items-center rounded-full bg-black/20">
+                                                <span class="inline-block h-3 w-3 transform rounded-full bg-white transition {{ ($visibility['host_badge_logo'] ?? true) ? 'translate-x-3.5' : 'translate-x-0.5' }}"></span>
+                                            </span>
+                                            <span class="text-[10px] font-semibold text-white">{{ ($visibility['host_badge_logo'] ?? true) ? 'Tampil' : 'Sembunyi' }}</span>
+                                        </button>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        @if ($projectLive->host_badge_logo)
+                                            <img src="{{ $projectLive->hostBadgeLogoUrl() }}" alt="" class="w-6 h-6 rounded-full object-cover flex-shrink-0">
+                                        @endif
+                                        <input type="file" wire:model="hostBadgeLogoFile" accept="image/*"
+                                            class="block w-full text-[10px] text-gray-600 dark:text-gray-300 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/40 file:text-indigo-700 dark:file:text-indigo-300">
+                                        @if ($projectLive->host_badge_logo)
+                                            <button type="button" wire:click="removeHostBadgeLogoGlobal" wire:confirm="Hapus logo badge Host?"
+                                                class="flex-shrink-0 text-[10px] font-semibold text-gray-400 hover:text-red-500">
+                                                Hapus
+                                            </button>
+                                        @endif
+                                    </div>
+                                    <div wire:loading wire:target="hostBadgeLogoFile" class="text-[10px] text-gray-400">Mengunggah...</div>
+                                    <x-input-error :messages="$errors->get('hostBadgeLogoFile')" class="mt-1" />
+                                    <p class="text-[10px] text-gray-400">Bisa di-custom per kotak BG lewat "Logo di Samping Tulisan Host" di Preview Live.</p>
+                                </div>
                             @endif
                         </div>
                     @endforeach

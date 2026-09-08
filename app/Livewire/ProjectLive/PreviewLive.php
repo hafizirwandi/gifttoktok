@@ -140,6 +140,20 @@ class PreviewLive extends Component
     public string $hostNameVisible = '';
 
     /**
+     * Logo/icon custom LOKAL (kotak BG ini saja) di samping tulisan badge "Host" -
+     * $hostBadgeLogo path yang LAGI TERSIMPAN (bukan file baru, lihat
+     * $hostBadgeLogoFile utk itu), string kosong = belum ada logo lokal (ikut
+     * GLOBAL App\Models\ProjectLive::hostBadgeLogoUrl()). $hostBadgeLogoVisible
+     * sama pola dgn $hostBadgeVisible di atas (string kosong = ikut GLOBAL
+     * project_lives.host_badge_logo_visible).
+     */
+    public string $hostBadgeLogo = '';
+
+    public $hostBadgeLogoFile = null;
+
+    public string $hostBadgeLogoVisible = '';
+
+    /**
      * Elemen visual kotak yang bisa di-override LOKAL lewat tombol "Custom" per
      * kotak (beda dari modal edit kursi/BG di atas yang isinya DATA - nama/coin/dst)
      * - masing2 elemen: 'label' (tampil di UI), 'size_col'/'offset_x_col'/
@@ -236,6 +250,15 @@ class PreviewLive extends Component
     public function emptyIconUrl(): ?string
     {
         return $this->emptyIcon !== '' ? Storage::disk('public')->url($this->emptyIcon) : null;
+    }
+
+    /**
+     * URL preview logo badge Host LOKAL yang LAGI TERSIMPAN - dipakai modal "Edit
+     * Kotak BG" (bagian "Style Badge Host") buat nampilin thumbnail.
+     */
+    public function hostBadgeLogoUrl(): ?string
+    {
+        return $this->hostBadgeLogo !== '' ? Storage::disk('public')->url($this->hostBadgeLogo) : null;
     }
 
     /**
@@ -389,6 +412,9 @@ class PreviewLive extends Component
         $this->hostBadgeOffsetY = $bg->host_badge_offset_y;
         $this->hostBadgeVisible = $bg->host_badge_visible === null ? '' : ($bg->host_badge_visible ? '1' : '0');
         $this->hostNameVisible = $bg->host_name_visible === null ? '' : ($bg->host_name_visible ? '1' : '0');
+        $this->hostBadgeLogo = (string) $bg->host_badge_logo;
+        $this->hostBadgeLogoFile = null;
+        $this->hostBadgeLogoVisible = $bg->host_badge_logo_visible === null ? '' : ($bg->host_badge_logo_visible ? '1' : '0');
 
         // Field co-host - SAMA PERSIS dgn openEdit() normal, dipakai bareng. $name JUGA
         // dipakai role Host (nama Host, teks bold tanpa badge - lihat
@@ -401,7 +427,7 @@ class PreviewLive extends Component
 
     public function closeBgEdit(): void
     {
-        $this->reset(['editingBgDetailId', 'editingBgId', 'bgRole', 'hostBadgeBgColor', 'hostBadgeTextColor', 'hostBadgeSize', 'hostBadgeText', 'hostBadgeFont', 'hostBadgeOffsetX', 'hostBadgeOffsetY', 'hostBadgeVisible', 'hostNameVisible', 'name', 'coin', 'micEnabled']);
+        $this->reset(['editingBgDetailId', 'editingBgId', 'bgRole', 'hostBadgeBgColor', 'hostBadgeTextColor', 'hostBadgeSize', 'hostBadgeText', 'hostBadgeFont', 'hostBadgeOffsetX', 'hostBadgeOffsetY', 'hostBadgeVisible', 'hostNameVisible', 'hostBadgeLogo', 'hostBadgeLogoFile', 'hostBadgeLogoVisible', 'name', 'coin', 'micEnabled']);
     }
 
     /**
@@ -473,6 +499,33 @@ class PreviewLive extends Component
             : ($this->projectLive->host_name_visible ? '1' : '0');
     }
 
+    public function toggleHostBadgeLogoVisible(): void
+    {
+        $this->hostBadgeLogoVisible = $this->hostBadgeLogoVisible !== ''
+            ? ''
+            : ($this->projectLive->host_badge_logo_visible ? '1' : '0');
+    }
+
+    /**
+     * Hapus logo LOKAL kotak BG ini yang lagi tersimpan, balik ikut GLOBAL
+     * (App\Models\ProjectLive::hostBadgeLogoUrl()) - langsung tereksekusi (beda
+     * dari upload baru yang nunggu tombol Simpan), sama pola dgn removeEmptyIcon().
+     */
+    public function removeHostBadgeLogoLocal(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $bg = $this->projectLive->backgrounds()->findOrFail($this->editingBgId);
+
+        if ($bg->host_badge_logo) {
+            Storage::disk('public')->delete($bg->host_badge_logo);
+        }
+
+        $bg->update(['host_badge_logo' => null]);
+
+        $this->hostBadgeLogo = '';
+    }
+
     public function saveBgEdit(): void
     {
         $this->authorize('viewLive', $this->projectLive);
@@ -488,13 +541,16 @@ class PreviewLive extends Component
             'hostBadgeOffsetY' => 'nullable|integer|min:-100|max:100',
             'hostBadgeVisible' => ['nullable', Rule::in(['', '0', '1'])],
             'hostNameVisible' => ['nullable', Rule::in(['', '0', '1'])],
+            'hostBadgeLogoFile' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:8192',
+            'hostBadgeLogoVisible' => ['nullable', Rule::in(['', '0', '1'])],
             'name' => 'nullable|string|max:255',
             'coin' => 'required|integer|min:0',
             'micEnabled' => 'boolean',
         ]);
 
         $bg = $this->projectLive->backgrounds()->findOrFail($this->editingBgId);
-        $bg->update([
+
+        $data = [
             'role' => $validated['bgRole'],
             'host_badge_bg_color' => $validated['hostBadgeBgColor'],
             'host_badge_text_color' => $validated['hostBadgeTextColor'],
@@ -505,7 +561,19 @@ class PreviewLive extends Component
             'host_badge_offset_y' => $validated['hostBadgeOffsetY'],
             'host_badge_visible' => $validated['hostBadgeVisible'] !== '' ? $validated['hostBadgeVisible'] === '1' : null,
             'host_name_visible' => $validated['hostNameVisible'] !== '' ? $validated['hostNameVisible'] === '1' : null,
-        ]);
+            'host_badge_logo_visible' => $validated['hostBadgeLogoVisible'] !== '' ? $validated['hostBadgeLogoVisible'] === '1' : null,
+        ];
+
+        if ($this->hostBadgeLogoFile) {
+            $oldLogo = $bg->host_badge_logo;
+            $data['host_badge_logo'] = $this->hostBadgeLogoFile->store('project-lives/'.$this->projectLive->id, 'public');
+
+            if ($oldLogo) {
+                Storage::disk('public')->delete($oldLogo);
+            }
+        }
+
+        $bg->update($data);
 
         // name/coin/mic cuma relevan kalau role-nya co-host (name JUGA relevan kalau
         // role-nya host, lihat komentar openBgEdit()), tapi disimpan apa adanya

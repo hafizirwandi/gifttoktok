@@ -140,6 +140,8 @@ class LiveShow extends Component
             'host_name_visible' => null,
             'host_badge_text' => null,
             'host_badge_font' => null,
+            'host_badge_logo_url' => null,
+            'host_badge_logo_visible' => null,
             'audio_enabled' => false,
         ];
 

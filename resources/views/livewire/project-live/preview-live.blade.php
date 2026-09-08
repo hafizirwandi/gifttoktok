@@ -27,6 +27,29 @@
     @php
         $mode = $projectLive->display_mode;
     @endphp
+    {{-- Efek pulse kursi - SAMA PERSIS dgn live-show.blade.php, lihat komentar di
+         sana kenapa (App\Livewire\ProjectLive\FrameHost, menu "Frame Host"). BUG
+         YANG SUDAH KEJADIAN: partials/seat-box.blade.php nempelin
+         "animation: gtt-seat-pulse ..." ke kotak yg posisinya tercentang, tapi
+         @keyframes-nya SEBELUMNYA cuma didefinisikan di live-show.blade.php - di
+         Preview Live animasinya nunjuk ke keyframe yang TIDAK ADA sama sekali,
+         browser diam2 mengabaikannya (border cuma tampil warna statis lokal/global,
+         TIDAK PERNAH nge-pulse) - jadi Preview Live kelihatan beda dari Live asli
+         padahal rule Frame Host-nya harusnya menang duluan atas lokal/global. --}}
+    @if ($projectLive->seat_pulse_enabled)
+        <style>
+            @keyframes gtt-seat-pulse {
+                0% { border-color: {{ $projectLive->frame_pulse_color_1 }}; }
+                @if ($projectLive->frame_pulse_color_3)
+                    33% { border-color: {{ $projectLive->frame_pulse_color_2 }}; }
+                    66% { border-color: {{ $projectLive->frame_pulse_color_3 }}; }
+                @else
+                    50% { border-color: {{ $projectLive->frame_pulse_color_2 }}; }
+                @endif
+                100% { border-color: {{ $projectLive->frame_pulse_color_1 }}; }
+            }
+        </style>
+    @endif
     <div class="w-screen overflow-hidden flex items-start justify-center px-3 pt-20" style="height: 97vh;">
         {{-- Kotak mobile-first max 480px ini SATU-SATUNYA acuan ukuran/posisi baik utk
              grid kursi MAUPUN BG layar penuh - SAMA PERSIS dgn live-show.blade.php,
@@ -435,9 +458,20 @@
                                 {{-- Preview live pakai nilai yang lagi di-staging (belum Simpan) -
                                      teks/font/posisi ambil dari properti bundel Tulisan Host di
                                      bawah kalau lagi Lokal (bisa null saat Global, makanya ada
-                                     fallback), warna/ukuran tetap dari properti di section ini. --}}
-                                <span class="inline-flex items-center rounded-full px-2.5 py-1"
+                                     fallback), warna/ukuran tetap dari properti di section ini.
+                                     Logo sama pola: URL LOKAL yang lagi di-staging kalau ada,
+                                     atau GLOBAL kalau tidak - visible-nya LOKAL kalau section
+                                     "Logo di Samping Tulisan Host" lagi di-toggle Lokal, atau
+                                     GLOBAL kalau tidak. --}}
+                                @php
+                                    $previewLogoUrl = $this->hostBadgeLogoUrl() ?: $projectLive->hostBadgeLogoUrl();
+                                    $previewLogoVisible = $hostBadgeLogoVisible !== '' ? $hostBadgeLogoVisible === '1' : $projectLive->host_badge_logo_visible;
+                                @endphp
+                                <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1"
                                     style="background: {{ $hostBadgeBgColor }}; transform: translate({{ $hostBadgeOffsetX ?? 0 }}px, {{ $hostBadgeOffsetY ?? 0 }}px) scale({{ $hostBadgeSize / 100 }});">
+                                    @if ($previewLogoVisible && $previewLogoUrl)
+                                        <img src="{{ $previewLogoUrl }}" alt="" class="w-4 h-4 rounded-full object-cover flex-shrink-0">
+                                    @endif
                                     <span style="color: {{ $hostBadgeTextColor }};" class="text-sm font-semibold">{{ $hostBadgeText ?: 'Host' }}</span>
                                 </span>
                             </div>
@@ -540,6 +574,56 @@
                                     </div>
                                 </div>
                             @endif
+                        </div>
+
+                        {{-- Logo di samping tulisan "Host" - LOKAL kotak BG ini
+                             (project_live_backgrounds.host_badge_logo) kalau di-upload, atau
+                             ikut GLOBAL (App\Models\ProjectLive::hostBadgeLogoUrl(), diatur di
+                             Admin) kalau tidak - toggle Lokal/Global di sini CUMA ngatur
+                             visible-nya (project_live_backgrounds.host_badge_logo_visible,
+                             sama pola dgn "Style Badge Host" di atas), sementara FILE lokalnya
+                             sendiri otomatis aktif begitu diupload (tombol "Hapus" balikin ke
+                             ikut Global lagi). --}}
+                        <div class="border-t border-gray-100 dark:border-gray-700 pt-4 space-y-3">
+                            <div class="flex items-center justify-between gap-2">
+                                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">Logo di Samping Tulisan "Host"</p>
+                                <button type="button" wire:click="toggleHostBadgeLogoVisible"
+                                    class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full pl-1 pr-2 py-0.5 transition {{ $hostBadgeLogoVisible !== '' ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                    <span class="relative inline-flex h-4 w-7 items-center rounded-full bg-black/20">
+                                        <span class="inline-block h-3 w-3 transform rounded-full bg-white transition {{ $hostBadgeLogoVisible !== '' ? 'translate-x-3.5' : 'translate-x-0.5' }}"></span>
+                                    </span>
+                                    <span class="text-[10px] font-semibold text-white">{{ $hostBadgeLogoVisible !== '' ? 'Lokal' : 'Global' }}</span>
+                                </button>
+                            </div>
+                            @if ($hostBadgeLogoVisible !== '')
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-[10px] text-gray-500 dark:text-gray-400">Tampil/Sembunyi</span>
+                                    <button type="button" wire:click="$set('hostBadgeLogoVisible', '{{ $hostBadgeLogoVisible === '1' ? '0' : '1' }}')"
+                                        class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full pl-1 pr-2 py-0.5 transition {{ $hostBadgeLogoVisible === '1' ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                        <span class="relative inline-flex h-4 w-7 items-center rounded-full bg-black/20">
+                                            <span class="inline-block h-3 w-3 transform rounded-full bg-white transition {{ $hostBadgeLogoVisible === '1' ? 'translate-x-3.5' : 'translate-x-0.5' }}"></span>
+                                        </span>
+                                        <span class="text-[10px] font-semibold text-white">{{ $hostBadgeLogoVisible === '1' ? 'Tampil' : 'Sembunyi' }}</span>
+                                    </button>
+                                </div>
+                            @endif
+
+                            <div class="flex items-center gap-1.5">
+                                @if ($this->hostBadgeLogoUrl())
+                                    <img src="{{ $this->hostBadgeLogoUrl() }}" alt="" class="w-6 h-6 rounded-full object-cover flex-shrink-0">
+                                @endif
+                                <input type="file" wire:model="hostBadgeLogoFile" accept="image/*"
+                                    class="block w-full text-[10px] text-gray-600 dark:text-gray-300 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/40 file:text-indigo-700 dark:file:text-indigo-300">
+                                @if ($hostBadgeLogo !== '')
+                                    <button type="button" wire:click="removeHostBadgeLogoLocal" wire:confirm="Hapus logo LOKAL kotak ini? (balik ikut Global)"
+                                        class="flex-shrink-0 text-[10px] font-semibold text-gray-400 hover:text-red-500">
+                                        Hapus
+                                    </button>
+                                @endif
+                            </div>
+                            <div wire:loading wire:target="hostBadgeLogoFile" class="text-[10px] text-gray-400">Mengunggah...</div>
+                            <x-input-error :messages="$errors->get('hostBadgeLogoFile')" class="mt-1" />
+                            <p class="text-[10px] text-gray-400">Kosong = ikut logo Global (diatur di Admin).</p>
                         </div>
                     @elseif ($bgRole === 'co_host')
                         <div class="border-t border-gray-100 dark:border-gray-700 pt-4 space-y-3">

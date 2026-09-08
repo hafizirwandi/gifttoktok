@@ -117,6 +117,13 @@
     $hostBadgeFont = ($detail['background']['host_badge_font'] ?? null) ?: $projectLive->host_badge_font;
     $hostBadgeOffsetX = ($detail['background']['host_badge_offset_x'] ?? null) ?? $projectLive->host_badge_offset_x;
     $hostBadgeOffsetY = ($detail['background']['host_badge_offset_y'] ?? null) ?? $projectLive->host_badge_offset_y;
+    // Logo di samping tulisan badge "Host" - LOKAL per-BG (project_live_backgrounds.
+    // host_badge_logo_url) kalau ada, atau GLOBAL (App\Models\ProjectLive::
+    // hostBadgeLogoUrl()) kalau tidak - null dua-duanya = tidak ada logo sama sekali
+    // (badge cuma teks polos, tidak ada fallback icon bawaan). Visible-nya
+    // independen dari $hostBadgeVisible (itu ngatur SELURUH badge).
+    $hostBadgeLogoUrl = ($detail['background']['host_badge_logo_url'] ?? null) ?: $projectLive->hostBadgeLogoUrl();
+    $hostBadgeLogoVisible = ($detail['background']['host_badge_logo_visible'] ?? null) ?? $projectLive->host_badge_logo_visible;
 @endphp
 @if (($detail['background']['role'] ?? 'none') === 'co_host')
     {{-- Co-Host (App\Enums\SeatRole) - kotak yang jadi BG, media-nya (video/gambar) tampil
@@ -236,8 +243,11 @@
 
         @if (($detail['background']['role'] ?? 'none') === 'host')
             @if ($hostBadgeVisible)
-                <span class="absolute top-2 left-2 flex items-center rounded-full px-2.5 py-1"
+                <span class="absolute top-2 left-2 flex items-center gap-1 rounded-full px-2.5 py-1"
                     style="background: {{ $detail['background']['host_badge_bg_color'] }}; transform: translate({{ $hostBadgeOffsetX }}px, {{ $hostBadgeOffsetY }}px) scale({{ $detail['background']['host_badge_size'] / 100 }}); transform-origin: top left;">
+                    @if ($hostBadgeLogoVisible && $hostBadgeLogoUrl)
+                        <img src="{{ $hostBadgeLogoUrl }}" alt="" class="w-4 h-4 rounded-full object-cover flex-shrink-0">
+                    @endif
                     <span style="color: {{ $detail['background']['host_badge_text_color'] }}; {{ $hostBadgeFont ? 'font-family: '.\App\Enums\SeatFont::from($hostBadgeFont)->cssFontFamily().';' : '' }}" class="text-sm font-semibold">{{ $hostBadgeText }}</span>
                 </span>
             @endif

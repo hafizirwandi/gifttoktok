@@ -35,6 +35,8 @@ class ProjectLiveBackground extends Model
         'host_name_visible',
         'host_badge_text',
         'host_badge_font',
+        'host_badge_logo',
+        'host_badge_logo_visible',
         'audio_enabled',
     ];
 
@@ -48,6 +50,7 @@ class ProjectLiveBackground extends Model
             'role' => SeatRole::class,
             'host_badge_visible' => 'boolean',
             'host_name_visible' => 'boolean',
+            'host_badge_logo_visible' => 'boolean',
             'audio_enabled' => 'boolean',
         ];
     }
@@ -60,6 +63,16 @@ class ProjectLiveBackground extends Model
     public function fileUrl(): ?string
     {
         return $this->file ? Storage::disk('public')->url($this->file) : null;
+    }
+
+    /**
+     * Logo/icon custom LOKAL (kotak BG ini saja) - null kalau belum upload apa pun
+     * (fallback ke logo GLOBAL App\Models\ProjectLive::hostBadgeLogoUrl() di
+     * partials/seat-box.blade.php).
+     */
+    public function hostBadgeLogoUrl(): ?string
+    {
+        return $this->host_badge_logo ? Storage::disk('public')->url($this->host_badge_logo) : null;
     }
 
     /**
@@ -95,6 +108,11 @@ class ProjectLiveBackground extends Model
             // null = ikut default GLOBAL (project_lives.host_badge_text/font).
             'host_badge_text' => $this->host_badge_text,
             'host_badge_font' => $this->host_badge_font,
+            // logo: null = ikut GLOBAL (App\Models\ProjectLive::hostBadgeLogoUrl()).
+            // logo_visible: null = ikut GLOBAL (project_lives.host_badge_logo_visible),
+            // true/false = override LOKAL.
+            'host_badge_logo_url' => $this->hostBadgeLogoUrl(),
+            'host_badge_logo_visible' => $this->host_badge_logo_visible,
             'audio_enabled' => $this->audio_enabled,
         ];
     }

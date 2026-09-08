@@ -102,6 +102,16 @@
                                 #{{ $detail['position'] }} &middot; Co-Host
                             </span>
 
+                            {{-- Tombol "Custom" - buka panel override LOKAL elemen visual kotak ini
+                                 (coin/nama/mic/dst, App\Support\SeatStyleResolver), BEDA dari klik
+                                 kartu (openBgEdit, DATA kursi ini) - stop propagation biar tidak
+                                 ikut memicu openBgEdit. --}}
+                            <button type="button" wire:click.stop="openStyleEdit({{ $detail['id'] }})"
+                                title="Custom tampilan kotak ini"
+                                class="absolute bottom-1.5 right-1.5 z-10 flex items-center justify-center w-4 h-4 rounded bg-black/60 text-white text-[9px] hover:bg-indigo-600">
+                                ⚙
+                            </button>
+
                             <div class="absolute inset-x-0 bottom-0 flex flex-col items-center gap-0 leading-tight py-1 bg-gradient-to-t from-black/80 to-transparent">
                                 <span class="text-[9px] font-medium text-gray-100 truncate max-w-[90%]">
                                     {{ $detail['name'] ?: 'Belum diisi' }}
@@ -145,6 +155,12 @@
                                     &middot; Host
                                 @endif
                             </span>
+
+                            <button type="button" wire:click.stop="openStyleEdit({{ $detail['id'] }})"
+                                title="Custom tampilan kotak ini"
+                                class="absolute bottom-1.5 right-1.5 z-10 flex items-center justify-center w-4 h-4 rounded bg-black/60 text-white text-[9px] hover:bg-indigo-600">
+                                ⚙
+                            </button>
 
                             {{-- Nama Host - kartu preview ikut nampilin begitu sudah diisi lewat
                                  modal openBgEdit(), biar admin bisa cek tanpa buka Live asli. --}}
@@ -208,10 +224,16 @@
                             </div>
 
                             @if ($detail['hotkey'])
-                                <span class="absolute bottom-1.5 right-1.5 text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-600 text-white">
+                                <span class="absolute bottom-1.5 right-6 text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-600 text-white">
                                     {{ $detail['hotkey'] }}
                                 </span>
                             @endif
+
+                            <button type="button" wire:click.stop="openStyleEdit({{ $detail['id'] }})"
+                                title="Custom tampilan kotak ini"
+                                class="absolute bottom-1.5 right-1.5 z-10 flex items-center justify-center w-4 h-4 rounded bg-black/60 text-white text-[9px] hover:bg-indigo-600">
+                                ⚙
+                            </button>
                         </div>
                     @endif
                 @endforeach
@@ -259,93 +281,15 @@
                     </div>
 
                     <div>
-                        <x-input-label for="hotkey" value="Hotkey" />
-                        <x-text-input wire:model="hotkey" id="hotkey" maxlength="1" class="block mt-1 w-full" type="text" placeholder="1" />
-                        <x-input-error :messages="$errors->get('hotkey')" class="mt-2" />
-                    </div>
-
-                    <div>
                         <x-input-label for="coin" value="Coin" />
                         <x-text-input wire:model="coin" id="coin" class="block mt-1 w-full" type="number" min="0" placeholder="0" />
                         <p class="text-xs text-gray-400 mt-1">Angka gift/coin yang tampil di badge kursi ini.</p>
                         <x-input-error :messages="$errors->get('coin')" class="mt-2" />
                     </div>
 
-                    <div class="border-t border-gray-100 dark:border-gray-700 pt-4 space-y-3">
-                        <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">Tampilan kotak ini saat kosong (belum ada gifter/tamu)</p>
-
-                        <div>
-                            <x-input-label for="emptyLabel" value="Teks" />
-                            <x-text-input wire:model="emptyLabel" id="emptyLabel" class="block mt-1 w-full" type="text" placeholder="Request" maxlength="30" />
-                            <x-input-error :messages="$errors->get('emptyLabel')" class="mt-2" />
-                        </div>
-
-                        <div>
-                            <x-input-label value="Font Teks" />
-                            <div class="grid grid-cols-2 gap-1.5 mt-1">
-                                @foreach (\App\Enums\SeatFont::cases() as $option)
-                                    <button type="button" wire:click="$set('font', '{{ $option->value }}')"
-                                        style="font-family: {{ $option->cssFontFamily() }};"
-                                        class="px-2 py-1.5 text-sm rounded-md border transition {{ $font === $option->value ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
-                                        {{ $option->label() }}
-                                    </button>
-                                @endforeach
-                            </div>
-                            <x-input-error :messages="$errors->get('font')" class="mt-2" />
-                        </div>
-
-                        <div x-data="{ preview: null }">
-                            <x-input-label for="emptyIconFile" value="Icon" />
-                            <div class="flex items-center gap-2 mt-1">
-                                @if ($this->emptyIconUrl())
-                                    <img src="{{ $this->emptyIconUrl() }}" class="w-9 h-9 object-contain rounded-md border border-gray-200 dark:border-gray-600 flex-shrink-0">
-                                @endif
-                                <template x-if="preview">
-                                    <img :src="preview" class="w-9 h-9 object-contain rounded-md border border-gray-200 dark:border-gray-600 flex-shrink-0">
-                                </template>
-                                <input type="file" wire:model="emptyIconFile" id="emptyIconFile" accept="image/*"
-                                    x-on:change="
-                                        const file = $event.target.files[0];
-                                        if (! file) { preview = null; return; }
-                                        const reader = new FileReader();
-                                        reader.onload = (e) => preview = e.target.result;
-                                        reader.readAsDataURL(file);
-                                    "
-                                    class="block w-full text-sm text-gray-600 dark:text-gray-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/40 file:text-indigo-700 dark:file:text-indigo-300">
-                                @if ($this->emptyIconUrl())
-                                    <button type="button" wire:click="removeEmptyIcon"
-                                        class="flex-shrink-0 text-xs font-semibold text-gray-400 hover:text-red-500">
-                                        Hapus
-                                    </button>
-                                @endif
-                            </div>
-                            <p class="text-xs text-gray-400 mt-1">JPG, PNG, atau WEBP, maksimal 8MB. Kosongkan (jangan pilih file) untuk fallback default (+).</p>
-                            <div wire:loading wire:target="emptyIconFile" class="text-xs text-gray-400 mt-1">Mengunggah...</div>
-                            <x-input-error :messages="$errors->get('emptyIconFile')" class="mt-2" />
-                        </div>
-
-                        <p class="text-xs text-gray-400">
-                            Warna latar kotak kosong sekarang diatur di halaman
-                            <a href="{{ route('project-live.hotkey-color', $projectLive) }}" wire:navigate class="text-indigo-600 dark:text-indigo-400 hover:underline">Hotkey Warna</a>.
-                        </p>
-                    </div>
-
-                    <div class="border-t border-gray-100 dark:border-gray-700 pt-4">
-                        <x-input-label for="borderColor" value="Warna Border Kotak" />
-                        <div class="flex items-center gap-2 mt-1">
-                            <input type="color" wire:model="borderColor" id="borderColor"
-                                value="{{ $borderColor ?: '#ffffff' }}"
-                                class="h-9 w-14 rounded-md border border-gray-200 dark:border-gray-600 cursor-pointer">
-                            <x-text-input wire:model="borderColor" class="block w-full" type="text" placeholder="Default (#ffffff26)" />
-                            @if ($borderColor)
-                                <button type="button" wire:click="$set('borderColor', '')"
-                                    class="flex-shrink-0 text-xs font-semibold text-gray-400 hover:text-red-500">
-                                    Reset
-                                </button>
-                            @endif
-                        </div>
-                        <x-input-error :messages="$errors->get('borderColor')" class="mt-2" />
-                    </div>
+                    <p class="text-[10px] text-gray-400">
+                        Tampilan kotak kosong (teks/font/icon) & warna border diatur lewat tombol &quot;Custom&quot; di kartu kotak ini.
+                    </p>
 
                     <div>
                         <x-input-label value="Status" />
@@ -359,32 +303,7 @@
                         <x-input-error :messages="$errors->get('status')" class="mt-2" />
                     </div>
 
-                    <div>
-                        <x-input-label value="Icon Mic" />
-                        <button type="button" wire:click="toggleModalMic"
-                            class="mt-1 inline-flex items-center gap-2 rounded-full pl-1 pr-3 py-1 transition {{ $micEnabled ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
-                            <span class="relative inline-flex h-6 w-11 items-center rounded-full bg-black/20">
-                                <span class="inline-block h-4 w-4 transform rounded-full bg-white transition {{ $micEnabled ? 'translate-x-6' : 'translate-x-1' }}"></span>
-                            </span>
-                            <span class="text-sm font-medium text-white">{{ $micEnabled ? 'Tampil' : 'Sembunyi' }}</span>
-                        </button>
-                        <x-input-error :messages="$errors->get('micEnabled')" class="mt-2" />
-                    </div>
-
-                    <div>
-                        <x-input-label value="Posisi Mic Kotak Ini (opsional)" />
-                        <p class="text-[10px] text-gray-400 mt-1">Kosongkan = pakai settingan global (Admin &rarr; Ukuran Konten Kotak Live).</p>
-                        <div class="grid grid-cols-2 gap-2 mt-1">
-                            <div>
-                                <x-text-input wire:model="micOffsetX" class="block w-full text-sm" type="number" min="-100" max="100" placeholder="Kiri/Kanan" />
-                                <x-input-error :messages="$errors->get('micOffsetX')" class="mt-1" />
-                            </div>
-                            <div>
-                                <x-text-input wire:model="micOffsetY" class="block w-full text-sm" type="number" min="-100" max="100" placeholder="Naik/Turun" />
-                                <x-input-error :messages="$errors->get('micOffsetY')" class="mt-1" />
-                            </div>
-                        </div>
-                    </div>
+                    <p class="text-[10px] text-gray-400">Tampil/sembunyi, ukuran/posisi & icon mic kotak ini diatur lewat tombol &quot;Custom&quot; di kartu kotak ini.</p>
 
                     <div class="border-t border-gray-100 dark:border-gray-700 pt-4">
                         <x-input-label value="Pin Kursi" />
@@ -445,7 +364,30 @@
 
                     @if ($bgRole === 'host')
                         <div class="border-t border-gray-100 dark:border-gray-700 pt-4 space-y-3">
-                            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">Nama Host</p>
+                            <div class="flex items-center justify-between gap-2">
+                                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">Nama Host</p>
+                                {{-- Tampil/Sembunyi LOKAL kotak ini - kosong (Global) = ikut default
+                                     Admin (project_lives.host_name_visible). --}}
+                                <button type="button" wire:click="toggleHostNameVisible"
+                                    class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full pl-1 pr-2 py-0.5 transition {{ $hostNameVisible !== '' ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                    <span class="relative inline-flex h-4 w-7 items-center rounded-full bg-black/20">
+                                        <span class="inline-block h-3 w-3 transform rounded-full bg-white transition {{ $hostNameVisible !== '' ? 'translate-x-3.5' : 'translate-x-0.5' }}"></span>
+                                    </span>
+                                    <span class="text-[10px] font-semibold text-white">{{ $hostNameVisible !== '' ? 'Lokal' : 'Global' }}</span>
+                                </button>
+                            </div>
+                            @if ($hostNameVisible !== '')
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-[10px] text-gray-500 dark:text-gray-400">Tampil/Sembunyi</span>
+                                    <button type="button" wire:click="$set('hostNameVisible', '{{ $hostNameVisible === '1' ? '0' : '1' }}')"
+                                        class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full pl-1 pr-2 py-0.5 transition {{ $hostNameVisible === '1' ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                        <span class="relative inline-flex h-4 w-7 items-center rounded-full bg-black/20">
+                                            <span class="inline-block h-3 w-3 transform rounded-full bg-white transition {{ $hostNameVisible === '1' ? 'translate-x-3.5' : 'translate-x-0.5' }}"></span>
+                                        </span>
+                                        <span class="text-[10px] font-semibold text-white">{{ $hostNameVisible === '1' ? 'Tampil' : 'Sembunyi' }}</span>
+                                    </button>
+                                </div>
+                            @endif
                             <p class="text-[10px] text-gray-400">
                                 Tampil bold di pojok kiri bawah kotak (tanpa badge). Font/ukuran/posisi
                                 diatur global di halaman
@@ -466,7 +408,28 @@
                         </div>
 
                         <div class="border-t border-gray-100 dark:border-gray-700 pt-4 space-y-3">
-                            <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">Style Badge "Host"</p>
+                            <div class="flex items-center justify-between gap-2">
+                                <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">Style Badge "Host"</p>
+                                <button type="button" wire:click="toggleHostBadgeVisible"
+                                    class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full pl-1 pr-2 py-0.5 transition {{ $hostBadgeVisible !== '' ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                    <span class="relative inline-flex h-4 w-7 items-center rounded-full bg-black/20">
+                                        <span class="inline-block h-3 w-3 transform rounded-full bg-white transition {{ $hostBadgeVisible !== '' ? 'translate-x-3.5' : 'translate-x-0.5' }}"></span>
+                                    </span>
+                                    <span class="text-[10px] font-semibold text-white">{{ $hostBadgeVisible !== '' ? 'Lokal' : 'Global' }}</span>
+                                </button>
+                            </div>
+                            @if ($hostBadgeVisible !== '')
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-[10px] text-gray-500 dark:text-gray-400">Tampil/Sembunyi</span>
+                                    <button type="button" wire:click="$set('hostBadgeVisible', '{{ $hostBadgeVisible === '1' ? '0' : '1' }}')"
+                                        class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full pl-1 pr-2 py-0.5 transition {{ $hostBadgeVisible === '1' ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                        <span class="relative inline-flex h-4 w-7 items-center rounded-full bg-black/20">
+                                            <span class="inline-block h-3 w-3 transform rounded-full bg-white transition {{ $hostBadgeVisible === '1' ? 'translate-x-3.5' : 'translate-x-0.5' }}"></span>
+                                        </span>
+                                        <span class="text-[10px] font-semibold text-white">{{ $hostBadgeVisible === '1' ? 'Tampil' : 'Sembunyi' }}</span>
+                                    </button>
+                                </div>
+                            @endif
 
                             <div class="flex items-center justify-center py-2">
                                 {{-- Preview live pakai nilai yang lagi di-staging (belum Simpan) --}}
@@ -545,22 +508,8 @@
                                     </span>
                                     <span class="text-sm font-medium text-white">{{ $micEnabled ? 'Tampil' : 'Sembunyi' }}</span>
                                 </button>
+                                <p class="text-[10px] text-gray-400 mt-1">Ukuran/posisi/icon mic (dan elemen lain) kotak ini bisa di-custom lewat tombol &quot;Custom&quot; di kartu kotak ini.</p>
                                 <x-input-error :messages="$errors->get('micEnabled')" class="mt-2" />
-                            </div>
-
-                            <div>
-                                <x-input-label value="Posisi Mic Kotak Ini (opsional)" />
-                                <p class="text-[10px] text-gray-400 mt-1">Kosongkan = pakai settingan global (Admin &rarr; Ukuran Konten Kotak Live).</p>
-                                <div class="grid grid-cols-2 gap-2 mt-1">
-                                    <div>
-                                        <x-text-input wire:model="micOffsetX" class="block w-full text-sm" type="number" min="-100" max="100" placeholder="Kiri/Kanan" />
-                                        <x-input-error :messages="$errors->get('micOffsetX')" class="mt-1" />
-                                    </div>
-                                    <div>
-                                        <x-text-input wire:model="micOffsetY" class="block w-full text-sm" type="number" min="-100" max="100" placeholder="Naik/Turun" />
-                                        <x-input-error :messages="$errors->get('micOffsetY')" class="mt-1" />
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     @endif
@@ -573,6 +522,272 @@
                         <x-primary-button>
                             Simpan
                         </x-primary-button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal "Custom" - override LOKAL beberapa elemen visual KOTAK INI SAJA (beda
+         dari 2 modal di atas yang isinya DATA - nama/foto/coin/role/dst). Tiap
+         elemen (App\Livewire\ProjectLive\PreviewLive::STYLE_ELEMENTS) punya toggle
+         Aktif/Nonaktif sendiri: Aktif = pakai size/geser di sini, Nonaktif = pakai
+         settingan GLOBAL project_lives apa adanya (Admin -> Ukuran Konten Kotak
+         Live). Dipicu tombol "⚙" di tiap kartu kotak di atas, TERLEPAS dari
+         role/isi kotaknya (co-host/BG/normal/kosong sama2 bisa di-custom). --}}
+    <div x-show="$wire.editingStyleDetailId !== null" x-cloak
+        class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+        <div class="flex items-center justify-center min-h-screen px-4 py-8">
+            <div x-show="$wire.editingStyleDetailId !== null" x-transition.opacity wire:click="closeStyleEdit"
+                class="fixed inset-0 bg-black/60"></div>
+
+            <div x-show="$wire.editingStyleDetailId !== null" x-transition
+                class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-3xl w-full p-6 space-y-4 text-gray-900 dark:text-gray-100">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    Custom Kotak Ini
+                </h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 -mt-2">
+                    Aktifkan elemen yang mau di-custom KHUSUS kotak ini - sisanya tetap ikut settingan global.
+                </p>
+
+                <form wire:submit="saveStyleEdit" class="space-y-3">
+                    {{-- grid 2 kolom (bukan ditumpuk vertikal spt sebelumnya, tapi juga jangan
+                         3 kolom - kepanjangan/kelewat lebar) - modal-nya dilebarkan secukupnya
+                         (max-w-3xl) biar 2 kartu muat berdampingan tanpa jadi kelewat lebar. --}}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        @foreach (\App\Livewire\ProjectLive\PreviewLive::STYLE_ELEMENTS as $key => $config)
+                            <div class="border border-gray-200 dark:border-gray-700 rounded-md p-3 space-y-2">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{ $config['label'] }}</span>
+                                    <button type="button" wire:click="toggleStyleElement('{{ $key }}')"
+                                        class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full pl-1 pr-2 py-0.5 transition {{ ($styleOverrides[$key]['enabled'] ?? false) ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                        <span class="relative inline-flex h-4 w-7 items-center rounded-full bg-black/20">
+                                            <span class="inline-block h-3 w-3 transform rounded-full bg-white transition {{ ($styleOverrides[$key]['enabled'] ?? false) ? 'translate-x-3.5' : 'translate-x-0.5' }}"></span>
+                                        </span>
+                                        <span class="text-[10px] font-semibold text-white">{{ ($styleOverrides[$key]['enabled'] ?? false) ? 'Lokal' : 'Global' }}</span>
+                                    </button>
+                                </div>
+
+                                @if ($styleOverrides[$key]['enabled'] ?? false)
+                                    {{-- Tampil/Sembunyi icon mic - PINDAH dari modal Edit Kursi ke sini
+                                         (kartu "Icon Mic"), DI DALAM blok Lokal (bagian dari skema
+                                         lokal panel ini, bukan settingan terpisah di luarnya). --}}
+                                    @if ($key === 'mic')
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="text-[10px] text-gray-500 dark:text-gray-400">Tampil/Sembunyi</span>
+                                            <button type="button" wire:click="toggleModalMic"
+                                                class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full pl-1 pr-2 py-0.5 transition {{ $micEnabled ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                                <span class="relative inline-flex h-4 w-7 items-center rounded-full bg-black/20">
+                                                    <span class="inline-block h-3 w-3 transform rounded-full bg-white transition {{ $micEnabled ? 'translate-x-3.5' : 'translate-x-0.5' }}"></span>
+                                                </span>
+                                                <span class="text-[10px] font-semibold text-white">{{ $micEnabled ? 'Tampil' : 'Sembunyi' }}</span>
+                                            </button>
+                                        </div>
+                                    @endif
+
+                                    {{-- Tampil/Sembunyi elemen ini KOTAK INI SAJA - DI DALAM blok
+                                         Lokal (sama pola dgn mic di atas), cuma dipakai elemen yang
+                                         punya 'visible_col' (ada pasangan GLOBAL-nya di project_lives). --}}
+                                    @if (! empty($config['visible_col']))
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="text-[10px] text-gray-500 dark:text-gray-400">Tampil/Sembunyi</span>
+                                            <button type="button" wire:click="toggleStyleElementVisible('{{ $key }}')"
+                                                class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full pl-1 pr-2 py-0.5 transition {{ ($styleOverrides[$key]['visible'] ?? true) ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                                <span class="relative inline-flex h-4 w-7 items-center rounded-full bg-black/20">
+                                                    <span class="inline-block h-3 w-3 transform rounded-full bg-white transition {{ ($styleOverrides[$key]['visible'] ?? true) ? 'translate-x-3.5' : 'translate-x-0.5' }}"></span>
+                                                </span>
+                                                <span class="text-[10px] font-semibold text-white">{{ ($styleOverrides[$key]['visible'] ?? true) ? 'Tampil' : 'Sembunyi' }}</span>
+                                            </button>
+                                        </div>
+                                    @endif
+
+                                    {{-- 'no_offset_x' (avatar doang) - foto user di tengah kotak cuma
+                                         butuh ukuran & naik/turun, tanpa geser kiri/kanan. offset_x
+                                         TETAP tersimpan di style_overrides apa adanya (default 0, lihat
+                                         PreviewLive::saveStyleEdit()), cuma tidak ditampilkan di sini. --}}
+                                    <div class="grid {{ ! empty($config['no_offset_x']) ? 'grid-cols-2' : 'grid-cols-3' }} gap-2">
+                                        <div>
+                                            <x-input-label value="Ukuran (%)" class="text-[10px]" />
+                                            <x-text-input wire:model="styleOverrides.{{ $key }}.size" type="number" min="50" max="200" class="block w-full text-sm mt-0.5" />
+                                        </div>
+                                        @if (empty($config['no_offset_x']))
+                                            <div>
+                                                <x-input-label value="Kiri/Kanan" class="text-[10px]" />
+                                                <x-text-input wire:model="styleOverrides.{{ $key }}.offset_x" type="number" min="-100" max="100" class="block w-full text-sm mt-0.5" />
+                                            </div>
+                                        @endif
+                                        <div>
+                                            <x-input-label value="Naik/Turun" class="text-[10px]" />
+                                            <x-text-input wire:model="styleOverrides.{{ $key }}.offset_y" type="number" min="-100" max="100" class="block w-full text-sm mt-0.5" />
+                                        </div>
+                                    </div>
+                                    <x-input-error :messages="$errors->get('styleOverrides.'.$key.'.size')" class="mt-1" />
+                                    <x-input-error :messages="$errors->get('styleOverrides.'.$key.'.offset_x')" class="mt-1" />
+                                    <x-input-error :messages="$errors->get('styleOverrides.'.$key.'.offset_y')" class="mt-1" />
+
+                                    @if (! empty($config['has_icon']))
+                                        {{-- Icon mic LOKAL (mic doang) - opsional, kosongkan tetap pakai icon
+                                             mic GLOBAL (App\Models\ProjectLive::micIconUrl()). Bagian dari
+                                             skema lokal (toggle Aktif di atas), jadi tetap di DALAM blok ini. --}}
+                                        <div class="pt-1">
+                                            <x-input-label value="Icon Mic Kotak Ini (opsional)" class="text-[10px]" />
+                                            <div class="flex items-center gap-2 mt-1">
+                                                @if ($styleOverrides[$key]['icon'] ?? null)
+                                                    <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($styleOverrides[$key]['icon']) }}" class="w-7 h-7 object-contain rounded border border-gray-200 dark:border-gray-600 flex-shrink-0">
+                                                @endif
+                                                <input type="file" wire:model="localMicIconFile" accept="image/*"
+                                                    class="block w-full text-xs text-gray-600 dark:text-gray-300 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/40 file:text-indigo-700 dark:file:text-indigo-300">
+                                                @if ($styleOverrides[$key]['icon'] ?? null)
+                                                    <button type="button" wire:click="removeLocalMicIcon"
+                                                        class="flex-shrink-0 text-[10px] font-semibold text-gray-400 hover:text-red-500">
+                                                        Hapus
+                                                    </button>
+                                                @endif
+                                            </div>
+                                            <div wire:loading wire:target="localMicIconFile" class="text-[10px] text-gray-400 mt-1">Mengunggah...</div>
+                                            <x-input-error :messages="$errors->get('localMicIconFile')" class="mt-1" />
+                                        </div>
+                                    @endif
+
+                                    {{-- Teks/font kotak kosong - PINDAH dari modal Edit Kursi ke sini,
+                                         DI DALAM blok "enabled" (bagian dari skema lokal panel ini,
+                                         bukan settingan terpisah di luarnya). --}}
+                                    @if ($key === 'empty_label')
+                                        <div class="pt-1 space-y-2">
+                                            <div>
+                                                <x-input-label for="emptyLabel" value="Teks" class="text-[10px]" />
+                                                <x-text-input wire:model="emptyLabel" id="emptyLabel" class="block mt-0.5 w-full text-sm" type="text" placeholder="Request" maxlength="30" />
+                                                <x-input-error :messages="$errors->get('emptyLabel')" class="mt-1" />
+                                            </div>
+                                            <div>
+                                                <x-input-label value="Font" class="text-[10px]" />
+                                                <div class="grid grid-cols-2 gap-1.5 mt-0.5">
+                                                    @foreach (\App\Enums\SeatFont::cases() as $option)
+                                                        <button type="button" wire:click="$set('font', '{{ $option->value }}')"
+                                                            style="font-family: {{ $option->cssFontFamily() }};"
+                                                            class="px-2 py-1 text-xs rounded-md border transition {{ $font === $option->value ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                                                            {{ $option->label() }}
+                                                        </button>
+                                                    @endforeach
+                                                </div>
+                                                <x-input-error :messages="$errors->get('font')" class="mt-1" />
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    {{-- Icon kotak kosong - PINDAH dari modal Edit Kursi ke sini, DI
+                                         DALAM blok "enabled" (bagian dari skema lokal). --}}
+                                    @if ($key === 'empty_icon')
+                                        <div class="pt-1" x-data="{ preview: null }">
+                                            <x-input-label for="emptyIconFile" value="Icon" class="text-[10px]" />
+                                            <div class="flex items-center gap-2 mt-0.5">
+                                                @if ($this->emptyIconUrl())
+                                                    <img src="{{ $this->emptyIconUrl() }}" class="w-7 h-7 object-contain rounded border border-gray-200 dark:border-gray-600 flex-shrink-0">
+                                                @endif
+                                                <template x-if="preview">
+                                                    <img :src="preview" class="w-7 h-7 object-contain rounded border border-gray-200 dark:border-gray-600 flex-shrink-0">
+                                                </template>
+                                                <input type="file" wire:model="emptyIconFile" id="emptyIconFile" accept="image/*"
+                                                    x-on:change="
+                                                        const file = $event.target.files[0];
+                                                        if (! file) { preview = null; return; }
+                                                        const reader = new FileReader();
+                                                        reader.onload = (e) => preview = e.target.result;
+                                                        reader.readAsDataURL(file);
+                                                    "
+                                                    class="block w-full text-xs text-gray-600 dark:text-gray-300 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[10px] file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/40 file:text-indigo-700 dark:file:text-indigo-300">
+                                                @if ($this->emptyIconUrl())
+                                                    <button type="button" wire:click="removeEmptyIcon"
+                                                        class="flex-shrink-0 text-[10px] font-semibold text-gray-400 hover:text-red-500">
+                                                        Hapus
+                                                    </button>
+                                                @endif
+                                            </div>
+                                            <p class="text-[10px] text-gray-400 mt-1">Kosongkan (jangan pilih file) utk fallback default (+).</p>
+                                            <div wire:loading wire:target="emptyIconFile" class="text-[10px] text-gray-400 mt-1">Mengunggah...</div>
+                                            <x-input-error :messages="$errors->get('emptyIconFile')" class="mt-1" />
+                                        </div>
+                                    @endif
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <div class="border-t border-gray-100 dark:border-gray-700 pt-3">
+                        {{-- borderColor/emptyBgColor SUDAH toggle secara implisit (string kosong
+                             = ikut GLOBAL project_lives.seat_border_color/seat_empty_bg_color,
+                             diisi = override LOKAL) - toggleBorderColor()/toggleEmptyBgColor()
+                             cuma nyediain tombol yang tampil SAMA kayak elemen lain di atas. --}}
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-md p-3 space-y-2">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">Warna BG Kotak Kosong</span>
+                                <button type="button" wire:click="toggleEmptyBgColor"
+                                    class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full pl-1 pr-2 py-0.5 transition {{ $emptyBgColor !== '' ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                    <span class="relative inline-flex h-4 w-7 items-center rounded-full bg-black/20">
+                                        <span class="inline-block h-3 w-3 transform rounded-full bg-white transition {{ $emptyBgColor !== '' ? 'translate-x-3.5' : 'translate-x-0.5' }}"></span>
+                                    </span>
+                                    <span class="text-[10px] font-semibold text-white">{{ $emptyBgColor !== '' ? 'Lokal' : 'Global' }}</span>
+                                </button>
+                            </div>
+
+                            @if ($emptyBgColor !== '')
+                                <p class="text-[10px] text-gray-400">Dipakai selama kotak ini belum ada interaksi & tidak ada hotkey warna aktif.</p>
+                                <div class="flex items-center gap-2">
+                                    <input type="color" wire:model="emptyBgColor" id="emptyBgColor"
+                                        class="h-9 w-14 rounded-md border border-gray-200 dark:border-gray-600 cursor-pointer">
+                                    <x-text-input wire:model="emptyBgColor" class="block w-full text-sm" type="text" />
+                                </div>
+                                <x-input-error :messages="$errors->get('emptyBgColor')" class="mt-1" />
+                            @endif
+                        </div>
+
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-md p-3 space-y-2">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-xs font-semibold text-gray-700 dark:text-gray-300">Border Kotak</span>
+                                {{-- Satu toggle utk warna & tebal border sekaligus (bukan 2 toggle
+                                     terpisah) - keduanya bagian dari 1 override "Border Kotak Ini". --}}
+                                <button type="button" wire:click="toggleBorderColor"
+                                    class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full pl-1 pr-2 py-0.5 transition {{ $borderColor !== '' ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                    <span class="relative inline-flex h-4 w-7 items-center rounded-full bg-black/20">
+                                        <span class="inline-block h-3 w-3 transform rounded-full bg-white transition {{ $borderColor !== '' ? 'translate-x-3.5' : 'translate-x-0.5' }}"></span>
+                                    </span>
+                                    <span class="text-[10px] font-semibold text-white">{{ $borderColor !== '' ? 'Lokal' : 'Global' }}</span>
+                                </button>
+                            </div>
+
+                            @if ($borderColor !== '')
+                                <div>
+                                    <x-input-label value="Warna" class="text-[10px]" />
+                                    <div class="flex items-center gap-2 mt-0.5">
+                                        <input type="color" wire:model="borderColor" id="styleBorderColor"
+                                            class="h-9 w-14 rounded-md border border-gray-200 dark:border-gray-600 cursor-pointer">
+                                        <x-text-input wire:model="borderColor" class="block w-full text-sm" type="text" />
+                                    </div>
+                                    <x-input-error :messages="$errors->get('borderColor')" class="mt-1" />
+                                </div>
+                                <div>
+                                    <x-input-label value="Tebal (px)" class="text-[10px]" />
+                                    <x-text-input wire:model="borderWidth" class="block w-full text-sm mt-0.5" type="number" min="0" max="20" />
+                                    <x-input-error :messages="$errors->get('borderWidth')" class="mt-1" />
+                                </div>
+                            @endif
+                        </div>
+                        </div>
+                    </div>
+
+                    {{-- Batal & Simpan SENGAJA pakai class yang sama persis (bukan
+                         <x-primary-button>, itu text-xs uppercase - beda ukuran/gaya dari
+                         tombol Batal di sebelahnya) biar dua-duanya kelihatan sama besar. --}}
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button type="button" wire:click="closeStyleEdit"
+                            class="px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md hover:bg-gray-50 dark:hover:bg-gray-800">
+                            Batal
+                        </button>
+                        <button type="submit"
+                            class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700">
+                            Simpan
+                        </button>
                     </div>
                 </form>
             </div>

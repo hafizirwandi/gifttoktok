@@ -32,13 +32,19 @@ class PreviewLive extends Component
 
     public string $coin = '0';
 
+    /**
+     * Teks kotak kosong - diisi/disimpan lewat panel "Custom" (openStyleEdit()/
+     * saveStyleEdit(), bagian "Teks Kotak Kosong"), BUKAN modal Edit Kursi lagi -
+     * tidak punya "versi global" (selalu per-kotak), makanya tidak ikut sistem
+     * toggle lokal/global spt elemen lain di STYLE_ELEMENTS.
+     */
     public string $emptyLabel = '';
 
     /**
      * Path GAMBAR yang lagi tersimpan di kursi ini (bukan file baru yang mau di-upload,
      * lihat $emptyIconFile utk itu) - dulu ini emoji yang dipilih dari daftar tetap,
-     * sekarang diganti total jadi upload per kursi (lihat App\Models\ProjectLiveDetail::
-     * emptyIconUrl()). String kosong = belum ada, fallback ke '+' bawaan.
+     * sekarang diganti total jadi upload per kursi lewat panel "Custom" (App\Models\
+     * ProjectLiveDetail::emptyIconUrl()). String kosong = belum ada, fallback ke '+'.
      */
     public string $emptyIcon = '';
 
@@ -51,17 +57,6 @@ class PreviewLive extends Component
     public bool $micEnabled = true;
 
     /**
-     * Override posisi icon mic KOTAK INI SAJA (App\Models\ProjectLiveDetail::
-     * mic_offset_x/y) - string kosong = tidak di-override, pakai settingan global
-     * project_lives.mic_offset_x/y apa adanya (lihat partials/seat-box.blade.php).
-     * Dipakai bareng oleh modal edit kursi normal DAN modal BG co-host, sama seperti
-     * $name/$coin/$micEnabled di atas.
-     */
-    public string $micOffsetX = '';
-
-    public string $micOffsetY = '';
-
-    /**
      * Pin: kursi ini DIKECUALIKAN dari Reset Leaderboard/Reset Coin DAN dari
      * pengisian otomatis auto-gift (lihat App\Services\GiftLeaderboardService) -
      * nama/foto/coin-nya dipertahankan apa pun yang terjadi ke leaderboard, sampai
@@ -71,13 +66,24 @@ class PreviewLive extends Component
     public bool $isPinned = false;
 
     /**
-     * Font teks kotak kosong (App\Enums\SeatFont) & warna border kustom kursi ini -
-     * lihat App\Models\ProjectLiveDetail::font/border_color. borderColor string kosong
-     * = pakai default bawaan (border-white/15), bukan hitam/putih literal.
+     * Font teks kotak kosong (App\Enums\SeatFont) - lihat App\Models\ProjectLiveDetail::
+     * font, sama pola dgn $emptyLabel di atas (diisi/disimpan lewat panel "Custom",
+     * tidak punya "versi global"). borderColor string kosong = ikut GLOBAL project_lives.
+     * seat_border_color (atau default border-white/15 kalau itu juga kosong) - lihat
+     * toggleBorderColor().
      */
     public string $font = 'default';
 
     public string $borderColor = '';
+
+    /**
+     * Tebal border KOTAK INI - satu toggle dgn $borderColor (bukan toggle sendiri),
+     * cuma benar2 kepakai/tersimpan kalau $borderColor !== '' (Lokal aktif) - null
+     * effectively lewat $borderColor kosong, bukan lewat properti ini sendiri. Diisi
+     * dari nilai GLOBAL project_lives.seat_border_width saat toggleBorderColor()
+     * dinyalakan, biar admin mulai dari tampilan yang sama.
+     */
+    public int $borderWidth = 4;
 
     /**
      * BG layar penuh yang lagi aktif - sama persis dgn App\Livewire\ProjectLive\
@@ -109,6 +115,58 @@ class PreviewLive extends Component
     public int $hostBadgeOffsetX = 0;
 
     public int $hostBadgeOffsetY = 0;
+
+    /**
+     * Tampil/Sembunyi badge "Host" & Nama Host KOTAK BG INI SAJA - string kosong =
+     * ikut default GLOBAL (project_lives.host_badge_visible/host_name_visible),
+     * '1'/'0' = override LOKAL eksplisit. Sama pola dgn $borderColor/$emptyBgColor
+     * (string kosong = global) - lihat toggleHostBadgeVisible()/toggleHostNameVisible().
+     */
+    public string $hostBadgeVisible = '';
+
+    public string $hostNameVisible = '';
+
+    /**
+     * Elemen visual kotak yang bisa di-override LOKAL lewat tombol "Custom" per
+     * kotak (beda dari modal edit kursi/BG di atas yang isinya DATA - nama/coin/dst)
+     * - masing2 elemen: 'label' (tampil di UI), 'size_col'/'offset_x_col'/
+     * 'offset_y_col' (nama kolom GLOBAL project_lives yang jadi fallback kalau
+     * override-nya nonaktif), 'has_icon' (mic doang, bisa upload icon per-kotak).
+     * Lihat App\Support\SeatStyleResolver & partials/seat-box.blade.php.
+     */
+    public const STYLE_ELEMENTS = [
+        // Foto user di TENGAH kotak - cuma ukuran & naik/turun (TIDAK ada geser
+        // kiri/kanan, beda dari elemen lain, sesuai permintaan admin: foto ini
+        // sudah di-tengah secara horizontal, jarang perlu digeser kiri/kanan) -
+        // lihat 'no_offset_x' di bawah, dibaca UI panel Custom & saveStyleEdit().
+        'avatar' => ['label' => 'Foto User (Tengah)', 'size_col' => 'avatar_size', 'offset_x_col' => 'avatar_offset_x', 'offset_y_col' => 'avatar_offset_y', 'no_offset_x' => true],
+        'coin' => ['label' => 'Badge Coin', 'size_col' => 'coin_size', 'offset_x_col' => 'coin_offset_x', 'offset_y_col' => 'coin_offset_y', 'visible_col' => 'coin_visible'],
+        'name' => ['label' => 'Badge Nama', 'size_col' => 'name_size', 'offset_x_col' => 'name_offset_x', 'offset_y_col' => 'name_offset_y', 'visible_col' => 'name_visible'],
+        'gift_badge' => ['label' => 'Icon Pemetaan Gift', 'size_col' => 'gift_badge_size', 'offset_x_col' => 'gift_badge_offset_x', 'offset_y_col' => 'gift_badge_offset_y', 'visible_col' => 'gift_badge_visible'],
+        // 'visible' mic BUKAN lewat style_overrides spt elemen lain - dia sudah punya
+        // mekanisme sendiri dari lama (project_live_details.mic_visible, $micEnabled/
+        // toggleModalMic()), jadi TIDAK ada 'visible_col' di sini. Resolusi lokal-vs-
+        // global-nya khusus, lihat partials/seat-box.blade.php ($micVisible).
+        'mic' => ['label' => 'Icon Mic', 'size_col' => 'mic_size', 'offset_x_col' => 'mic_offset_x', 'offset_y_col' => 'mic_offset_y', 'has_icon' => true],
+        'empty_icon' => ['label' => 'Icon Kotak Kosong', 'size_col' => 'empty_icon_size', 'offset_x_col' => 'empty_icon_offset_x', 'offset_y_col' => 'empty_icon_offset_y', 'visible_col' => 'empty_icon_visible'],
+        'empty_label' => ['label' => 'Teks Kotak Kosong', 'size_col' => 'empty_label_size', 'offset_x_col' => 'empty_label_offset_x', 'offset_y_col' => 'empty_label_offset_y', 'visible_col' => 'empty_label_visible'],
+    ];
+
+    public ?int $editingStyleDetailId = null;
+
+    /**
+     * Working copy yang lagi di-staging (belum Simpan) - dikunci ke bentuk
+     * ['enabled' => bool, 'size' => int, 'offset_x' => int, 'offset_y' => int] per
+     * key STYLE_ELEMENTS ('mic' tambahan 'icon' => path|null). Dipetakan ke/dari
+     * project_live_details.style_overrides (JSON) lewat openStyleEdit()/saveStyleEdit().
+     *
+     * @var array<string, array<string, mixed>>
+     */
+    public array $styleOverrides = [];
+
+    public string $emptyBgColor = '';
+
+    public $localMicIconFile = null;
 
     public function mount(ProjectLive $projectLive): void
     {
@@ -146,28 +204,21 @@ class PreviewLive extends Component
         $this->editingDetailId = $detail->id;
         $this->name = (string) $detail->name;
         $this->coin = (string) $detail->gift_total_value;
-        $this->emptyLabel = (string) $detail->empty_label;
-        $this->emptyIcon = (string) $detail->empty_icon;
-        $this->emptyIconFile = null;
         $this->hotkey = (string) $detail->hotkey;
         $this->status = $detail->status->value;
-        $this->micEnabled = $detail->mic_visible;
-        $this->micOffsetX = $detail->mic_offset_x !== null ? (string) $detail->mic_offset_x : '';
-        $this->micOffsetY = $detail->mic_offset_y !== null ? (string) $detail->mic_offset_y : '';
-        $this->font = $detail->font?->value ?? SeatFont::Default->value;
-        $this->borderColor = (string) $detail->border_color;
         $this->isPinned = $detail->is_pinned;
         $this->img = null;
     }
 
     public function closeEdit(): void
     {
-        $this->reset(['editingDetailId', 'img', 'name', 'coin', 'emptyLabel', 'emptyIcon', 'emptyIconFile', 'hotkey', 'status', 'micEnabled', 'micOffsetX', 'micOffsetY', 'font', 'borderColor', 'isPinned']);
+        $this->reset(['editingDetailId', 'img', 'name', 'coin', 'hotkey', 'status', 'isPinned']);
     }
 
     /**
      * URL preview icon kotak kosong yang LAGI TERSIMPAN (bukan file baru yang belum
-     * di-upload) - dipakai modal edit buat nampilin thumbnail sebelum Simpan.
+     * di-upload) - dipakai panel "Custom" (bagian "Icon Kotak Kosong") buat
+     * nampilin thumbnail sebelum Simpan.
      */
     public function emptyIconUrl(): ?string
     {
@@ -182,7 +233,7 @@ class PreviewLive extends Component
     {
         $this->authorize('viewLive', $this->projectLive);
 
-        $detail = $this->projectLive->details()->findOrFail($this->editingDetailId);
+        $detail = $this->projectLive->details()->findOrFail($this->editingStyleDetailId);
 
         if ($detail->empty_icon) {
             Storage::disk('public')->delete($detail->empty_icon);
@@ -230,8 +281,6 @@ class PreviewLive extends Component
         $validated = $this->validate([
             'name' => 'nullable|string|max:255',
             'coin' => 'required|integer|min:0',
-            'emptyLabel' => 'nullable|string|max:30',
-            'emptyIconFile' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:8192',
             'hotkey' => [
                 'nullable',
                 'string',
@@ -252,12 +301,7 @@ class PreviewLive extends Component
                 },
             ],
             'status' => 'required|in:hide,show',
-            'micEnabled' => 'boolean',
-            'micOffsetX' => 'nullable|integer|min:-100|max:100',
-            'micOffsetY' => 'nullable|integer|min:-100|max:100',
             'isPinned' => 'boolean',
-            'font' => ['required', Rule::in(array_column(SeatFont::cases(), 'value'))],
-            'borderColor' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
             // 2048 (2MB) sebelumnya kelewat kecil buat foto HP modern — upload gagal
             // divalidasi diam-diam (cuma teks error kecil yang gampang kelewat), user
             // ngira foto-nya tidak terupload sama sekali. Dinaikkan ke 8MB.
@@ -267,15 +311,9 @@ class PreviewLive extends Component
         $data = [
             'name' => $validated['name'],
             'gift_total_value' => $validated['coin'],
-            'empty_label' => $validated['emptyLabel'] !== '' ? $validated['emptyLabel'] : null,
             'hotkey' => $validated['hotkey'] !== '' ? $validated['hotkey'] : null,
             'status' => $validated['status'],
-            'mic_visible' => $validated['micEnabled'],
-            'mic_offset_x' => $validated['micOffsetX'] !== '' && $validated['micOffsetX'] !== null ? (int) $validated['micOffsetX'] : null,
-            'mic_offset_y' => $validated['micOffsetY'] !== '' && $validated['micOffsetY'] !== null ? (int) $validated['micOffsetY'] : null,
             'is_pinned' => $validated['isPinned'],
-            'font' => $validated['font'] !== SeatFont::Default->value ? $validated['font'] : null,
-            'border_color' => $validated['borderColor'] !== '' ? $validated['borderColor'] : null,
             // Edit manual selalu mengembalikan kursi ke source "manual", supaya tidak
             // langsung ketiban timpa oleh recalculation leaderboard auto-mode berikutnya -
             // KECUALI kalau lagi di-PIN: link ke project_live_gifter_id SENGAJA
@@ -300,16 +338,6 @@ class PreviewLive extends Component
 
             if ($oldImg) {
                 Storage::disk('public')->delete($oldImg);
-            }
-        }
-
-        if ($this->emptyIconFile) {
-            $oldEmptyIcon = $detail->empty_icon;
-
-            $data['empty_icon'] = $this->emptyIconFile->store('project-live-details/'.$this->projectLive->id.'/empty-icons', 'public');
-
-            if ($oldEmptyIcon) {
-                Storage::disk('public')->delete($oldEmptyIcon);
             }
         }
 
@@ -344,6 +372,8 @@ class PreviewLive extends Component
         $this->hostBadgeSize = $bg->host_badge_size;
         $this->hostBadgeOffsetX = $bg->host_badge_offset_x;
         $this->hostBadgeOffsetY = $bg->host_badge_offset_y;
+        $this->hostBadgeVisible = $bg->host_badge_visible === null ? '' : ($bg->host_badge_visible ? '1' : '0');
+        $this->hostNameVisible = $bg->host_name_visible === null ? '' : ($bg->host_name_visible ? '1' : '0');
 
         // Field co-host - SAMA PERSIS dgn openEdit() normal, dipakai bareng. $name JUGA
         // dipakai role Host (nama Host, teks bold tanpa badge - lihat
@@ -352,13 +382,32 @@ class PreviewLive extends Component
         $this->name = (string) $detail->name;
         $this->coin = (string) $detail->gift_total_value;
         $this->micEnabled = $detail->mic_visible;
-        $this->micOffsetX = $detail->mic_offset_x !== null ? (string) $detail->mic_offset_x : '';
-        $this->micOffsetY = $detail->mic_offset_y !== null ? (string) $detail->mic_offset_y : '';
     }
 
     public function closeBgEdit(): void
     {
-        $this->reset(['editingBgDetailId', 'editingBgId', 'bgRole', 'hostBadgeBgColor', 'hostBadgeTextColor', 'hostBadgeSize', 'hostBadgeOffsetX', 'hostBadgeOffsetY', 'name', 'coin', 'micEnabled', 'micOffsetX', 'micOffsetY']);
+        $this->reset(['editingBgDetailId', 'editingBgId', 'bgRole', 'hostBadgeBgColor', 'hostBadgeTextColor', 'hostBadgeSize', 'hostBadgeOffsetX', 'hostBadgeOffsetY', 'hostBadgeVisible', 'hostNameVisible', 'name', 'coin', 'micEnabled']);
+    }
+
+    /**
+     * hostBadgeVisible/hostNameVisible SUDAH toggle secara implisit (string kosong =
+     * ikut GLOBAL project_lives.host_badge_visible/host_name_visible, '1'/'0' =
+     * override LOKAL) - method ini nyediain tombol Aktif/Nonaktif spt borderColor/
+     * emptyBgColor. Nyalain override diisi dari nilai GLOBAL yang lagi aktif biar
+     * admin mulai dari tampilan yang sama sebelum di-tweak.
+     */
+    public function toggleHostBadgeVisible(): void
+    {
+        $this->hostBadgeVisible = $this->hostBadgeVisible !== ''
+            ? ''
+            : ($this->projectLive->host_badge_visible ? '1' : '0');
+    }
+
+    public function toggleHostNameVisible(): void
+    {
+        $this->hostNameVisible = $this->hostNameVisible !== ''
+            ? ''
+            : ($this->projectLive->host_name_visible ? '1' : '0');
     }
 
     public function saveBgEdit(): void
@@ -372,11 +421,11 @@ class PreviewLive extends Component
             'hostBadgeSize' => 'required|integer|min:50|max:200',
             'hostBadgeOffsetX' => 'required|integer|min:-100|max:100',
             'hostBadgeOffsetY' => 'required|integer|min:-100|max:100',
+            'hostBadgeVisible' => ['nullable', Rule::in(['', '0', '1'])],
+            'hostNameVisible' => ['nullable', Rule::in(['', '0', '1'])],
             'name' => 'nullable|string|max:255',
             'coin' => 'required|integer|min:0',
             'micEnabled' => 'boolean',
-            'micOffsetX' => 'nullable|integer|min:-100|max:100',
-            'micOffsetY' => 'nullable|integer|min:-100|max:100',
         ]);
 
         $bg = $this->projectLive->backgrounds()->findOrFail($this->editingBgId);
@@ -387,6 +436,8 @@ class PreviewLive extends Component
             'host_badge_size' => $validated['hostBadgeSize'],
             'host_badge_offset_x' => $validated['hostBadgeOffsetX'],
             'host_badge_offset_y' => $validated['hostBadgeOffsetY'],
+            'host_badge_visible' => $validated['hostBadgeVisible'] !== '' ? $validated['hostBadgeVisible'] === '1' : null,
+            'host_name_visible' => $validated['hostNameVisible'] !== '' ? $validated['hostNameVisible'] === '1' : null,
         ]);
 
         // name/coin/mic cuma relevan kalau role-nya co-host (name JUGA relevan kalau
@@ -397,13 +448,215 @@ class PreviewLive extends Component
             'name' => $validated['name'],
             'gift_total_value' => $validated['coin'],
             'mic_visible' => $validated['micEnabled'],
-            'mic_offset_x' => $validated['micOffsetX'] !== '' && $validated['micOffsetX'] !== null ? (int) $validated['micOffsetX'] : null,
-            'mic_offset_y' => $validated['micOffsetY'] !== '' && $validated['micOffsetY'] !== null ? (int) $validated['micOffsetY'] : null,
         ]);
 
         $this->closeBgEdit();
 
         $this->dispatch('notify', message: 'Kursi berhasil disimpan.');
+    }
+
+    /**
+     * Buka panel "Custom" KOTAK INI SAJA (tombol baru di tiap kartu Preview Live,
+     * beda dari openEdit()/openBgEdit() yang isinya DATA kursi/BG) - override lokal
+     * size/offset (+font/icon kalau relevan) per elemen, lihat STYLE_ELEMENTS.
+     */
+    public function openStyleEdit(int $detailId): void
+    {
+        $detail = $this->projectLive->details()->findOrFail($detailId);
+
+        $this->editingStyleDetailId = $detail->id;
+        $this->borderColor = (string) $detail->border_color;
+        $this->borderWidth = $detail->border_width ?? $this->projectLive->seat_border_width;
+        $this->emptyBgColor = (string) $detail->empty_bg_color;
+        $this->localMicIconFile = null;
+        // Teks/font/icon kotak kosong - pindah ke sini (bagian "Teks Kotak Kosong"/
+        // "Icon Kotak Kosong" di panel Custom) dari modal Edit Kursi lama, sesuai
+        // permintaan admin: elemen tampilan (ukuran/posisi/isi) kotak kosong SEMUA
+        // diatur di satu tempat ini.
+        $this->emptyLabel = (string) $detail->empty_label;
+        $this->emptyIcon = (string) $detail->empty_icon;
+        $this->emptyIconFile = null;
+        $this->font = $detail->font?->value ?? SeatFont::Default->value;
+        // Toggle Nyala/Sembunyi icon mic - pindah ke sini (kartu "Icon Mic") dari
+        // modal Edit Kursi lama, sama alasannya dgn emptyLabel/emptyIcon/font di atas.
+        $this->micEnabled = $detail->mic_visible;
+
+        $stored = $detail->style_overrides ?? [];
+
+        foreach (self::STYLE_ELEMENTS as $key => $config) {
+            $local = $stored[$key] ?? [];
+
+            $this->styleOverrides[$key] = [
+                'enabled' => (bool) ($local['enabled'] ?? false),
+                'size' => (int) ($local['size'] ?? 100),
+                'offset_x' => (int) ($local['offset_x'] ?? 0),
+                'offset_y' => (int) ($local['offset_y'] ?? 0),
+            ];
+
+            if (! empty($config['has_icon'])) {
+                $this->styleOverrides[$key]['icon'] = $local['icon'] ?? null;
+            }
+
+            if (! empty($config['visible_col'])) {
+                $this->styleOverrides[$key]['visible'] = (bool) ($local['visible'] ?? true);
+            }
+        }
+    }
+
+    public function closeStyleEdit(): void
+    {
+        $this->reset(['editingStyleDetailId', 'styleOverrides', 'emptyBgColor', 'borderColor', 'borderWidth', 'localMicIconFile', 'emptyLabel', 'emptyIcon', 'emptyIconFile', 'font', 'micEnabled']);
+    }
+
+    public function toggleStyleElement(string $key): void
+    {
+        $this->styleOverrides[$key]['enabled'] = ! ($this->styleOverrides[$key]['enabled'] ?? false);
+    }
+
+    public function toggleStyleElementVisible(string $key): void
+    {
+        $this->styleOverrides[$key]['visible'] = ! ($this->styleOverrides[$key]['visible'] ?? true);
+    }
+
+    /**
+     * borderColor/emptyBgColor sudah "toggle" secara implisit (string kosong = ikut
+     * GLOBAL project_lives.seat_border_color/seat_empty_bg_color, diisi = override
+     * LOKAL) - method ini cuma nyediain tombol Aktif/Nonaktif yang KELIHATANNYA
+     * sama kayak elemen lain (STYLE_ELEMENTS) biar konsisten, bukan mekanisme baru.
+     * Nyalain override diisi dari warna GLOBAL yang lagi aktif (kalau ada) supaya
+     * admin mulai dari tampilan yang sama sebelum di-tweak, bukan warna acak.
+     */
+    public function toggleBorderColor(): void
+    {
+        if ($this->borderColor !== '') {
+            $this->borderColor = '';
+
+            return;
+        }
+
+        $this->borderColor = $this->projectLive->seat_border_color ?: '#ffffff';
+        $this->borderWidth = $this->projectLive->seat_border_width;
+    }
+
+    public function toggleEmptyBgColor(): void
+    {
+        $this->emptyBgColor = $this->emptyBgColor !== ''
+            ? ''
+            : ($this->projectLive->seat_empty_bg_color ?: '#000000');
+    }
+
+    /**
+     * Hapus icon mic LOKAL kotak ini, balik ke fallback icon mic GLOBAL - langsung
+     * tereksekusi (sama pola dgn removeEmptyIcon(), beda dari upload baru yang
+     * nunggu tombol Simpan panel Custom).
+     */
+    public function removeLocalMicIcon(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $detail = $this->projectLive->details()->findOrFail($this->editingStyleDetailId);
+        $stored = $detail->style_overrides ?? [];
+        $oldIcon = $stored['mic']['icon'] ?? null;
+
+        if ($oldIcon) {
+            Storage::disk('public')->delete($oldIcon);
+        }
+
+        $stored['mic']['icon'] = null;
+        $detail->update(['style_overrides' => $stored]);
+
+        $this->styleOverrides['mic']['icon'] = null;
+    }
+
+    public function saveStyleEdit(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $rules = [
+            'emptyBgColor' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'borderColor' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'borderWidth' => 'required|integer|min:0|max:20',
+            'localMicIconFile' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:8192',
+            'emptyLabel' => 'nullable|string|max:30',
+            'emptyIconFile' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:8192',
+            'font' => ['required', Rule::in(array_column(SeatFont::cases(), 'value'))],
+            'micEnabled' => 'boolean',
+        ];
+
+        foreach (self::STYLE_ELEMENTS as $key => $config) {
+            $rules["styleOverrides.{$key}.enabled"] = 'boolean';
+            $rules["styleOverrides.{$key}.size"] = 'required|integer|min:50|max:200';
+            $rules["styleOverrides.{$key}.offset_x"] = 'required|integer|min:-100|max:100';
+            $rules["styleOverrides.{$key}.offset_y"] = 'required|integer|min:-100|max:100';
+
+            if (! empty($config['visible_col'])) {
+                $rules["styleOverrides.{$key}.visible"] = 'boolean';
+            }
+        }
+
+        $validated = $this->validate($rules);
+
+        $detail = $this->projectLive->details()->findOrFail($this->editingStyleDetailId);
+
+        if ($this->localMicIconFile) {
+            $oldIcon = $this->styleOverrides['mic']['icon'] ?? null;
+
+            $this->styleOverrides['mic']['icon'] = $this->localMicIconFile->store(
+                'project-live-details/'.$this->projectLive->id.'/mic-icons', 'public'
+            );
+
+            if ($oldIcon) {
+                Storage::disk('public')->delete($oldIcon);
+            }
+        }
+
+        $emptyIconPath = $detail->empty_icon;
+
+        if ($this->emptyIconFile) {
+            $oldEmptyIcon = $detail->empty_icon;
+
+            $emptyIconPath = $this->emptyIconFile->store('project-live-details/'.$this->projectLive->id.'/empty-icons', 'public');
+
+            if ($oldEmptyIcon) {
+                Storage::disk('public')->delete($oldEmptyIcon);
+            }
+        }
+
+        $overrides = [];
+
+        foreach (self::STYLE_ELEMENTS as $key => $config) {
+            $entry = [
+                'enabled' => (bool) $validated['styleOverrides'][$key]['enabled'],
+                'size' => (int) $validated['styleOverrides'][$key]['size'],
+                'offset_x' => (int) $validated['styleOverrides'][$key]['offset_x'],
+                'offset_y' => (int) $validated['styleOverrides'][$key]['offset_y'],
+            ];
+
+            if (! empty($config['has_icon'])) {
+                $entry['icon'] = $this->styleOverrides[$key]['icon'] ?? null;
+            }
+
+            if (! empty($config['visible_col'])) {
+                $entry['visible'] = (bool) $validated['styleOverrides'][$key]['visible'];
+            }
+
+            $overrides[$key] = $entry;
+        }
+
+        $detail->update([
+            'style_overrides' => $overrides,
+            'empty_bg_color' => $validated['emptyBgColor'] !== '' ? $validated['emptyBgColor'] : null,
+            'border_color' => $validated['borderColor'] !== '' ? $validated['borderColor'] : null,
+            'border_width' => $validated['borderColor'] !== '' ? $validated['borderWidth'] : null,
+            'empty_label' => $validated['emptyLabel'] !== '' ? $validated['emptyLabel'] : null,
+            'empty_icon' => $emptyIconPath,
+            'font' => $validated['font'] !== SeatFont::Default->value ? $validated['font'] : null,
+            'mic_visible' => $validated['micEnabled'],
+        ]);
+
+        $this->closeStyleEdit();
+
+        $this->dispatch('notify', message: 'Setting lokal kotak ini disimpan.');
     }
 
     public function render()

@@ -1,12 +1,6 @@
 <div>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                Frame Host
-            </h2>
-            <a href="{{ route('project-live.admin', $projectLive) }}" wire:navigate
-                class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">&larr; Kembali ke Admin</a>
-        </div>
+        @include('livewire.project-live.partials.nav', ['projectLive' => $projectLive, 'title' => 'Frame Host'])
     </x-slot>
 
     <div class="py-8">

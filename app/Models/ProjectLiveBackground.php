@@ -31,6 +31,8 @@ class ProjectLiveBackground extends Model
         'host_badge_size',
         'host_badge_offset_x',
         'host_badge_offset_y',
+        'host_badge_visible',
+        'host_name_visible',
         'audio_enabled',
     ];
 
@@ -42,6 +44,8 @@ class ProjectLiveBackground extends Model
             'fit_mode' => BackgroundFit::class,
             'is_active' => 'boolean',
             'role' => SeatRole::class,
+            'host_badge_visible' => 'boolean',
+            'host_name_visible' => 'boolean',
             'audio_enabled' => 'boolean',
         ];
     }
@@ -78,6 +82,11 @@ class ProjectLiveBackground extends Model
             'host_badge_size' => $this->host_badge_size,
             'host_badge_offset_x' => $this->host_badge_offset_x,
             'host_badge_offset_y' => $this->host_badge_offset_y,
+            // null = ikut default GLOBAL (project_lives.host_badge_visible/
+            // host_name_visible), true/false = override LOKAL kotak BG ini - lihat
+            // partials/seat-box.blade.php.
+            'host_badge_visible' => $this->host_badge_visible,
+            'host_name_visible' => $this->host_name_visible,
             'audio_enabled' => $this->audio_enabled,
         ];
     }

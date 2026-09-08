@@ -109,9 +109,11 @@ class LiveShow extends Component
             'empty_icon_url' => null,
             'font' => null,
             'border_color' => null,
+            'border_width' => null,
             'mic_visible' => true,
-            'mic_offset_x' => null,
-            'mic_offset_y' => null,
+            'style_overrides' => null,
+            'local_mic_icon_url' => null,
+            'empty_bg_color' => null,
             'background' => null,
             'active_hotkey_color' => null,
             'last_gift_icon_url' => null,
@@ -134,6 +136,8 @@ class LiveShow extends Component
             'host_badge_size' => 100,
             'host_badge_offset_x' => 0,
             'host_badge_offset_y' => 0,
+            'host_badge_visible' => null,
+            'host_name_visible' => null,
             'audio_enabled' => false,
         ];
 

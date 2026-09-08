@@ -37,6 +37,8 @@ class ProjectLive extends Model
         'coin_size',
         'name_size',
         'avatar_size',
+        'avatar_offset_x',
+        'avatar_offset_y',
         'empty_icon_size',
         'empty_label_size',
         'gift_badge_size',
@@ -44,11 +46,16 @@ class ProjectLive extends Model
         'seat_padding',
         'seat_border_width',
         'seat_border_radius',
+        'seat_border_color',
+        'seat_empty_bg_color',
         'seat_gap',
         'empty_icon_offset_y',
         'empty_label_offset_y',
+        'empty_icon_offset_x',
+        'empty_label_offset_x',
         'mic_offset_y',
         'mic_icon',
+        'empty_icon',
         'coin_offset_y',
         'name_offset_y',
         'gift_badge_offset_y',
@@ -57,9 +64,18 @@ class ProjectLive extends Model
         'mic_offset_x',
         'gift_badge_offset_x',
         'host_name_font',
+        'empty_label_font',
         'host_name_size',
         'host_name_offset_x',
         'host_name_offset_y',
+        'coin_visible',
+        'name_visible',
+        'gift_badge_visible',
+        'mic_visible',
+        'empty_icon_visible',
+        'empty_label_visible',
+        'host_badge_visible',
+        'host_name_visible',
         'seat_fill_direction',
         'frame_orientation',
         'frame_ratio_w',
@@ -104,6 +120,14 @@ class ProjectLive extends Model
             'frame_pulse' => 'boolean',
             'seat_pulse_enabled' => 'boolean',
             'seat_pulse_positions' => 'array',
+            'coin_visible' => 'boolean',
+            'name_visible' => 'boolean',
+            'gift_badge_visible' => 'boolean',
+            'mic_visible' => 'boolean',
+            'empty_icon_visible' => 'boolean',
+            'empty_label_visible' => 'boolean',
+            'host_badge_visible' => 'boolean',
+            'host_name_visible' => 'boolean',
             'auto_gift_mode' => 'boolean',
             'gift_listener_connected_at' => 'datetime',
             'round_reset_at' => 'datetime',
@@ -143,13 +167,24 @@ class ProjectLive extends Model
     }
 
     /**
-     * Icon mic custom (App\Livewire\ProjectLive\DetailAdmin::saveMicIcon()) - satu utk
-     * SEMUA kotak kursi project ini (beda dari background yg per-kotak). Null kalau
-     * belum upload apa pun - seat-box.blade.php fallback ke SVG mic bawaan.
+     * Icon mic custom (App\Livewire\ProjectLive\DetailAdmin::saveGlobalSettings()) -
+     * satu utk SEMUA kotak kursi project ini (beda dari background yg per-kotak).
+     * Null kalau belum upload apa pun - seat-box.blade.php fallback ke SVG mic bawaan.
      */
     public function micIconUrl(): ?string
     {
         return $this->mic_icon ? Storage::disk('public')->url($this->mic_icon) : null;
+    }
+
+    /**
+     * Icon kotak kosong custom GLOBAL (App\Livewire\ProjectLive\DetailAdmin::
+     * saveGlobalSettings()) - fallback kalau kotak TIDAK punya icon LOKAL sendiri
+     * (project_live_details.empty_icon, diatur lewat tombol "Custom" di Preview
+     * Live). Null kalau belum upload apa pun - seat-box.blade.php fallback ke '+'.
+     */
+    public function emptyIconUrl(): ?string
+    {
+        return $this->empty_icon ? Storage::disk('public')->url($this->empty_icon) : null;
     }
 
     /**

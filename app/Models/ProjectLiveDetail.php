@@ -35,9 +35,10 @@ class ProjectLiveDetail extends Model
         'empty_icon',
         'font',
         'border_color',
+        'border_width',
         'mic_visible',
-        'mic_offset_x',
-        'mic_offset_y',
+        'style_overrides',
+        'empty_bg_color',
         'background_id',
         'active_hotkey_color',
         'source',
@@ -55,6 +56,7 @@ class ProjectLiveDetail extends Model
             'font' => SeatFont::class,
             'is_pinned' => 'boolean',
             'mic_visible' => 'boolean',
+            'style_overrides' => 'array',
             'last_gift_at' => 'datetime',
         ];
     }
@@ -90,6 +92,23 @@ class ProjectLiveDetail extends Model
     }
 
     /**
+     * Icon mic khusus kotak ini (App\Support\SeatStyleResolver, style_overrides.mic,
+     * diatur lewat tombol "Custom" per kotak di Preview Live) - null kalau override
+     * mic-nya tidak aktif atau belum upload apa pun, fallback ke icon mic GLOBAL
+     * (App\Models\ProjectLive::micIconUrl()) di partials/seat-box.blade.php.
+     */
+    public function localMicIconUrl(): ?string
+    {
+        $mic = $this->style_overrides['mic'] ?? null;
+
+        if (! is_array($mic) || ! ($mic['enabled'] ?? false) || empty($mic['icon'])) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($mic['icon']);
+    }
+
+    /**
      * Bentuk array yang dipakai bareng oleh App\Livewire\ProjectLive\LiveShow (halaman
      * Live asli) DAN App\Livewire\ProjectLive\PreviewLive (Preview Live, direndernya
      * pakai partials/seat-box.blade.php yang SAMA PERSIS) - dulu logic ini cuma ada di
@@ -118,11 +137,16 @@ class ProjectLiveDetail extends Model
             'empty_icon_url' => $this->emptyIconUrl(),
             'font' => $this->font?->value,
             'border_color' => $this->border_color,
+            'border_width' => $this->border_width,
             'mic_visible' => $this->mic_visible,
-            // Override posisi mic PER KOTAK - null = pakai settingan global project_lives.
-            // mic_offset_x/y apa adanya (lihat partials/seat-box.blade.php).
-            'mic_offset_x' => $this->mic_offset_x,
-            'mic_offset_y' => $this->mic_offset_y,
+            // Override LOKAL per kotak (tombol "Custom" di Preview Live) utk
+            // coin/nama/icon pemetaan gift/mic/icon & teks kotak kosong - null/kosong
+            // = elemen itu pakai settingan GLOBAL project_lives apa adanya. Lihat
+            // App\Support\SeatStyleResolver & App\Livewire\ProjectLive\PreviewLive::
+            // STYLE_ELEMENTS.
+            'style_overrides' => $this->style_overrides,
+            'local_mic_icon_url' => $this->localMicIconUrl(),
+            'empty_bg_color' => $this->empty_bg_color,
             'background' => $this->background ? $this->background->toLiveArray() : null,
             'active_hotkey_color' => $this->active_hotkey_color,
             'last_gift_icon_url' => $this->last_gift_icon_url,

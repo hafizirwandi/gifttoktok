@@ -1,30 +1,6 @@
 <div @if ($projectLive->auto_gift_mode) wire:poll.5s="$refresh" @endif>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-                Admin — {{ $projectLive->name }}
-            </h2>
-            <div class="flex items-center gap-4">
-                @can('manage', \App\Models\ProjectLive::class)
-                    <a href="{{ route('project-live.index') }}" wire:navigate
-                        class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">&larr; Kembali ke daftar project</a>
-                @endcan
-                <a href="{{ route('project-live.gift-mapping', $projectLive) }}" wire:navigate
-                    class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Pemetaan Gift</a>
-                <a href="{{ route('project-live.frame-host', $projectLive) }}" wire:navigate
-                    class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Frame Host</a>
-                <a href="{{ route('project-live.hotkey-color', $projectLive) }}" wire:navigate
-                    class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Hotkey Warna</a>
-                <a href="{{ route('project-live.event-trigger', $projectLive) }}" wire:navigate
-                    class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Event Trigger</a>
-                <a href="{{ route('project-live.background', $projectLive) }}" wire:navigate
-                    class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Background</a>
-                <a href="{{ route('project-live.preview-live', $projectLive) }}" target="_blank" rel="noopener"
-                    class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Preview Live</a>
-                <a href="{{ route('project-live.live', $projectLive) }}" target="_blank" rel="noopener"
-                    class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">Buka Live &rarr;</a>
-            </div>
-        </div>
+        @include('livewire.project-live.partials.nav', ['projectLive' => $projectLive, 'title' => 'Admin'])
     </x-slot>
 
     <div class="py-8">
@@ -89,21 +65,29 @@
             </div>
 
             @can('manage', \App\Models\ProjectLive::class)
-                <!-- Tata Letak Halaman Live -->
-                <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-3">
-                    <div>
-                        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Tata Letak Halaman Live</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Menentukan susunan kursi di halaman Live (yang dibuka lewat "Buka Live").</p>
-                    </div>
-                    <!-- Kartu ikon (bukan cuma teks) - klik langsung simpan spt sebelumnya. Preview
+                {{-- Tata Letak Halaman Live - disembunyikan default (x-data lokal, bukan
+                     Livewire) krn grid ikonnya makan tempat banyak & jarang diganti-ganti,
+                     beda dari settingan lain di halaman ini yang lebih sering di-tweak. --}}
+                <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-3" x-data="{ open: false }">
+                    <button type="button" x-on:click="open = ! open" class="w-full flex items-center justify-between gap-3 text-left">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Tata Letak Halaman Live</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Menentukan susunan kursi di halaman Live (yang dibuka lewat "Buka Live"). Saat ini: {{ $projectLive->display_mode->label() }}.</p>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5 flex-shrink-0 text-gray-400 transition-transform" x-bind:class="open ? 'rotate-180' : ''">
+                            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+
+                    {{-- Kartu ikon (bukan cuma teks) - klik langsung simpan spt sebelumnya. Preview
                          kursinya sendiri ada di menu "Preview Live" terpisah. Ganti tata letak SELALU
                          minta konfirmasi (bukan cuma pas kursi berkurang) krn updateDisplayMode() juga
                          reset leaderboard sekalian - lihat App\Livewire\ProjectLive\DetailAdmin. Pakai
                          CSS grid dgn JUMLAH KOLOM TETAP per breakpoint (bukan flex-wrap/auto-fill) -
                          semua kartu jadi otomatis SAMA PERSIS ukurannya & sejajar rapi (lebar kartu =
                          lebar track grid, seragam), beda dari flex-1 sebelumnya yg bisa melebar beda2
-                         tiap baris. -->
-                    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                         tiap baris. --}}
+                    <div x-show="open" x-cloak x-transition class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                         @foreach (\App\Enums\DisplayMode::cases() as $mode)
                             <button type="button" wire:click="updateDisplayMode('{{ $mode->value }}')"
                                 title="{{ $mode->description() }}"
@@ -117,72 +101,168 @@
                 </div>
             @endcan
 
-            <!-- Ukuran Konten Kotak Live: beda dari Tata Letak di atas (superadmin only),
-                 ini boleh diatur akun role "live" juga -->
+            {{-- Ukuran & Posisi Kotak Live: beda dari Tata Letak di atas (superadmin only),
+                 ini boleh diatur akun role "live" juga. Dikelompokkan JADI SATU KARTU per
+                 elemen (App\Livewire\ProjectLive\DetailAdmin::ELEMENT_GROUPS) - ukuran,
+                 geser kiri/kanan, & naik/turun elemen yang SAMA sekarang keliatan bareng,
+                 bukan tersebar di 2 grid terpisah spt sebelumnya (grid ukuran vs grid
+                 padding/offset). Font Nama Host & Icon Mic Custom juga ikut dipindah ke
+                 kartu elemennya masing2 (host_name/mic) krn nyambung sama elemen itu. --}}
             <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-3">
                 <div class="flex items-center justify-between gap-3">
                     <div>
-                        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Ukuran Konten Kotak Live</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Persen dari ukuran default (100%). Berlaku untuk semua kotak kursi di halaman Live.</p>
+                        <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Ukuran &amp; Posisi Kotak Live</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Berlaku ke semua kotak, kecuali kotak yang di-custom lokal lewat tombol "Custom" di Preview Live.</p>
                     </div>
-                    <button type="button" wire:click="resetSizes"
+                    <button type="button" wire:click="resetContentSettings"
                         class="flex-shrink-0 text-xs font-semibold text-gray-400 hover:text-red-500">
                         Reset ke Default
                     </button>
                 </div>
 
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    @foreach ([
-                        'coin' => 'Coin (badge)',
-                        'name' => 'Nama (badge)',
-                        'avatar' => 'Foto',
-                        'empty_icon' => 'Icon kotak kosong',
-                        'empty_label' => 'Teks kotak kosong',
-                        'gift_badge' => 'Icon pemetaan gift',
-                        'mic' => 'Icon mic',
-                        'host_name' => 'Nama Host (bold)',
-                    ] as $field => $label)
-                        <div>
-                            <x-input-label :for="'size-'.$field" :value="$label" />
-                            <div class="flex items-center gap-1 mt-1">
-                                <x-text-input :id="'size-'.$field" wire:model="sizes.{{ $field }}" type="number" min="50" max="200" step="5" class="block w-full text-sm" />
-                                <span class="text-xs text-gray-400 flex-shrink-0">%</span>
+                {{-- SATU form utk SELURUH settingan global di kartu ini (ukuran/posisi
+                     per elemen, padding/border/gap, warna kotak, font, icon) - SATU
+                     tombol Simpan di paling bawah, lihat DetailAdmin::saveGlobalSettings(). --}}
+                <form wire:submit="saveGlobalSettings" class="space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    @foreach (\App\Livewire\ProjectLive\DetailAdmin::ELEMENT_GROUPS as $field => $label)
+                        <div class="border border-gray-200 dark:border-gray-700 rounded-md p-3 space-y-2">
+                            <div class="flex items-center justify-between gap-2">
+                                <p class="text-xs font-semibold text-gray-700 dark:text-gray-300">{{ $label }}</p>
+                                {{-- Show/hide GLOBAL - fallback kalau override LOKAL kotak (tombol
+                                     "Custom" di Preview Live) tidak diaktifkan, lihat
+                                     App\Support\SeatStyleResolver::isVisible(). --}}
+                                @if (in_array($field, \App\Livewire\ProjectLive\DetailAdmin::VISIBILITY_FIELDS, true))
+                                    <button type="button" wire:click="toggleVisibilityDraft('{{ $field }}')"
+                                        class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full pl-1 pr-2 py-0.5 transition {{ ($visibility[$field] ?? true) ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                        <span class="relative inline-flex h-4 w-7 items-center rounded-full bg-black/20">
+                                            <span class="inline-block h-3 w-3 transform rounded-full bg-white transition {{ ($visibility[$field] ?? true) ? 'translate-x-3.5' : 'translate-x-0.5' }}"></span>
+                                        </span>
+                                        <span class="text-[10px] font-semibold text-white">{{ ($visibility[$field] ?? true) ? 'Tampil' : 'Sembunyi' }}</span>
+                                    </button>
+                                @endif
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <x-input-label value="Ukuran (%)" class="text-[10px]" />
+                                    <x-text-input :id="'size-'.$field" wire:model="sizes.{{ $field }}" type="number" min="50" max="200" step="5" class="block w-full text-sm mt-0.5" />
+                                </div>
+                                <div>
+                                    <x-input-label value="Kiri/Kanan" class="text-[10px]" />
+                                    <x-text-input wire:model="boxStyle.{{ $field }}_offset_x" type="number" min="-100" max="100" class="block w-full text-sm mt-0.5" />
+                                </div>
+                                <div>
+                                    <x-input-label value="Naik/Turun" class="text-[10px]" />
+                                    <x-text-input wire:model="boxStyle.{{ $field }}_offset_y" type="number" min="-100" max="100" class="block w-full text-sm mt-0.5" />
+                                </div>
                             </div>
                             <x-input-error :messages="$errors->get('sizes.'.$field)" class="mt-1" />
+                            <x-input-error :messages="$errors->get('boxStyle.'.$field.'_offset_x')" class="mt-1" />
+                            <x-input-error :messages="$errors->get('boxStyle.'.$field.'_offset_y')" class="mt-1" />
+
                             @if ($field === 'mic')
-                                <p class="text-[10px] text-gray-400 mt-1">Nyala/mati mic diatur per kotak di Preview Live.</p>
+                                <p class="text-[10px] text-gray-400">Nyala/mati &amp; icon lokal per-kotak diatur di Preview Live.</p>
+                                <div class="border-t border-gray-100 dark:border-gray-700 pt-2 space-y-1.5">
+                                    <p class="text-[10px] font-semibold text-gray-500 dark:text-gray-400">Icon Custom (semua kotak)</p>
+                                    <div class="flex items-center gap-1.5">
+                                        @if ($projectLive->mic_icon)
+                                            <img src="{{ $projectLive->micIconUrl() }}" alt="" class="w-6 h-6 object-contain flex-shrink-0">
+                                        @endif
+                                        <input type="file" wire:model="micIconFile" accept="image/*"
+                                            class="block w-full text-[10px] text-gray-600 dark:text-gray-300 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/40 file:text-indigo-700 dark:file:text-indigo-300">
+                                        @if ($projectLive->mic_icon)
+                                            <button type="button" wire:click="removeMicIcon" wire:confirm="Kembalikan ke icon mic bawaan?"
+                                                class="flex-shrink-0 text-[10px] font-semibold text-gray-400 hover:text-red-500">
+                                                Hapus
+                                            </button>
+                                        @endif
+                                    </div>
+                                    <div wire:loading wire:target="micIconFile" class="text-[10px] text-gray-400">Mengunggah...</div>
+                                    <x-input-error :messages="$errors->get('micIconFile')" class="mt-1" />
+                                </div>
                             @endif
+
+                            @if ($field === 'empty_icon')
+                                <p class="text-[10px] text-gray-400">Icon lokal per-kotak diatur di Preview Live.</p>
+                                <div class="border-t border-gray-100 dark:border-gray-700 pt-2 space-y-1.5">
+                                    <p class="text-[10px] font-semibold text-gray-500 dark:text-gray-400">Icon Custom (semua kotak)</p>
+                                    <div class="flex items-center gap-1.5">
+                                        @if ($projectLive->empty_icon)
+                                            <img src="{{ $projectLive->emptyIconUrl() }}" alt="" class="w-6 h-6 object-contain flex-shrink-0">
+                                        @endif
+                                        <input type="file" wire:model="emptyIconFile" accept="image/*"
+                                            class="block w-full text-[10px] text-gray-600 dark:text-gray-300 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/40 file:text-indigo-700 dark:file:text-indigo-300">
+                                        @if ($projectLive->empty_icon)
+                                            <button type="button" wire:click="removeEmptyIconGlobal" wire:confirm="Kembalikan ke icon bawaan (+)?"
+                                                class="flex-shrink-0 text-[10px] font-semibold text-gray-400 hover:text-red-500">
+                                                Hapus
+                                            </button>
+                                        @endif
+                                    </div>
+                                    <div wire:loading wire:target="emptyIconFile" class="text-[10px] text-gray-400">Mengunggah...</div>
+                                    <x-input-error :messages="$errors->get('emptyIconFile')" class="mt-1" />
+                                </div>
+                            @endif
+
+                            @if ($field === 'empty_label')
+                                <p class="text-[10px] text-gray-400">Teks lokal per-kotak diatur di Preview Live.</p>
+                                <div class="border-t border-gray-100 dark:border-gray-700 pt-2 space-y-1">
+                                    <x-input-label for="emptyLabelFont" value="Font (semua kotak)" class="text-[10px] font-semibold text-gray-500 dark:text-gray-400" />
+                                    <select wire:model="emptyLabelFont" id="emptyLabelFont"
+                                        class="block mt-0.5 w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 shadow-sm text-xs">
+                                        @foreach (\App\Enums\SeatFont::cases() as $option)
+                                            <option value="{{ $option->value }}">{{ $option->label() }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
+
                             @if ($field === 'host_name')
-                                <p class="text-[10px] text-gray-400 mt-1">Nama kotak yang jadi Host (isi teksnya diatur per kotak di Preview Live).</p>
+                                <p class="text-[10px] text-gray-400">Nama Host per kotak diatur di Preview Live.</p>
+                                <div class="border-t border-gray-100 dark:border-gray-700 pt-2 space-y-1">
+                                    <x-input-label for="hostNameFont" value="Font" class="text-[10px] font-semibold text-gray-500 dark:text-gray-400" />
+                                    <select wire:model="hostNameFont" id="hostNameFont"
+                                        class="block mt-0.5 w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 shadow-sm text-xs">
+                                        @foreach (\App\Enums\SeatFont::cases() as $option)
+                                            <option value="{{ $option->value }}">{{ $option->label() }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                {{-- Tulisan "Host" (badge, bukan Nama Host) - tidak punya kartu
+                                     ELEMENT_GROUPS sendiri (stylingnya per-BG, bukan global), jadi
+                                     tombol Tampil/Sembunyi GLOBAL-nya ditaruh di sini, berdampingan
+                                     dgn Nama Host. --}}
+                                <div class="border-t border-gray-100 dark:border-gray-700 pt-2">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <span class="text-[10px] font-semibold text-gray-500 dark:text-gray-400">Tulisan "Host"</span>
+                                        <button type="button" wire:click="toggleVisibilityDraft('host_badge')"
+                                            class="flex-shrink-0 inline-flex items-center gap-1.5 rounded-full pl-1 pr-2 py-0.5 transition {{ ($visibility['host_badge'] ?? true) ? 'bg-green-600' : 'bg-gray-300 dark:bg-gray-600' }}">
+                                            <span class="relative inline-flex h-4 w-7 items-center rounded-full bg-black/20">
+                                                <span class="inline-block h-3 w-3 transform rounded-full bg-white transition {{ ($visibility['host_badge'] ?? true) ? 'translate-x-3.5' : 'translate-x-0.5' }}"></span>
+                                            </span>
+                                            <span class="text-[10px] font-semibold text-white">{{ ($visibility['host_badge'] ?? true) ? 'Tampil' : 'Sembunyi' }}</span>
+                                        </button>
+                                    </div>
+                                </div>
                             @endif
                         </div>
                     @endforeach
                 </div>
 
-                <div class="flex justify-end">
-                    <button type="button" wire:click="saveSizes"
-                        class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700">
-                        Simpan Ukuran
-                    </button>
-                </div>
-
-                <!-- Padding, tebal border, & rounded border kotak - beda dari grid ukuran di
-                     atas (persen skala), ini nilai PIXEL literal, lihat
-                     App\Livewire\ProjectLive\DetailAdmin::BOX_STYLE_FIELDS. -->
+                {{-- Padding/border/jarak - level KOTAK (bukan per elemen visual spt di atas),
+                     ikut tersimpan lewat tombol Simpan yang sama di paling bawah form ini
+                     (satu $boxStyle array yang sama, lihat DetailAdmin::saveGlobalSettings()). --}}
                 <div class="border-t border-gray-100 dark:border-gray-700 pt-3 space-y-3">
-                    <div class="flex items-center justify-between gap-3">
-                        <p class="text-xs font-semibold text-gray-600 dark:text-gray-300">Padding &amp; Border Kotak</p>
-                        <button type="button" wire:click="resetBoxStyle"
-                            class="flex-shrink-0 text-xs font-semibold text-gray-400 hover:text-red-500">
-                            Reset ke Default
-                        </button>
-                    </div>
+                    <p class="text-xs font-semibold text-gray-600 dark:text-gray-300">Padding, Border &amp; Jarak Kotak</p>
 
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        @foreach (\App\Livewire\ProjectLive\DetailAdmin::BOX_STYLE_FIELDS as $field => $config)
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        @foreach (['seat_padding', 'seat_border_width', 'seat_border_radius', 'seat_gap'] as $field)
+                            @php $config = \App\Livewire\ProjectLive\DetailAdmin::BOX_STYLE_FIELDS[$field]; @endphp
                             <div>
-                                <x-input-label :for="'box-style-'.$field" :value="$config['label']" />
-                                <div class="flex items-center gap-1 mt-1">
+                                <x-input-label :for="'box-style-'.$field" :value="$config['label']" class="text-[10px]" />
+                                <div class="flex items-center gap-1 mt-0.5">
                                     <x-text-input :id="'box-style-'.$field" wire:model="boxStyle.{{ $field }}" type="number" :min="$config['min']" :max="$config['max']" step="1" class="block w-full text-sm" />
                                     <span class="text-xs text-gray-400 flex-shrink-0">px</span>
                                 </div>
@@ -191,65 +271,57 @@
                         @endforeach
                     </div>
 
-                    <div class="flex justify-end">
-                        <button type="button" wire:click="saveBoxStyle"
-                            class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700">
-                            Simpan Padding &amp; Border
-                        </button>
-                    </div>
-                </div>
+                    {{-- Warna GLOBAL border & BG kotak kosong - fallback kalau override LOKAL
+                         kotak (tombol "Custom" per kotak di Preview Live) tidak diaktifkan.
+                         Kosong = pakai perilaku default lama (border-white/15, #000000). --}}
+                    <div class="border-t border-gray-100 dark:border-gray-700 pt-3 space-y-3">
+                        <p class="text-xs font-semibold text-gray-600 dark:text-gray-300">Warna Kotak (Global)</p>
+                        <p class="text-[10px] text-gray-400">Berlaku ke semua kotak, kecuali kotak yang di-custom lokal lewat tombol "Custom" di Preview Live.</p>
 
-                <!-- Font Nama Host - GLOBAL utk semua kotak yang jadi Host (App\Enums\
-                     SeatRole::Host), teksnya sendiri (siapa namanya) & ukuran/posisi
-                     diatur terpisah (grid Ukuran Konten "Nama Host" & Padding/Border di
-                     atas, isi teks per kotak di Preview Live). -->
-                <div class="border-t border-gray-100 dark:border-gray-700 pt-3 space-y-2">
-                    <p class="text-xs font-semibold text-gray-600 dark:text-gray-300">Font Nama Host</p>
-                    <p class="text-[10px] text-gray-400">Font teks nama Host (bold, tanpa badge) di pojok kiri bawah kotak.</p>
-                    <div class="grid grid-cols-2 gap-1.5">
-                        @foreach (\App\Enums\SeatFont::cases() as $option)
-                            <button type="button" wire:click="updateHostNameFont('{{ $option->value }}')"
-                                style="font-family: {{ $option->cssFontFamily() }};"
-                                class="px-2 py-1.5 text-sm rounded-md border transition {{ $hostNameFont === $option->value ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300' : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
-                                {{ $option->label() }}
-                            </button>
-                        @endforeach
-                    </div>
-                </div>
-
-                <!-- Icon mic custom - satu utk SEMUA kotak kursi (beda dari icon kotak
-                     kosong di Preview Live yang per-kotak), lihat
-                     App\Models\ProjectLive::micIconUrl(). Ukuran/posisi tetap pakai
-                     "Icon mic" di grid Ukuran Konten & "Naik/Turun Icon Mic" di atas. -->
-                <div class="border-t border-gray-100 dark:border-gray-700 pt-3 space-y-3">
-                    <div class="flex items-center justify-between gap-3">
-                        <div>
-                            <p class="text-xs font-semibold text-gray-600 dark:text-gray-300">Icon Mic Custom</p>
-                            <p class="text-[10px] text-gray-400">Ganti icon mic bawaan (SVG) dengan gambar sendiri, berlaku ke semua kotak.</p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <x-input-label for="seatBorderColor" value="Warna Border" />
+                                <div class="flex items-center gap-2 mt-1">
+                                    <input type="color" wire:model="seatBorderColor" id="seatBorderColor"
+                                        value="{{ $seatBorderColor ?: '#ffffff' }}"
+                                        class="h-9 w-12 rounded-md border border-gray-200 dark:border-gray-600 cursor-pointer">
+                                    <x-text-input wire:model="seatBorderColor" class="block w-full text-xs" type="text" placeholder="Default" />
+                                    @if ($seatBorderColor)
+                                        <button type="button" wire:click="$set('seatBorderColor', '')"
+                                            class="flex-shrink-0 text-xs font-semibold text-gray-400 hover:text-red-500">
+                                            Reset
+                                        </button>
+                                    @endif
+                                </div>
+                                <x-input-error :messages="$errors->get('seatBorderColor')" class="mt-1" />
+                            </div>
+                            <div>
+                                <x-input-label for="seatEmptyBgColor" value="Warna BG Kotak Kosong" />
+                                <div class="flex items-center gap-2 mt-1">
+                                    <input type="color" wire:model="seatEmptyBgColor" id="seatEmptyBgColor"
+                                        value="{{ $seatEmptyBgColor ?: '#000000' }}"
+                                        class="h-9 w-12 rounded-md border border-gray-200 dark:border-gray-600 cursor-pointer">
+                                    <x-text-input wire:model="seatEmptyBgColor" class="block w-full text-xs" type="text" placeholder="Default" />
+                                    @if ($seatEmptyBgColor)
+                                        <button type="button" wire:click="$set('seatEmptyBgColor', '')"
+                                            class="flex-shrink-0 text-xs font-semibold text-gray-400 hover:text-red-500">
+                                            Reset
+                                        </button>
+                                    @endif
+                                </div>
+                                <x-input-error :messages="$errors->get('seatEmptyBgColor')" class="mt-1" />
+                            </div>
                         </div>
-                        @if ($projectLive->mic_icon)
-                            <img src="{{ $projectLive->micIconUrl() }}" alt="Icon mic" class="w-8 h-8 object-contain flex-shrink-0">
-                        @endif
                     </div>
-
-                    <div class="flex items-center gap-2">
-                        <input type="file" wire:model="micIconFile" accept="image/*"
-                            class="block w-full text-sm text-gray-600 dark:text-gray-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/40 file:text-indigo-700 dark:file:text-indigo-300">
-                        <button type="button" wire:click="saveMicIcon"
-                            class="flex-shrink-0 inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700">
-                            Simpan
-                        </button>
-                        @if ($projectLive->mic_icon)
-                            <button type="button" wire:click="removeMicIcon" wire:confirm="Kembalikan ke icon mic bawaan?"
-                                class="flex-shrink-0 text-xs font-semibold text-gray-400 hover:text-red-500">
-                                Hapus
-                            </button>
-                        @endif
-                    </div>
-                    <p class="text-xs text-gray-400">JPG, PNG, atau WEBP, maksimal 8MB.</p>
-                    <div wire:loading wire:target="micIconFile" class="text-xs text-gray-400">Mengunggah...</div>
-                    <x-input-error :messages="$errors->get('micIconFile')" class="mt-1" />
                 </div>
+
+                <div class="flex justify-end">
+                    <button type="submit"
+                        class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-md hover:bg-indigo-700">
+                        Simpan
+                    </button>
+                </div>
+                </form>
 
                 <!-- Arah kotak kosong diisi gifter baru - lihat
                      App\Services\GiftLeaderboardService::recalculate(). -->

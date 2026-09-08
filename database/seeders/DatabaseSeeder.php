@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             ProjectLiveSeeder::class,
             TikTokGiftSeeder::class,
+            HostBadgePresetSeeder::class,
         ]);
     }
 }

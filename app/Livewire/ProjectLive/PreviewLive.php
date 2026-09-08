@@ -6,6 +6,7 @@ use App\Enums\DetailSource;
 use App\Enums\DetailStatus;
 use App\Enums\SeatFont;
 use App\Enums\SeatRole;
+use App\Models\HostBadgePreset;
 use App\Models\ProjectLive;
 use App\Models\ProjectLiveDetail;
 use App\Services\DominantColorExtractor;
@@ -427,6 +428,31 @@ class PreviewLive extends Component
     }
 
     /**
+     * Isi hostBadgeBgColor/hostBadgeTextColor (& hostBadgeFont kalau presetnya
+     * punya) dari katalog MASTER App\Models\HostBadgePreset - CUMA ngisi awal,
+     * BUKAN nge-lock ke preset itu, admin tetap bebas ubah manual sesudahnya lewat
+     * color/font picker yang sudah ada (belum benar2 tersimpan sampai tombol
+     * Simpan di-klik, sama spt field lain di modal ini).
+     */
+    public function applyHostBadgePreset(int $presetId): void
+    {
+        $preset = HostBadgePreset::findOrFail($presetId);
+
+        $this->hostBadgeBgColor = $preset->bg_color;
+        $this->hostBadgeTextColor = $preset->text_color;
+
+        if ($preset->font) {
+            // Font cuma kepakai kalau bundel Lokal (teks/font/posisi) aktif - nyalain
+            // dulu kalau masih ikut Global, biar font presetnya benar2 ke-apply.
+            if ($this->hostBadgeOffsetX === null) {
+                $this->toggleHostBadgeCustom();
+            }
+
+            $this->hostBadgeFont = $preset->font;
+        }
+    }
+
+    /**
      * hostBadgeVisible/hostNameVisible SUDAH toggle secara implisit (string kosong =
      * ikut GLOBAL project_lives.host_badge_visible/host_name_visible, '1'/'0' =
      * override LOKAL) - method ini nyediain tombol Aktif/Nonaktif spt borderColor/
@@ -715,6 +741,7 @@ class PreviewLive extends Component
 
         return view('livewire.project-live.preview-live', [
             'details' => $details,
+            'hostBadgePresets' => HostBadgePreset::orderBy('sort_order')->get(),
         ]);
     }
 }

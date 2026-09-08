@@ -442,6 +442,25 @@
                                 </span>
                             </div>
 
+                            {{-- Preset MASTER (App\Models\HostBadgePreset, database/seeders/
+                                 HostBadgePresetSeeder.php) - klik cuma ngisi warna/font di
+                                 bawah, BUKAN nge-lock, tetap bisa diubah manual sesudahnya. --}}
+                            @if ($hostBadgePresets->isNotEmpty())
+                                <div>
+                                    <x-input-label value="Preset" />
+                                    <div class="flex flex-wrap gap-1.5 mt-1">
+                                        @foreach ($hostBadgePresets as $preset)
+                                            <button type="button" wire:click="applyHostBadgePreset({{ $preset->id }})"
+                                                title="{{ $preset->name }}"
+                                                class="inline-flex items-center rounded-full px-2.5 py-1 border border-gray-200 dark:border-gray-600 hover:ring-2 hover:ring-indigo-500 transition"
+                                                style="background: {{ $preset->bg_color }};">
+                                                <span class="text-xs font-semibold" style="color: {{ $preset->text_color }};">{{ $preset->name }}</span>
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <x-input-label for="hostBadgeBgColor" value="Warna Latar" />

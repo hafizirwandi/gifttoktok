@@ -77,8 +77,8 @@
                              openEdit - nama/coin/mic kursi ini diedit lewat dialog itu. --}}
                         @php $coHostIsVideo = $detail['background']['type'] === 'video'; @endphp
                         <div wire:click="openBgEdit({{ $detail['id'] }})" role="button" tabindex="0"
-                            style="{{ $seatStyle }}"
-                            class="relative w-full h-full rounded-xl overflow-hidden border border-gray-700 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer {{ $detail['background']['fit_mode'] === 'circle' ? 'bg-gray-700' : '' }}">
+                            style="{{ $seatStyle }} {{ $detail['background']['fit_mode'] === 'circle' ? 'background-color: '.$detail['background']['circle_bg_color'].';' : '' }}"
+                            class="relative w-full h-full rounded-xl overflow-hidden border border-gray-700 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer">
                             @if ($detail['background']['fit_mode'] === 'circle')
                                 {{-- Lingkaran di tengah kartu (App\Enums\BackgroundFit::Circle) -
                                      samain dgn Live asli (partials/seat-box.blade.php), biar Preview
@@ -118,8 +118,8 @@
                              atur role Host/Co-Host, lihat App\Enums\SeatRole. --}}
                         @php $seatFit = \App\Enums\BackgroundFit::from($detail['background']['fit_mode'])->cssObjectFit(); @endphp
                         <div wire:click="openBgEdit({{ $detail['id'] }})" role="button" tabindex="0"
-                            style="{{ $seatStyle }}"
-                            class="relative w-full h-full rounded-xl overflow-hidden border border-gray-700 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer {{ $detail['background']['fit_mode'] === 'circle' ? 'bg-gray-700' : '' }}">
+                            style="{{ $seatStyle }} {{ $detail['background']['fit_mode'] === 'circle' ? 'background-color: '.$detail['background']['circle_bg_color'].';' : '' }}"
+                            class="relative w-full h-full rounded-xl overflow-hidden border border-gray-700 hover:ring-2 hover:ring-indigo-500 transition cursor-pointer">
                             @if ($detail['background']['fit_mode'] === 'circle')
                                 {{-- Lingkaran di tengah kartu - samain dgn Live asli, lihat komentar
                                      detail di partials/seat-box.blade.php. --}}

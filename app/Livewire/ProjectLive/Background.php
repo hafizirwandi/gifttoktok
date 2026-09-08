@@ -45,6 +45,13 @@ class Background extends Component
     public int $scale = 100;
 
     /**
+     * Warna area DI LUAR lingkaran - cuma relevan kalau fitMode=circle (lihat
+     * partials/seat-box.blade.php & live-show.blade.php). Default '#374151' = hex
+     * Tailwind gray-700, sama kayak yang sebelumnya hardcode.
+     */
+    public string $circleBgColor = '#374151';
+
+    /**
      * Cuma relevan kalau type=video - lihat komentar migrasi
      * add_audio_enabled_to_project_live_backgrounds_table kenapa suaranya CUMA nyala
      * di halaman Live asli, tidak pernah di Preview Live (partials/seat-box.blade.php
@@ -67,6 +74,7 @@ class Background extends Component
         $this->seatPosition = null;
         $this->fitMode = BackgroundFit::Cover->value;
         $this->scale = 100;
+        $this->circleBgColor = '#374151';
         $this->audioEnabled = false;
         $this->showModal = true;
     }
@@ -84,6 +92,7 @@ class Background extends Component
         $this->offsetX = $bg->offset_x;
         $this->offsetY = $bg->offset_y;
         $this->scale = $bg->scale;
+        $this->circleBgColor = $bg->circle_bg_color;
         $this->audioEnabled = $bg->audio_enabled;
         $this->file = null;
         $this->showModal = true;
@@ -99,6 +108,7 @@ class Background extends Component
         $this->placement = BackgroundPlacement::Screen->value;
         $this->fitMode = BackgroundFit::Cover->value;
         $this->scale = 100;
+        $this->circleBgColor = '#374151';
         $this->audioEnabled = false;
     }
 
@@ -120,6 +130,7 @@ class Background extends Component
             'offsetX' => 'integer',
             'offsetY' => 'integer',
             'scale' => 'integer|min:10|max:300',
+            'circleBgColor' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'audioEnabled' => 'boolean',
             // Rule array TIDAK dipecah otomatis di tanda "|" per elemen (beda dari rule
             // string biasa) - tiap rule harus jadi elemen array terpisah sendiri-sendiri,
@@ -142,6 +153,7 @@ class Background extends Component
             'offset_x' => $validated['offsetX'],
             'offset_y' => $validated['offsetY'],
             'scale' => $validated['scale'],
+            'circle_bg_color' => $validated['circleBgColor'],
             // Cuma benar2 kepakai kalau type=video (lihat seat-box.blade.php/live-show.
             // blade.php) - dibiarkan tersimpan apa adanya walau type=image, tidak
             // ngefek apa pun.

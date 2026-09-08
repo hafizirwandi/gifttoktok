@@ -121,7 +121,7 @@
                         // elemennya dari nol.
                         $screenVideoKey = 'screenbg-'.($screenVideoMuted ? 'muted' : 'unmuted');
                     @endphp
-                    <div style="position: absolute; inset: 0; z-index: 0; overflow: hidden;" class="{{ $screenBackground['fit_mode'] === 'circle' ? 'bg-gray-700' : '' }}">
+                    <div style="position: absolute; inset: 0; z-index: 0; overflow: hidden; {{ $screenBackground['fit_mode'] === 'circle' ? 'background-color: '.$screenBackground['circle_bg_color'].';' : '' }}">
                         @if ($screenBackground['fit_mode'] === 'circle')
                             {{-- Lingkaran di tengah (App\Enums\BackgroundFit::Circle) - lihat
                                  komentar detail di partials/seat-box.blade.php, markupnya sama

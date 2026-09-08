@@ -150,13 +150,28 @@
 
                         <div>
                             <x-input-label value="Fit" />
-                            <select wire:model="fitMode"
+                            {{-- .live (bukan wire:model biasa) - biar field "Warna BG Lingkaran" di
+                                 bawah langsung muncul/hilang begitu dipilih, tanpa nunggu request lain. --}}
+                            <select wire:model.live="fitMode"
                                 class="block mt-1 w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 shadow-sm text-sm">
                                 @foreach (\App\Enums\BackgroundFit::cases() as $option)
                                     <option value="{{ $option->value }}">{{ $option->label() }}</option>
                                 @endforeach
                             </select>
                         </div>
+
+                        @if ($fitMode === 'circle')
+                            <div>
+                                <x-input-label for="circleBgColor" value="Warna BG di Luar Lingkaran" />
+                                <div class="flex items-center gap-2 mt-1">
+                                    <input type="color" wire:model="circleBgColor" id="circleBgColor"
+                                        class="h-9 w-12 rounded-md border border-gray-200 dark:border-gray-600 cursor-pointer">
+                                    <x-text-input wire:model="circleBgColor" class="block w-full text-sm" type="text" />
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1">Warna kotak di sekeliling lingkaran (default abu2, sama spt kotak yang belum ada interaksi).</p>
+                                <x-input-error :messages="$errors->get('circleBgColor')" class="mt-2" />
+                            </div>
+                        @endif
 
                         <div class="grid grid-cols-2 gap-3">
                             <div>

@@ -84,16 +84,18 @@
         $seatFit = \App\Enums\BackgroundFit::from($detail['background']['fit_mode'])->cssObjectFit();
     @endphp
     <div wire:key="seat-{{ $detail['id'] }}"
-        style="{{ $seatAreaStyle }} {{ $bgBoxStyle }}"
-        class="relative w-full h-full overflow-hidden border-white/15 {{ $detail['background']['fit_mode'] === 'circle' ? 'bg-gray-700' : '' }}">
+        style="{{ $seatAreaStyle }} {{ $bgBoxStyle }} {{ $detail['background']['fit_mode'] === 'circle' ? 'background-color: '.$detail['background']['circle_bg_color'].';' : '' }}"
+        class="relative w-full h-full overflow-hidden border-white/15">
         {{-- Media BG penuh (sama persis dgn cabang "elseif ($detail['background'])" di
              bawah utk role Host/polos) - fit_mode/offset/scale diatur admin lewat
              App\Livewire\ProjectLive\Background, BUKAN lagi avatar_size (setting itu
              cuma relevan buat avatar lingkaran kursi normal). Fit "circle" (App\Enums\
              BackgroundFit) beda total dari cover/contain/stretch: medianya TIDAK
              ngisi kotak edge-to-edge, cuma tampil sbg lingkaran di TENGAH kotak - luar
-             lingkaran dikasih bg-gray-700 (SAMA persis dgn abu2 avatar placeholder
-             kursi kosong di bawah), bukan transparan/hitam polos. Diameter default
+             lingkaran diisi warna circle_bg_color (diatur admin per-BG lewat
+             App\Livewire\ProjectLive\Background, default abu2 #374151 - SAMA persis
+             dgn avatar placeholder kursi kosong di bawah), bukan transparan/hitam
+             polos. Diameter default
              62% dari lebar kotak (base yang SAMA dgn avatar_size normal `w-[62%]` di
              bawah, biar tidak kegedean edge-to-edge kalau admin belum sempat
              nge-tweak) - 'scale' 100% (default) = 62%, scale-nya jadi FAKTOR PENGALI
@@ -156,8 +158,8 @@
          admin lewat Preview Live (warna latar/icon/teks & ukuran, PreviewLive::saveBgEdit()). --}}
     @php $seatFit = \App\Enums\BackgroundFit::from($detail['background']['fit_mode'])->cssObjectFit(); @endphp
     <div wire:key="seat-{{ $detail['id'] }}"
-        style="{{ $seatAreaStyle }} {{ $bgBoxStyle }}"
-        class="relative w-full h-full overflow-hidden border-white/15 {{ $detail['background']['fit_mode'] === 'circle' ? 'bg-gray-700' : '' }}">
+        style="{{ $seatAreaStyle }} {{ $bgBoxStyle }} {{ $detail['background']['fit_mode'] === 'circle' ? 'background-color: '.$detail['background']['circle_bg_color'].';' : '' }}"
+        class="relative w-full h-full overflow-hidden border-white/15">
         @if ($detail['background']['fit_mode'] === 'circle')
             {{-- Lingkaran di tengah kotak (App\Enums\BackgroundFit::Circle) - lihat
                  komentar lebih detail di cabang "co_host" di atas, markup-nya sama

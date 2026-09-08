@@ -127,6 +127,7 @@ class LiveShow extends Component
         // "Undefined array key" pas baca $detail['background']['role'] - jadi di-backfill
         // terpisah di sini.
         $backgroundDefaults = [
+            'circle_bg_color' => '#374151',
             'role' => 'none',
             'host_badge_bg_color' => '#f59e0b',
             'host_badge_text_color' => '#000000',

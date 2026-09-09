@@ -148,13 +148,18 @@ class GiftLeaderboardService
      * Kursi yang di-PIN (App\Livewire\ProjectLive\PreviewLive::togglePinned())
      * DIKECUALIKAN dari reset ini - itu intinya fitur pin: datanya (nama/foto)
      * dipertahankan apa pun yang terjadi ke leaderboard, sampai admin unpin manual.
+     *
+     * Kursi yang dijadikan BG (background_id terisi - role Host/Co-Host, lihat
+     * recalculate() di atas) JUGA DIKECUALIKAN - nama/foto-nya diisi manual admin
+     * lewat PreviewLive::saveBgEdit(), bukan hasil auto-gift, jadi tidak boleh
+     * ikut kehapus tiap kali operator pencet hotkey Reset Leaderboard.
      */
     public function reset(ProjectLive $projectLive): void
     {
         DB::transaction(function () use ($projectLive) {
             $projectLive->update(['round_reset_at' => now()]);
 
-            $projectLive->details()->where('is_pinned', false)->update([
+            $projectLive->details()->where('is_pinned', false)->whereNull('background_id')->update([
                 'name' => null,
                 'img' => null,
                 'project_live_gifter_id' => null,
@@ -173,7 +178,8 @@ class GiftLeaderboardService
      *
      * Kursi yang di-PIN & gifter yang lagi nempatinnya SENGAJA dikecualikan (sama
      * alasannya dgn reset() di atas) - coin yang tampil di kursi pin tidak boleh
-     * ikut ke-nolkan.
+     * ikut ke-nolkan. Kursi BG (background_id terisi) JUGA dikecualikan - coin-nya
+     * diisi manual admin (PreviewLive::saveBgEdit()), bukan dari gift asli.
      */
     public function resetCoins(ProjectLive $projectLive): void
     {
@@ -187,7 +193,7 @@ class GiftLeaderboardService
                 ->when($pinnedGifterIds->isNotEmpty(), fn ($q) => $q->whereNotIn('id', $pinnedGifterIds))
                 ->update(['round_value' => 0]);
 
-            $projectLive->details()->where('is_pinned', false)->update(['gift_total_value' => 0]);
+            $projectLive->details()->where('is_pinned', false)->whereNull('background_id')->update(['gift_total_value' => 0]);
         });
     }
 

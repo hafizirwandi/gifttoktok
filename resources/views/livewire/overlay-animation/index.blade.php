@@ -14,8 +14,8 @@
                     halaman "Event Trigger" di masing-masing project.
                 </p>
                 <p class="text-xs text-gray-400">
-                    "Durasi Tayang" diisi manual sesuai lama animasinya benar-benar selesai - dipakai halaman "Show
-                    Animasi Overlay" buat tahu kapan harus lanjut ke antrian berikutnya.
+                    "Durasi Tayang" dipakai halaman "Show Animasi Overlay" buat tahu kapan harus lanjut ke antrian
+                    berikutnya — bisa diisi manual, atau otomatis dihitung dari durasi asli file WebP-nya.
                 </p>
             </div>
 
@@ -37,7 +37,11 @@
 
                         <div class="flex-1 min-w-0">
                             <p class="text-sm text-gray-800 dark:text-gray-200 truncate">{{ $animation->name }}</p>
-                            <p class="text-xs text-gray-400">Durasi {{ number_format($animation->duration_ms / 1000, 1) }} detik</p>
+                            <p class="text-xs text-gray-400">
+                                Durasi {{ number_format($animation->duration_ms / 1000, 1) }} detik
+                                <span class="text-gray-300 dark:text-gray-600">&middot;</span>
+                                {{ $animation->duration_mode === 'auto' ? 'Otomatis' : 'Manual' }}
+                            </p>
                         </div>
 
                         <button type="button" wire:click="toggleActive({{ $animation->id }})"
@@ -93,13 +97,36 @@
                 </div>
 
                 <div>
-                    <x-input-label value="Durasi Tayang (detik)" />
-                    <input type="number" step="0.1" min="0.2" max="60"
-                        value="{{ number_format(((float) $durationMs) / 1000, 1) }}"
-                        x-on:change="$wire.durationMs = Math.round($event.target.value * 1000)"
-                        class="mt-1 block w-full text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200">
+                    <x-input-label value="Durasi Tayang" />
+                    <div class="grid grid-cols-2 gap-1.5 mt-1">
+                        <label class="flex items-center gap-1.5 px-2.5 py-2 rounded-md border cursor-pointer transition {{ $durationMode === 'manual' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30' : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                            <input type="radio" wire:model.live="durationMode" value="manual" class="border-gray-300 dark:border-gray-600">
+                            <span class="text-xs text-gray-700 dark:text-gray-300">Manual</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 px-2.5 py-2 rounded-md border cursor-pointer transition {{ $durationMode === 'auto' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30' : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                            <input type="radio" wire:model.live="durationMode" value="auto" class="border-gray-300 dark:border-gray-600">
+                            <span class="text-xs text-gray-700 dark:text-gray-300">Otomatis (sampai selesai)</span>
+                        </label>
+                    </div>
+
+                    @if ($durationMode === 'manual')
+                        <input type="number" step="0.1" min="0.2" max="60"
+                            value="{{ number_format(((float) $durationMs) / 1000, 1) }}"
+                            x-on:change="$wire.durationMs = Math.round($event.target.value * 1000)"
+                            class="mt-2 block w-full text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200">
+                        <p class="text-xs text-gray-400 mt-1">Isi manual (detik), sesuaikan dengan lama animasinya benar-benar selesai secara visual.</p>
+                    @else
+                        <p class="text-xs text-gray-400 mt-2">
+                            Dihitung otomatis dari total durasi 1 loop file WebP-nya sendiri begitu disimpan (jumlah
+                            durasi semua frame animasinya) - kosongkan/ganti file di atas kalau mau dihitung ulang.
+                            @if ($editingId && $durationMode === 'auto')
+                                Nilai sekarang: <strong>{{ number_format(((float) $durationMs) / 1000, 1) }} detik</strong>.
+                            @endif
+                        </p>
+                    @endif
+
+                    <x-input-error :messages="$errors->get('durationMode')" class="mt-1" />
                     <x-input-error :messages="$errors->get('durationMs')" class="mt-1" />
-                    <p class="text-xs text-gray-400 mt-1">Sesuaikan dengan lama animasinya benar-benar selesai secara visual.</p>
                 </div>
 
                 <label class="flex items-center gap-2 cursor-pointer">

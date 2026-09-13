@@ -19,6 +19,7 @@ class OverlayAnimation extends Model
         'name',
         'file',
         'duration_ms',
+        'duration_mode',
         'active',
     ];
 

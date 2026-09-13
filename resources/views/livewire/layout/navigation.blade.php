@@ -40,6 +40,9 @@ new class extends Component
                         <x-nav-link :href="route('gift-senders.index')" :active="request()->routeIs('gift-senders.index')" wire:navigate>
                             {{ __('Pengirim Gift') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('overlay-animations.index')" :active="request()->routeIs('overlay-animations.index')" wire:navigate>
+                            {{ __('Animasi Overlay') }}
+                        </x-nav-link>
                     @endcan
                 </div>
             </div>
@@ -98,6 +101,9 @@ new class extends Component
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('gift-senders.index')" :active="request()->routeIs('gift-senders.index')" wire:navigate>
                     {{ __('Pengirim Gift') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('overlay-animations.index')" :active="request()->routeIs('overlay-animations.index')" wire:navigate>
+                    {{ __('Animasi Overlay') }}
                 </x-responsive-nav-link>
             @endcan
         </div>

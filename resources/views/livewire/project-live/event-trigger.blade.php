@@ -8,12 +8,13 @@
             <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-1">
                 <p class="text-sm text-gray-600 dark:text-gray-300">
                     Selain gift, event lain di TikTok LIVE (join, follow, share, subscribe, like, chat) juga bisa
-                    dipetakan ke sebuah gift — begitu event-nya terjadi & trigger-nya aktif, nama penonton itu naik
-                    ke papan &amp; ikon gift yang dipilih muncul di kursinya, persis seperti dia benar-benar
-                    mengirim gift itu.
+                    dipetakan ke satu atau lebih gift — begitu event-nya terjadi & trigger-nya aktif, nama penonton
+                    itu naik ke papan &amp; ikon salah satu gift (dipilih ACAK kalau lebih dari satu) muncul di
+                    kursinya, persis seperti dia benar-benar mengirim gift itu.
                 </p>
                 <p class="text-xs text-gray-400">
-                    Gift asli (fitur utama) selalu aktif secara otomatis, tidak perlu diatur di sini.
+                    Gift asli (fitur utama) selalu aktif secara otomatis, tidak perlu diatur di sini. Animasi overlay
+                    (opsional) tampil di halaman "Show Animasi Overlay" — link-nya ada di menu atas.
                 </p>
             </div>
 
@@ -28,11 +29,17 @@
                 @forelse ($triggers as $trigger)
                     <div wire:key="trigger-row-{{ $trigger->id }}" class="flex items-center gap-3 p-3">
                         <div class="flex items-center gap-2 flex-1 min-w-0">
-                            @if ($trigger->mappedGift?->icon_url)
-                                <img src="{{ $trigger->mappedGift->icon_url }}" class="w-8 h-8 rounded flex-shrink-0" alt="">
-                            @else
-                                <div class="w-8 h-8 rounded bg-gray-200 dark:bg-gray-700 flex-shrink-0"></div>
-                            @endif
+                            <div class="flex -space-x-1.5 flex-shrink-0">
+                                @forelse ($trigger->mappedGifts as $gift)
+                                    @if ($gift->icon_url)
+                                        <img src="{{ $gift->icon_url }}" title="{{ $gift->name }}" class="w-8 h-8 rounded-full ring-2 ring-white dark:ring-gray-800" alt="">
+                                    @else
+                                        <div title="{{ $gift->name }}" class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 ring-2 ring-white dark:ring-gray-800"></div>
+                                    @endif
+                                @empty
+                                    <div class="w-8 h-8 rounded bg-gray-200 dark:bg-gray-700"></div>
+                                @endforelse
+                            </div>
                             <div class="min-w-0">
                                 <p class="text-sm text-gray-800 dark:text-gray-200 truncate">{{ $trigger->type->label() }}</p>
                                 <p class="text-xs text-gray-400 truncate">
@@ -41,10 +48,15 @@
                                     @elseif ($trigger->type === \App\Enums\EventTriggerType::Like)
                                         Minimal {{ $trigger->min_count }}x tap
                                     @endif
-                                    @if ($trigger->mappedGift)
-                                        &rarr; {{ $trigger->mappedGift->name }}
+                                    @if ($trigger->mappedGifts->isNotEmpty())
+                                        &rarr; {{ $trigger->mappedGifts->pluck('name')->join(', ') }}
                                     @endif
                                 </p>
+                                @if ($trigger->overlayAnimations->isNotEmpty())
+                                    <p class="text-xs text-indigo-500 dark:text-indigo-400 truncate">
+                                        🎬 {{ $trigger->overlayAnimations->pluck('name')->join(', ') }}
+                                    </p>
+                                @endif
                             </div>
                         </div>
 
@@ -73,7 +85,7 @@
 
     <!-- Modal Create/Edit Trigger -->
     <div x-show="$wire.showModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
-        <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="flex items-center justify-center min-h-screen px-4 py-8">
             <div x-show="$wire.showModal" x-transition.opacity wire:click="closeModal" class="fixed inset-0 bg-black/60"></div>
 
             <div x-show="$wire.showModal" x-transition
@@ -116,17 +128,31 @@
 
                     @if ($selectedType->needsMappedGift())
                         <div class="relative" wire:key="gift-picker">
-                            <x-input-label value="Gift yang muncul" />
-                            <div class="flex items-center gap-2 mt-1">
-                                <x-text-input wire:model.live.debounce.300ms="giftSearch" type="text" placeholder="Cari nama gift..." class="block w-full text-sm" />
-                                @if ($giftId)
-                                    <button type="button" wire:click="clearGiftPick" class="flex-shrink-0 text-xs text-gray-400 hover:text-red-500">Ganti</button>
-                                @endif
-                            </div>
+                            <x-input-label value="Gift yang muncul (bisa lebih dari 1, nanti dipilih acak)" />
+
+                            @if (! empty($giftIds))
+                                <div class="flex flex-wrap gap-1.5 mt-1.5 mb-1.5">
+                                    @foreach ($giftIds as $pickedId)
+                                        @php $picked = $pickedGifts->get($pickedId); @endphp
+                                        @if ($picked)
+                                            <span wire:key="picked-gift-{{ $picked->id }}" class="inline-flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700">
+                                                @if ($picked->icon_url)
+                                                    <img src="{{ $picked->icon_url }}" class="w-5 h-5 rounded-full" alt="">
+                                                @endif
+                                                <span class="text-xs font-medium text-indigo-700 dark:text-indigo-300">{{ $picked->name }}</span>
+                                                <button type="button" wire:click="removeGift({{ $picked->id }})" class="text-indigo-400 hover:text-red-500 text-xs leading-none">&times;</button>
+                                            </span>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            @endif
+
+                            <x-text-input wire:model.live.debounce.300ms="giftSearch" type="text" placeholder="Cari nama gift buat ditambah..." class="block w-full text-sm" />
+
                             @if ($giftResults->isNotEmpty())
                                 <div class="absolute z-10 mt-1 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-48 overflow-y-auto">
                                     @foreach ($giftResults as $result)
-                                        <button type="button" wire:click="pickGift({{ $result->id }})"
+                                        <button type="button" wire:click="addGift({{ $result->id }})"
                                             class="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800">
                                             @if ($result->icon_url)
                                                 <img src="{{ $result->icon_url }}" class="w-6 h-6 rounded flex-shrink-0" alt="">
@@ -138,6 +164,24 @@
                             @endif
                         </div>
                     @endif
+
+                    <div wire:key="overlay-picker">
+                        <x-input-label value="Animasi Overlay (opsional, bisa lebih dari 1, nanti dipilih acak)" />
+                        @if ($overlayAnimations->isEmpty())
+                            <p class="text-xs text-gray-400 mt-1">
+                                Belum ada animasi di katalog. Tambah dulu lewat menu "Animasi Overlay" di atas.
+                            </p>
+                        @else
+                            <div class="grid grid-cols-2 gap-1.5 mt-1.5 max-h-40 overflow-y-auto p-1">
+                                @foreach ($overlayAnimations as $animation)
+                                    <label wire:key="overlay-opt-{{ $animation->id }}" class="flex items-center gap-1.5 px-2 py-1.5 rounded-md border cursor-pointer transition {{ in_array($animation->id, $overlayAnimationIds, true) ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30' : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                                        <input type="checkbox" wire:click="toggleOverlayAnimation({{ $animation->id }})" @checked(in_array($animation->id, $overlayAnimationIds, true)) class="rounded border-gray-300 dark:border-gray-600 flex-shrink-0">
+                                        <span class="text-xs text-gray-700 dark:text-gray-300 truncate">{{ $animation->name }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
 
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" wire:model="active" class="rounded border-gray-300 dark:border-gray-600">

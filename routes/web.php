@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\GiftSenders\Index as GiftSendersIndex;
+use App\Livewire\OverlayAnimation\Index as OverlayAnimationIndex;
 use App\Livewire\ProjectLive\Background;
 use App\Livewire\ProjectLive\DetailAdmin;
 use App\Livewire\ProjectLive\EventTrigger;
@@ -10,6 +11,7 @@ use App\Livewire\ProjectLive\GiftMapping;
 use App\Livewire\ProjectLive\HotkeyColor;
 use App\Livewire\ProjectLive\Index as ProjectLiveIndex;
 use App\Livewire\ProjectLive\LiveShow;
+use App\Livewire\ProjectLive\OverlayShow;
 use App\Livewire\ProjectLive\PreviewLive;
 use App\Livewire\User\Index as UserIndex;
 use Illuminate\Support\Facades\Route;
@@ -37,6 +39,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/project-live', ProjectLiveIndex::class)->name('project-live.index');
         Route::get('/users', UserIndex::class)->name('users.index');
         Route::get('/gift-senders', GiftSendersIndex::class)->name('gift-senders.index');
+        Route::get('/overlay-animations', OverlayAnimationIndex::class)->name('overlay-animations.index');
     });
 
     // Superadmin (project apa pun) atau akun live (project miliknya sendiri) — dicek via Policy di mount().
@@ -49,6 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/project-live/{projectLive}/event-trigger', EventTrigger::class)->name('project-live.event-trigger');
     Route::get('/project-live/{projectLive}/preview-live', PreviewLive::class)->name('project-live.preview-live');
     Route::get('/project-live/{projectLive}/background', Background::class)->name('project-live.background');
+    Route::get('/project-live/{projectLive}/overlay-show', OverlayShow::class)->name('project-live.overlay-show');
 });
 
 require __DIR__.'/auth.php';

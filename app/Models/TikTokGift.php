@@ -49,4 +49,18 @@ class TikTokGift extends Model
     {
         return $this->hasMany(self::class, 'mapped_to_gift_id');
     }
+
+    /**
+     * Animasi overlay yang diputar tiap kali gift ini BENERAN diterima (App\Services\
+     * TikTokGiftEventProcessor::applyGift(), cuma $isRealGiftEvent=true) - boleh
+     * lebih dari satu, salah satunya dipilih ACAK (App\Services\OverlayQueueService).
+     * Diatur lewat halaman "Pemetaan Gift" (App\Livewire\ProjectLive\GiftMapping).
+     */
+    public function overlayAnimations(): BelongsToMany
+    {
+        // Foreign pivot key dieksplisitkan - Eloquent menebak "tik_tok_gift_id" dari
+        // nama class (sama gotcha-nya dgn nama tabel, lihat komentar $table di atas),
+        // padahal kolom aslinya "tiktok_gift_id".
+        return $this->belongsToMany(OverlayAnimation::class, 'tiktok_gift_overlay_animations', 'tiktok_gift_id', 'overlay_animation_id');
+    }
 }

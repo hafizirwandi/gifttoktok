@@ -29,6 +29,7 @@ class TikTokGiftEventProcessor
     public function __construct(
         private readonly GiftLeaderboardService $leaderboard,
         private readonly DominantColorExtractor $colorExtractor,
+        private readonly OverlayQueueService $overlayQueue,
     ) {}
 
     public function handle(ProjectLive $projectLive, array $event): void
@@ -98,6 +99,12 @@ class TikTokGiftEventProcessor
 
             if ($isRealGiftEvent) {
                 $this->logGiftEvent($projectLive, $gifter, $gift, $repeatCount, $value);
+
+                // Animasi overlay yang dipetakan ke GIFT ini sendiri (App\Models\
+                // TikTokGift::overlayAnimations(), App\Livewire\ProjectLive\GiftMapping)
+                // - cuma utk gift ASLI, gift yang "disintesis" App\Services\
+                // EventTriggerProcessor pakai animasi pilihan TRIGGER-nya sendiri.
+                $this->overlayQueue->enqueueRandom($projectLive, $gift->overlayAnimations);
             }
         });
     }

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\ProjectLive;
 
+use App\Models\OverlayAnimation;
 use App\Models\ProjectLive;
 use App\Models\TikTokGift;
 use Livewire\Attributes\Layout;
@@ -31,6 +32,23 @@ class GiftMapping extends Component
     public string $targetSearch = '';
 
     public ?int $targetGiftId = null;
+
+    /**
+     * Section terpisah di bawah: pemetaan gift ASLI -> animasi overlay (App\Models\
+     * TikTokGift::overlayAnimations(), dipakai App\Services\TikTokGiftEventProcessor
+     * cuma utk gift asli, BUKAN sintesis Event Trigger) - GLOBAL sama seperti mapping
+     * ikon di atas.
+     */
+    public bool $showOverlayModal = false;
+
+    public string $overlayGiftSearch = '';
+
+    public ?int $overlayGiftId = null;
+
+    /**
+     * @var array<int, int>
+     */
+    public array $overlayAnimationIds = [];
 
     public function mount(ProjectLive $projectLive): void
     {
@@ -129,6 +147,81 @@ class GiftMapping extends Component
         $this->dispatch('notify', message: 'Pemetaan gift berhasil dihapus.');
     }
 
+    public function openOverlayCreate(): void
+    {
+        $this->reset(['overlayGiftSearch', 'overlayGiftId', 'overlayAnimationIds']);
+        $this->resetErrorBag();
+        $this->showOverlayModal = true;
+    }
+
+    public function openOverlayEdit(int $giftId): void
+    {
+        $gift = TikTokGift::with('overlayAnimations')->findOrFail($giftId);
+
+        $this->overlayGiftId = $gift->id;
+        $this->overlayGiftSearch = $gift->name;
+        $this->overlayAnimationIds = $gift->overlayAnimations->pluck('id')->all();
+        $this->resetErrorBag();
+        $this->showOverlayModal = true;
+    }
+
+    public function closeOverlayModal(): void
+    {
+        $this->reset(['showOverlayModal', 'overlayGiftSearch', 'overlayGiftId', 'overlayAnimationIds']);
+        $this->resetErrorBag();
+    }
+
+    public function pickOverlayGift(int $giftId): void
+    {
+        $gift = TikTokGift::findOrFail($giftId);
+        $this->overlayGiftId = $gift->id;
+        $this->overlayGiftSearch = $gift->name;
+    }
+
+    public function clearOverlayGiftPick(): void
+    {
+        $this->overlayGiftId = null;
+        $this->overlayGiftSearch = '';
+        $this->overlayAnimationIds = [];
+    }
+
+    public function toggleOverlayAnimation(int $animationId): void
+    {
+        if (in_array($animationId, $this->overlayAnimationIds, true)) {
+            $this->overlayAnimationIds = array_values(array_diff($this->overlayAnimationIds, [$animationId]));
+        } else {
+            $this->overlayAnimationIds[] = $animationId;
+        }
+    }
+
+    public function saveOverlay(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        $this->resetErrorBag();
+
+        if (! $this->overlayGiftId) {
+            $this->addError('overlayForm', 'Pilih dulu gift-nya lewat hasil pencarian.');
+
+            return;
+        }
+
+        TikTokGift::findOrFail($this->overlayGiftId)->overlayAnimations()->sync($this->overlayAnimationIds);
+
+        $this->closeOverlayModal();
+
+        $this->dispatch('notify', message: 'Animasi overlay gift berhasil disimpan.');
+    }
+
+    public function removeOverlayMapping(int $giftId): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+
+        TikTokGift::findOrFail($giftId)->overlayAnimations()->sync([]);
+
+        $this->dispatch('notify', message: 'Animasi overlay gift berhasil dihapus.');
+    }
+
     public function render()
     {
         $mappings = TikTokGift::whereNotNull('mapped_to_gift_id')
@@ -147,8 +240,22 @@ class GiftMapping extends Component
             ? TikTokGift::where('name', 'like', '%'.$this->targetSearch.'%')->limit(8)->get()
             : collect();
 
+        $overlayGiftSelectedName = $this->overlayGiftId ? TikTokGift::find($this->overlayGiftId)?->name : null;
+
+        $overlayGiftResults = $this->overlayGiftSearch !== '' && $this->overlayGiftSearch !== $overlayGiftSelectedName
+            ? TikTokGift::where('name', 'like', '%'.$this->overlayGiftSearch.'%')->limit(8)->get()
+            : collect();
+
+        $overlayMappings = TikTokGift::has('overlayAnimations')
+            ->with('overlayAnimations')
+            ->orderBy('name')
+            ->get();
+
         return view('livewire.project-live.gift-mapping', [
             'mappings' => $mappings,
+            'overlayGiftResults' => $overlayGiftResults,
+            'overlayMappings' => $overlayMappings,
+            'overlayAnimations' => OverlayAnimation::where('active', true)->orderBy('name')->get(),
             'sourceResults' => $sourceResults,
             'targetResults' => $targetResults,
         ]);

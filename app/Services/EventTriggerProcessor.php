@@ -32,6 +32,7 @@ class EventTriggerProcessor
 
     public function __construct(
         private readonly TikTokGiftEventProcessor $giftProcessor,
+        private readonly OverlayQueueService $overlayQueue,
     ) {}
 
     /**
@@ -44,17 +45,20 @@ class EventTriggerProcessor
     {
         $trigger = $this->resolveTrigger($projectLive, $rawEventType, $user, $likeCount, $chatContent);
 
-        if (! $trigger || ! $trigger->mapped_gift_id) {
+        if (! $trigger) {
+            return;
+        }
+
+        // Gift-nya sekarang bisa lebih dari satu (App\Models\ProjectLiveEventTrigger::
+        // mappedGifts()) - salah satunya dipilih ACAK tiap kali trigger ini kena, dulu
+        // kolom tunggal mapped_gift_id.
+        $gift = $trigger->mappedGifts->isNotEmpty() ? $trigger->mappedGifts->random() : null;
+
+        if (! $gift) {
             return;
         }
 
         if (in_array($rawEventType, self::COOLDOWN_RAW_TYPES, true) && $this->isCoolingDown($projectLive, $user['tiktok_user_id'])) {
-            return;
-        }
-
-        $gift = $trigger->mappedGift;
-
-        if (! $gift) {
             return;
         }
 
@@ -63,6 +67,11 @@ class EventTriggerProcessor
         }
 
         $this->giftProcessor->applyGift($projectLive, $gift, $user, repeatCount: 1, groupId: (string) Str::uuid(), isRealGiftEvent: false);
+
+        // Animasi overlay pilihan trigger ini sendiri (opsional, beda dari animasi
+        // yang dipetakan ke $gift lewat App\Models\TikTokGift::overlayAnimations() -
+        // itu cuma dipakai gift ASLI, lihat TikTokGiftEventProcessor::applyGift()).
+        $this->overlayQueue->enqueueRandom($projectLive, $trigger->overlayAnimations);
     }
 
     private function resolveTrigger(ProjectLive $projectLive, string $rawEventType, array $user, ?int $likeCount, ?string $chatContent): ?ProjectLiveEventTrigger

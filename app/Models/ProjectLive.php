@@ -224,6 +224,15 @@ class ProjectLive extends Model
     }
 
     /**
+     * Antrian animasi overlay project ini (App\Services\OverlayQueueService,
+     * App\Livewire\ProjectLive\OverlayShow).
+     */
+    public function overlayQueueItems(): HasMany
+    {
+        return $this->hasMany(ProjectLiveOverlayQueueItem::class);
+    }
+
+    /**
      * Gift yang diaktifkan ("opt-in") untuk dihitung di leaderboard project ini.
      */
     public function enabledGifts(): BelongsToMany

@@ -3,6 +3,7 @@
 namespace App\Livewire\ProjectLive;
 
 use App\Enums\EventTriggerType;
+use App\Models\OverlayAnimation;
 use App\Models\ProjectLive;
 use App\Models\ProjectLiveEventTrigger;
 use App\Models\TikTokGift;
@@ -28,7 +29,22 @@ class EventTrigger extends Component
 
     public string $giftSearch = '';
 
-    public ?int $giftId = null;
+    /**
+     * Gift-gift yang dipilih admin buat trigger ini - BISA LEBIH DARI SATU, salah
+     * satunya dipilih ACAK tiap kali trigger-nya jalan (App\Services\
+     * EventTriggerProcessor::handle()). Dulu properti tunggal $giftId.
+     *
+     * @var array<int, int>
+     */
+    public array $giftIds = [];
+
+    /**
+     * Animasi overlay pilihan trigger ini - opsional, boleh lebih dari satu, salah
+     * satunya dipilih ACAK (App\Services\OverlayQueueService::enqueueRandom()).
+     *
+     * @var array<int, int>
+     */
+    public array $overlayAnimationIds = [];
 
     public bool $active = true;
 
@@ -41,7 +57,7 @@ class EventTrigger extends Component
 
     public function openCreate(): void
     {
-        $this->reset(['editingId', 'type', 'commandText', 'minCount', 'giftSearch', 'giftId']);
+        $this->reset(['editingId', 'type', 'commandText', 'minCount', 'giftSearch', 'giftIds', 'overlayAnimationIds']);
         $this->active = true;
         $this->resetErrorBag();
         $this->showModal = true;
@@ -49,14 +65,15 @@ class EventTrigger extends Component
 
     public function openEdit(int $triggerId): void
     {
-        $trigger = $this->projectLive->eventTriggers()->with('mappedGift')->findOrFail($triggerId);
+        $trigger = $this->projectLive->eventTriggers()->with(['mappedGifts', 'overlayAnimations'])->findOrFail($triggerId);
 
         $this->editingId = $trigger->id;
         $this->type = $trigger->type->value;
         $this->commandText = (string) $trigger->command_text;
         $this->minCount = (string) ($trigger->min_count ?? '');
-        $this->giftId = $trigger->mapped_gift_id;
-        $this->giftSearch = $trigger->mappedGift->name ?? '';
+        $this->giftIds = $trigger->mappedGifts->pluck('id')->all();
+        $this->giftSearch = '';
+        $this->overlayAnimationIds = $trigger->overlayAnimations->pluck('id')->all();
         $this->active = $trigger->active;
         $this->resetErrorBag();
         $this->showModal = true;
@@ -64,21 +81,31 @@ class EventTrigger extends Component
 
     public function closeModal(): void
     {
-        $this->reset(['showModal', 'editingId', 'type', 'commandText', 'minCount', 'giftSearch', 'giftId', 'active']);
+        $this->reset(['showModal', 'editingId', 'type', 'commandText', 'minCount', 'giftSearch', 'giftIds', 'overlayAnimationIds', 'active']);
         $this->resetErrorBag();
     }
 
-    public function pickGift(int $giftId): void
+    public function addGift(int $giftId): void
     {
-        $gift = TikTokGift::findOrFail($giftId);
-        $this->giftId = $gift->id;
-        $this->giftSearch = $gift->name;
+        if (! in_array($giftId, $this->giftIds, true)) {
+            $this->giftIds[] = $giftId;
+        }
+
+        $this->giftSearch = '';
     }
 
-    public function clearGiftPick(): void
+    public function removeGift(int $giftId): void
     {
-        $this->giftId = null;
-        $this->giftSearch = '';
+        $this->giftIds = array_values(array_diff($this->giftIds, [$giftId]));
+    }
+
+    public function toggleOverlayAnimation(int $animationId): void
+    {
+        if (in_array($animationId, $this->overlayAnimationIds, true)) {
+            $this->overlayAnimationIds = array_values(array_diff($this->overlayAnimationIds, [$animationId]));
+        } else {
+            $this->overlayAnimationIds[] = $animationId;
+        }
     }
 
     public function save(): void
@@ -95,8 +122,8 @@ class EventTrigger extends Component
 
         $type = EventTriggerType::from($this->type);
 
-        if ($type->needsMappedGift() && ! $this->giftId) {
-            $this->addError('form', 'Pilih dulu gift yang mau muncul lewat hasil pencarian.');
+        if ($type->needsMappedGift() && empty($this->giftIds)) {
+            $this->addError('form', 'Pilih minimal 1 gift yang mau muncul lewat hasil pencarian.');
 
             return;
         }
@@ -116,17 +143,20 @@ class EventTrigger extends Component
         $data = [
             'project_live_id' => $this->projectLive->id,
             'type' => $type->value,
-            'mapped_gift_id' => $type->needsMappedGift() ? $this->giftId : null,
             'command_text' => $type->needsCommandText() ? trim($this->commandText) : null,
             'min_count' => $type->needsMinCount() ? (int) $this->minCount : null,
             'active' => $this->active,
         ];
 
         if ($this->editingId) {
-            $this->projectLive->eventTriggers()->whereKey($this->editingId)->update($data);
+            $trigger = $this->projectLive->eventTriggers()->findOrFail($this->editingId);
+            $trigger->update($data);
         } else {
-            ProjectLiveEventTrigger::create($data);
+            $trigger = ProjectLiveEventTrigger::create($data);
         }
+
+        $trigger->mappedGifts()->sync($type->needsMappedGift() ? $this->giftIds : []);
+        $trigger->overlayAnimations()->sync($this->overlayAnimationIds);
 
         $this->closeModal();
 
@@ -154,17 +184,24 @@ class EventTrigger extends Component
 
     public function render()
     {
-        $triggers = $this->projectLive->eventTriggers()->with('mappedGift')->latest()->get();
+        $triggers = $this->projectLive->eventTriggers()->with(['mappedGifts', 'overlayAnimations'])->latest()->get();
 
-        $selectedName = $this->giftId ? TikTokGift::find($this->giftId)?->name : null;
+        $pickedIds = $this->giftIds;
 
-        $giftResults = $this->giftSearch !== '' && $this->giftSearch !== $selectedName
-            ? TikTokGift::where('name', 'like', '%'.$this->giftSearch.'%')->limit(8)->get()
+        $giftResults = $this->giftSearch !== ''
+            ? TikTokGift::where('name', 'like', '%'.$this->giftSearch.'%')
+                ->when(! empty($pickedIds), fn ($q) => $q->whereNotIn('id', $pickedIds))
+                ->limit(8)
+                ->get()
             : collect();
+
+        $pickedGifts = ! empty($pickedIds) ? TikTokGift::whereIn('id', $pickedIds)->get()->keyBy('id') : collect();
 
         return view('livewire.project-live.event-trigger', [
             'triggers' => $triggers,
             'giftResults' => $giftResults,
+            'pickedGifts' => $pickedGifts,
+            'overlayAnimations' => OverlayAnimation::where('active', true)->orderBy('name')->get(),
         ]);
     }
 }

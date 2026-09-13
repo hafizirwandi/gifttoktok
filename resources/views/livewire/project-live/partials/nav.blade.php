@@ -39,6 +39,10 @@
             class="px-2.5 py-1 rounded-md text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700">
             Preview Live
         </a>
+        <a href="{{ route('project-live.overlay-show', $projectLive) }}" target="_blank" rel="noopener"
+            class="px-2.5 py-1 rounded-md text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700">
+            Show Animasi Overlay
+        </a>
         <a href="{{ route('project-live.live', $projectLive) }}" target="_blank" rel="noopener"
             class="px-2.5 py-1 rounded-md text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-700">
             Buka Live &rarr;

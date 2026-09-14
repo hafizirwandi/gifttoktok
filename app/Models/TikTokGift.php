@@ -3,9 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TikTokGift extends Model
 {
@@ -17,7 +15,6 @@ class TikTokGift extends Model
         'name',
         'diamond_count',
         'icon_url',
-        'mapped_to_gift_id',
         'is_custom',
     ];
 
@@ -34,20 +31,18 @@ class TikTokGift extends Model
     }
 
     /**
-     * Gift lain yang "wajahnya" dipakai gift ini kalau dikirim (lihat GiftMapping).
+     * Gift lain yang "wajahnya" BOLEH dipakai gift ini kalau dikirim (lihat
+     * GiftMapping) - boleh lebih dari satu, salah satunya dipilih ACAK tiap kali
+     * gift ini diterima (App\Services\TikTokGiftEventProcessor::stampGiftIcon()).
+     * Dulu kolom tunggal mapped_to_gift_id, sekarang pivot (lihat migration ganti-nya).
      */
-    public function mappedTo(): BelongsTo
+    public function mappedTargets(): BelongsToMany
     {
-        return $this->belongsTo(self::class, 'mapped_to_gift_id');
-    }
-
-    /**
-     * Gift-gift lain (bisa lebih dari satu — tidak unik lagi) yang memetakan dirinya
-     * ke gift ini.
-     */
-    public function mappedFrom(): HasMany
-    {
-        return $this->hasMany(self::class, 'mapped_to_gift_id');
+        // Self-referencing (dua-duanya sama-sama nunjuk ke tiktok_gifts) - foreign/
+        // related pivot key WAJIB dieksplisitkan, tidak ada nama kolom "tebakan"
+        // yang benar buat kasus ini (beda dari overlayAnimations() yang cuma perlu
+        // benerin SATU sisi krn tabel relasinya beda).
+        return $this->belongsToMany(self::class, 'tiktok_gift_mapped_targets', 'source_gift_id', 'target_gift_id');
     }
 
     /**

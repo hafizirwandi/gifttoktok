@@ -7,9 +7,10 @@
         <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
             <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-1">
                 <p class="text-sm text-gray-600 dark:text-gray-300">
-                    Petakan satu gift ke gift lain di katalog — ikon yang tampil di Live diambil dari ikon gift
-                    tujuannya (mis. gift <strong>Donat</strong> dipetakan ke gift <strong>Lion</strong>, jadi begitu
-                    ada yang kirim Donat, ikon Lion yang muncul sebentar di pojok kotaknya).
+                    Petakan satu gift ke satu atau lebih gift lain di katalog — ikon yang tampil di Live diambil dari
+                    ikon salah satu gift tujuannya (dipilih ACAK kalau lebih dari satu, mis. gift
+                    <strong>Donat</strong> dipetakan ke <strong>Lion</strong> &amp; <strong>Panda</strong>, jadi
+                    begitu ada yang kirim Donat, ikon Lion ATAU Panda yang muncul sebentar di pojok kotaknya).
                 </p>
                 <p class="text-xs text-gray-400">
                     Satu gift tujuan boleh dipakai untuk banyak pemetaan sekaligus. Katalog ini dipakai bareng semua project.
@@ -38,12 +39,16 @@
                         <span class="text-gray-300 dark:text-gray-600 flex-shrink-0">&rarr;</span>
 
                         <div class="flex items-center gap-2 flex-1 min-w-0">
-                            @if ($gift->mappedTo?->icon_url)
-                                <img src="{{ $gift->mappedTo->icon_url }}" class="w-8 h-8 rounded flex-shrink-0" alt="">
-                            @else
-                                <div class="w-8 h-8 rounded bg-gray-200 dark:bg-gray-700 flex-shrink-0"></div>
-                            @endif
-                            <p class="text-sm text-gray-800 dark:text-gray-200 truncate">{{ $gift->mappedTo?->name }}</p>
+                            <div class="flex -space-x-1.5 flex-shrink-0">
+                                @foreach ($gift->mappedTargets as $target)
+                                    @if ($target->icon_url)
+                                        <img src="{{ $target->icon_url }}" title="{{ $target->name }}" class="w-8 h-8 rounded-full ring-2 ring-white dark:ring-gray-800" alt="">
+                                    @else
+                                        <div title="{{ $target->name }}" class="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 ring-2 ring-white dark:ring-gray-800"></div>
+                                    @endif
+                                @endforeach
+                            </div>
+                            <p class="text-sm text-gray-800 dark:text-gray-200 truncate">{{ $gift->mappedTargets->pluck('name')->join(', ') }}</p>
                         </div>
 
                         <div class="flex items-center gap-2 flex-shrink-0">
@@ -157,19 +162,33 @@
 
                 <div class="text-center text-gray-300 dark:text-gray-600">&darr;</div>
 
-                <!-- Pilih gift tujuan (ikonnya yang dipakai) -->
+                <!-- Pilih gift tujuan (ikonnya yang dipakai, bisa lebih dari 1) -->
                 <div class="relative" wire:key="target-picker">
-                    <x-input-label value="Dipetakan ke ikon gift" />
-                    <div class="flex items-center gap-2 mt-1">
-                        <x-text-input wire:model.live.debounce.300ms="targetSearch" type="text" placeholder="Cari nama gift..." class="block w-full text-sm" />
-                        @if ($targetGiftId)
-                            <button type="button" wire:click="clearTargetPick" class="flex-shrink-0 text-xs text-gray-400 hover:text-red-500">Ganti</button>
-                        @endif
-                    </div>
+                    <x-input-label value="Dipetakan ke ikon gift (bisa lebih dari 1, nanti dipilih acak)" />
+
+                    @if (! empty($targetGiftIds))
+                        <div class="flex flex-wrap gap-1.5 mt-1.5 mb-1.5">
+                            @foreach ($targetGiftIds as $pickedId)
+                                @php $picked = $pickedTargets->get($pickedId); @endphp
+                                @if ($picked)
+                                    <span wire:key="picked-target-{{ $picked->id }}" class="inline-flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-full bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-700">
+                                        @if ($picked->icon_url)
+                                            <img src="{{ $picked->icon_url }}" class="w-5 h-5 rounded-full" alt="">
+                                        @endif
+                                        <span class="text-xs font-medium text-indigo-700 dark:text-indigo-300">{{ $picked->name }}</span>
+                                        <button type="button" wire:click="removeTarget({{ $picked->id }})" class="text-indigo-400 hover:text-red-500 text-xs leading-none">&times;</button>
+                                    </span>
+                                @endif
+                            @endforeach
+                        </div>
+                    @endif
+
+                    <x-text-input wire:model.live.debounce.300ms="targetSearch" type="text" placeholder="Cari nama gift buat ditambah..." class="block w-full text-sm" />
+
                     @if ($targetResults->isNotEmpty())
                         <div class="absolute z-10 mt-1 w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-48 overflow-y-auto">
                             @foreach ($targetResults as $result)
-                                <button type="button" wire:click="pickTarget({{ $result->id }})"
+                                <button type="button" wire:click="addTarget({{ $result->id }})"
                                     class="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800">
                                     @if ($result->icon_url)
                                         <img src="{{ $result->icon_url }}" class="w-6 h-6 rounded flex-shrink-0" alt="">

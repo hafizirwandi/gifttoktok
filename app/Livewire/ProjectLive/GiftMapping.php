@@ -31,7 +31,14 @@ class GiftMapping extends Component
 
     public string $targetSearch = '';
 
-    public ?int $targetGiftId = null;
+    /**
+     * Gift-gift tujuan yang dipilih admin - BISA LEBIH DARI SATU, salah satu
+     * ikonnya dipilih ACAK tiap kali gift sumber diterima (App\Services\
+     * TikTokGiftEventProcessor::stampGiftIcon()). Dulu properti tunggal $targetGiftId.
+     *
+     * @var array<int, int>
+     */
+    public array $targetGiftIds = [];
 
     /**
      * Section terpisah di bawah: pemetaan gift ASLI -> animasi overlay (App\Models\
@@ -59,7 +66,7 @@ class GiftMapping extends Component
 
     public function openCreate(): void
     {
-        $this->reset(['editingId', 'sourceSearch', 'sourceGiftId', 'targetSearch', 'targetGiftId']);
+        $this->reset(['editingId', 'sourceSearch', 'sourceGiftId', 'targetSearch', 'targetGiftIds']);
         $this->resetErrorBag();
         $this->showModal = true;
     }
@@ -68,20 +75,20 @@ class GiftMapping extends Component
     {
         $this->authorize('viewLive', $this->projectLive);
 
-        $gift = TikTokGift::with('mappedTo')->findOrFail($giftId);
+        $gift = TikTokGift::with('mappedTargets')->findOrFail($giftId);
 
         $this->editingId = $gift->id;
         $this->sourceGiftId = $gift->id;
         $this->sourceSearch = $gift->name;
-        $this->targetGiftId = $gift->mapped_to_gift_id;
-        $this->targetSearch = $gift->mappedTo->name ?? '';
+        $this->targetGiftIds = $gift->mappedTargets->pluck('id')->all();
+        $this->targetSearch = '';
         $this->resetErrorBag();
         $this->showModal = true;
     }
 
     public function closeModal(): void
     {
-        $this->reset(['showModal', 'editingId', 'sourceSearch', 'sourceGiftId', 'targetSearch', 'targetGiftId']);
+        $this->reset(['showModal', 'editingId', 'sourceSearch', 'sourceGiftId', 'targetSearch', 'targetGiftIds']);
         $this->resetErrorBag();
     }
 
@@ -92,23 +99,24 @@ class GiftMapping extends Component
         $this->sourceSearch = $gift->name;
     }
 
-    public function pickTarget(int $giftId): void
-    {
-        $gift = TikTokGift::findOrFail($giftId);
-        $this->targetGiftId = $gift->id;
-        $this->targetSearch = $gift->name;
-    }
-
     public function clearSourcePick(): void
     {
         $this->sourceGiftId = null;
         $this->sourceSearch = '';
     }
 
-    public function clearTargetPick(): void
+    public function addTarget(int $giftId): void
     {
-        $this->targetGiftId = null;
+        if (! in_array($giftId, $this->targetGiftIds, true)) {
+            $this->targetGiftIds[] = $giftId;
+        }
+
         $this->targetSearch = '';
+    }
+
+    public function removeTarget(int $giftId): void
+    {
+        $this->targetGiftIds = array_values(array_diff($this->targetGiftIds, [$giftId]));
     }
 
     public function save(): void
@@ -117,21 +125,21 @@ class GiftMapping extends Component
 
         $this->resetErrorBag();
 
-        if (! $this->sourceGiftId || ! $this->targetGiftId) {
-            $this->addError('form', 'Pilih dulu kedua gift-nya lewat hasil pencarian.');
+        if (! $this->sourceGiftId || empty($this->targetGiftIds)) {
+            $this->addError('form', 'Pilih gift sumber & minimal 1 gift tujuan lewat hasil pencarian.');
 
             return;
         }
 
-        if ($this->sourceGiftId === $this->targetGiftId) {
-            $this->addError('form', 'Gift sumber dan gift tujuan tidak boleh sama.');
+        if (in_array($this->sourceGiftId, $this->targetGiftIds, true)) {
+            $this->addError('form', 'Gift sumber tidak boleh ikut jadi gift tujuannya sendiri.');
 
             return;
         }
 
         // Satu gift tujuan sekarang BOLEH dipakai berkali-kali oleh gift sumber yang
         // berbeda-beda (tidak unik lagi) — biarkan saja kalau sudah dipetakan yang lain.
-        TikTokGift::whereKey($this->sourceGiftId)->update(['mapped_to_gift_id' => $this->targetGiftId]);
+        TikTokGift::findOrFail($this->sourceGiftId)->mappedTargets()->sync($this->targetGiftIds);
 
         $this->closeModal();
 
@@ -142,7 +150,7 @@ class GiftMapping extends Component
     {
         $this->authorize('viewLive', $this->projectLive);
 
-        TikTokGift::whereKey($giftId)->update(['mapped_to_gift_id' => null]);
+        TikTokGift::findOrFail($giftId)->mappedTargets()->sync([]);
 
         $this->dispatch('notify', message: 'Pemetaan gift berhasil dihapus.');
     }
@@ -224,21 +232,26 @@ class GiftMapping extends Component
 
     public function render()
     {
-        $mappings = TikTokGift::whereNotNull('mapped_to_gift_id')
-            ->with('mappedTo')
+        $mappings = TikTokGift::has('mappedTargets')
+            ->with('mappedTargets')
             ->orderBy('name')
             ->get();
 
         $sourceSelectedName = $this->sourceGiftId ? TikTokGift::find($this->sourceGiftId)?->name : null;
-        $targetSelectedName = $this->targetGiftId ? TikTokGift::find($this->targetGiftId)?->name : null;
 
         $sourceResults = $this->sourceSearch !== '' && $this->sourceSearch !== $sourceSelectedName
             ? TikTokGift::where('name', 'like', '%'.$this->sourceSearch.'%')->limit(8)->get()
             : collect();
 
-        $targetResults = $this->targetSearch !== '' && $this->targetSearch !== $targetSelectedName
-            ? TikTokGift::where('name', 'like', '%'.$this->targetSearch.'%')->limit(8)->get()
+        $targetResults = $this->targetSearch !== ''
+            ? TikTokGift::where('name', 'like', '%'.$this->targetSearch.'%')
+                ->when($this->sourceGiftId, fn ($q) => $q->whereKeyNot($this->sourceGiftId))
+                ->when(! empty($this->targetGiftIds), fn ($q) => $q->whereNotIn('id', $this->targetGiftIds))
+                ->limit(8)
+                ->get()
             : collect();
+
+        $pickedTargets = ! empty($this->targetGiftIds) ? TikTokGift::whereIn('id', $this->targetGiftIds)->get()->keyBy('id') : collect();
 
         $overlayGiftSelectedName = $this->overlayGiftId ? TikTokGift::find($this->overlayGiftId)?->name : null;
 
@@ -258,6 +271,7 @@ class GiftMapping extends Component
             'overlayAnimations' => OverlayAnimation::where('active', true)->orderBy('name')->get(),
             'sourceResults' => $sourceResults,
             'targetResults' => $targetResults,
+            'pickedTargets' => $pickedTargets,
         ]);
     }
 }

@@ -110,12 +110,13 @@ class TikTokGiftEventProcessor
     }
 
     /**
-     * Tandai kursi gifter ini dengan ikon gift yang baru dikirim — icon_url gift TUJUAN
-     * pemetaan kalau gift ini sudah dipetakan admin (lihat GiftMapping), kalau belum
-     * pakai icon_url gift itu sendiri apa adanya. live-show.blade.php nampilinnya
-     * sebentar di pojok kanan atas lalu fade-out sendiri berdasarkan last_gift_at
-     * (lihat LiveShow::toArray()). Tidak ngefek kalau gifter ini kebetulan sedang
-     * tidak dapat kursi (belum/tidak masuk top 8).
+     * Tandai kursi gifter ini dengan ikon gift yang baru dikirim — icon_url salah satu
+     * gift TUJUAN pemetaan (dipilih ACAK kalau lebih dari satu, lihat GiftMapping)
+     * kalau gift ini sudah dipetakan admin, kalau belum pakai icon_url gift itu
+     * sendiri apa adanya. live-show.blade.php nampilinnya sebentar di pojok kanan
+     * atas lalu fade-out sendiri berdasarkan last_gift_at (lihat LiveShow::toArray()).
+     * Tidak ngefek kalau gifter ini kebetulan sedang tidak dapat kursi (belum/tidak
+     * masuk top 8).
      */
     private function stampGiftIcon(ProjectLive $projectLive, ProjectLiveGifter $gifter, TikTokGift $gift): void
     {
@@ -127,9 +128,8 @@ class TikTokGiftEventProcessor
             return;
         }
 
-        $displayIconUrl = $gift->mapped_to_gift_id
-            ? $gift->mappedTo?->icon_url
-            : $gift->icon_url;
+        $target = $gift->mappedTargets->isNotEmpty() ? $gift->mappedTargets->random() : null;
+        $displayIconUrl = $target?->icon_url ?? $gift->icon_url;
 
         $seat->update([
             'last_gift_icon_url' => $displayIconUrl,

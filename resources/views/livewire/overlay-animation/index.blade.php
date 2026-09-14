@@ -9,13 +9,13 @@
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
             <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-4 space-y-1">
                 <p class="text-sm text-gray-600 dark:text-gray-300">
-                    Katalog animasi overlay (file <strong>WebP animasi</strong>) yang dipakai bareng semua project -
-                    petakan ke gift asli lewat halaman "Pemetaan Gift", atau ke Event Trigger (join/follow/dst) lewat
-                    halaman "Event Trigger" di masing-masing project.
+                    Katalog animasi overlay (video <strong>WebM</strong>) yang dipakai bareng semua project - petakan
+                    ke gift asli lewat halaman "Pemetaan Gift", atau ke Event Trigger (join/follow/dst) lewat halaman
+                    "Event Trigger" di masing-masing project.
                 </p>
                 <p class="text-xs text-gray-400">
                     "Durasi Tayang" dipakai halaman "Show Animasi Overlay" buat tahu kapan harus lanjut ke antrian
-                    berikutnya — bisa diisi manual, atau otomatis dihitung dari durasi asli file WebP-nya.
+                    berikutnya — Otomatis (sampai video-nya sendiri selesai) atau Manual (potong di detik tertentu).
                 </p>
             </div>
 
@@ -31,16 +31,18 @@
                     <div wire:key="overlay-row-{{ $animation->id }}" class="flex items-center gap-3 p-3">
                         <div class="w-12 h-12 rounded bg-gray-100 dark:bg-gray-900 flex-shrink-0 overflow-hidden flex items-center justify-center">
                             @if ($animation->fileUrl())
-                                <img src="{{ $animation->fileUrl() }}" class="max-w-full max-h-full object-contain" alt="">
+                                <video src="{{ $animation->fileUrl() }}" class="max-w-full max-h-full object-contain" muted loop autoplay playsinline></video>
                             @endif
                         </div>
 
                         <div class="flex-1 min-w-0">
                             <p class="text-sm text-gray-800 dark:text-gray-200 truncate">{{ $animation->name }}</p>
                             <p class="text-xs text-gray-400">
-                                Durasi {{ number_format($animation->duration_ms / 1000, 1) }} detik
-                                <span class="text-gray-300 dark:text-gray-600">&middot;</span>
-                                {{ $animation->duration_mode === 'auto' ? 'Otomatis' : 'Manual' }}
+                                @if ($animation->duration_mode === 'auto')
+                                    Otomatis (sampai video selesai)
+                                @else
+                                    Manual &middot; {{ number_format($animation->duration_ms / 1000, 1) }} detik
+                                @endif
                             </p>
                         </div>
 
@@ -85,11 +87,11 @@
                 </div>
 
                 <div>
-                    <x-input-label value="File WebP Animasi" />
+                    <x-input-label value="File WebM Animasi" />
                     @if ($editingId && ($current = \App\Models\OverlayAnimation::find($editingId))?->fileUrl())
-                        <img src="{{ $current->fileUrl() }}" class="w-16 h-16 object-contain rounded border border-gray-200 dark:border-gray-600 mt-1 mb-1" alt="">
+                        <video src="{{ $current->fileUrl() }}" class="w-24 h-24 object-contain rounded border border-gray-200 dark:border-gray-600 mt-1 mb-1" muted loop autoplay playsinline></video>
                     @endif
-                    <input type="file" wire:model="file" accept="image/webp"
+                    <input type="file" wire:model="file" accept="video/webm"
                         class="block w-full text-xs text-gray-600 dark:text-gray-300 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 dark:file:bg-indigo-900/40 file:text-indigo-700 dark:file:text-indigo-300 mt-1">
                     <div wire:loading wire:target="file" class="text-xs text-gray-400 mt-1">Mengunggah...</div>
                     <x-input-error :messages="$errors->get('file')" class="mt-1" />
@@ -99,13 +101,13 @@
                 <div>
                     <x-input-label value="Durasi Tayang" />
                     <div class="grid grid-cols-2 gap-1.5 mt-1">
-                        <label class="flex items-center gap-1.5 px-2.5 py-2 rounded-md border cursor-pointer transition {{ $durationMode === 'manual' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30' : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
-                            <input type="radio" wire:model.live="durationMode" value="manual" class="border-gray-300 dark:border-gray-600">
-                            <span class="text-xs text-gray-700 dark:text-gray-300">Manual</span>
-                        </label>
                         <label class="flex items-center gap-1.5 px-2.5 py-2 rounded-md border cursor-pointer transition {{ $durationMode === 'auto' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30' : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
                             <input type="radio" wire:model.live="durationMode" value="auto" class="border-gray-300 dark:border-gray-600">
                             <span class="text-xs text-gray-700 dark:text-gray-300">Otomatis (sampai selesai)</span>
+                        </label>
+                        <label class="flex items-center gap-1.5 px-2.5 py-2 rounded-md border cursor-pointer transition {{ $durationMode === 'manual' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30' : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' }}">
+                            <input type="radio" wire:model.live="durationMode" value="manual" class="border-gray-300 dark:border-gray-600">
+                            <span class="text-xs text-gray-700 dark:text-gray-300">Manual</span>
                         </label>
                     </div>
 
@@ -114,14 +116,11 @@
                             value="{{ number_format(((float) $durationMs) / 1000, 1) }}"
                             x-on:change="$wire.durationMs = Math.round($event.target.value * 1000)"
                             class="mt-2 block w-full text-sm rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200">
-                        <p class="text-xs text-gray-400 mt-1">Isi manual (detik), sesuaikan dengan lama animasinya benar-benar selesai secara visual.</p>
+                        <p class="text-xs text-gray-400 mt-1">Video dipotong paksa di detik ini, biarpun aslinya lebih panjang/looping.</p>
                     @else
                         <p class="text-xs text-gray-400 mt-2">
-                            Dihitung otomatis dari total durasi 1 loop file WebP-nya sendiri begitu disimpan (jumlah
-                            durasi semua frame animasinya) - kosongkan/ganti file di atas kalau mau dihitung ulang.
-                            @if ($editingId && $durationMode === 'auto')
-                                Nilai sekarang: <strong>{{ number_format(((float) $durationMs) / 1000, 1) }} detik</strong>.
-                            @endif
+                            Video diputar sekali lalu otomatis lanjut ke antrian berikutnya begitu videonya sendiri
+                            selesai - tidak perlu isi durasi manual.
                         </p>
                     @endif
 

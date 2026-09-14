@@ -38,11 +38,20 @@ class OverlayQueueService
     }
 
     /**
+     * Safety net - kalau item "playing" sudah lebih lama dari ini tapi client TIDAK
+     * PERNAH lapor selesai lewat finish() (mis. event "ended" video gagal nyala krn
+     * autoplay diblokir, file 404/korup, atau tab OverlayShow-nya ke-reload di
+     * tengah), tandai selesai paksa & lanjut ke antrian berikutnya - biar antrian
+     * tidak macet permanen nunggu 1 item yang tidak akan pernah lapor.
+     */
+    private const STUCK_AFTER_SECONDS = 60;
+
+    /**
      * Item yang lagi "playing" (harusnya cuma satu per project), atau POP item
      * "pending" PALING LAMA jadi "playing" kalau belum ada yang jalan. Dipanggil
      * App\Livewire\ProjectLive\OverlayShow tiap poll - begitu ada yang playing,
      * method ini TIDAK pop lagi (biar tidak keselip), nunggu client lapor selesai
-     * lewat finish().
+     * lewat finish() (KECUALI sudah macet - lihat STUCK_AFTER_SECONDS).
      */
     public function currentOrNext(ProjectLive $projectLive): ?ProjectLiveOverlayQueueItem
     {
@@ -51,6 +60,11 @@ class OverlayQueueService
             ->with('overlayAnimation')
             ->oldest('id')
             ->first();
+
+        if ($playing && $playing->played_at?->diffInSeconds(now()) >= self::STUCK_AFTER_SECONDS) {
+            $this->finish($playing);
+            $playing = null;
+        }
 
         if ($playing) {
             return $playing;

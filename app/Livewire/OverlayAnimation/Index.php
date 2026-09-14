@@ -4,7 +4,6 @@ namespace App\Livewire\OverlayAnimation;
 
 use App\Models\OverlayAnimation;
 use App\Models\ProjectLive;
-use App\Support\WebpAnimation;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -13,7 +12,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 
 /**
- * Master CRUD katalog animasi overlay (WebP animasi) - GLOBAL, dipakai bareng semua
+ * Master CRUD katalog animasi overlay (video WebM) - GLOBAL, dipakai bareng semua
  * project (sama pola dgn katalog tiktok_gifts) lewat App\Models\TikTokGift::
  * overlayAnimations() atau App\Models\ProjectLiveEventTrigger::overlayAnimations().
  * Superadmin-only, sama seperti halaman Users/Pengirim Gift.
@@ -31,11 +30,13 @@ class Index extends Component
     public string $name = '';
 
     /**
-     * 'manual' = admin isi sendiri (durationMs dipakai apa adanya), 'auto' = dihitung
-     * otomatis dari total durasi 1 loop animasi WebP-nya sendiri (App\Support\
-     * WebpAnimation) begitu tombol Simpan ditekan - lihat save().
+     * 'auto' = App\Livewire\ProjectLive\OverlayShow nunggu event "ended" bawaan
+     * <video> (diputar sampai video-nya sendiri benar2 selesai, TANPA perlu tahu
+     * durasi sama sekali - beda dari WebP dulu yang tidak punya event ini). 'manual'
+     * = admin maksa potong di detik tertentu (durationMs) biarpun videonya lebih
+     * panjang/looping.
      */
-    public string $durationMode = 'manual';
+    public string $durationMode = 'auto';
 
     public string $durationMs = '3000';
 
@@ -51,7 +52,7 @@ class Index extends Component
     public function openCreate(): void
     {
         $this->reset(['editingId', 'name', 'file']);
-        $this->durationMode = 'manual';
+        $this->durationMode = 'auto';
         $this->durationMs = '3000';
         $this->active = true;
         $this->resetErrorBag();
@@ -86,51 +87,28 @@ class Index extends Component
             'name' => 'required|string|max:100',
             'durationMode' => ['required', Rule::in(['manual', 'auto'])],
             'durationMs' => $this->durationMode === 'manual' ? 'required|integer|min:200|max:60000' : 'nullable',
-            'file' => [$this->editingId ? 'nullable' : 'required', 'file', 'mimes:webp', 'max:10240'],
+            'file' => [$this->editingId ? 'nullable' : 'required', 'file', 'mimes:webm', 'max:51200'],
             'active' => 'boolean',
         ]);
 
         $data = [
             'name' => $validated['name'],
             'duration_mode' => $validated['durationMode'],
+            // Cuma benar2 dipakai kalau mode-nya "manual" (lihat overlay-show.blade.php)
+            // - tetap disimpan apa adanya di mode "auto" (nilai lama/default), tidak
+            // ngefek krn Show pakai event "ended" video, bukan timer.
+            'duration_ms' => $validated['durationMode'] === 'manual' ? $validated['durationMs'] : 0,
             'active' => $validated['active'],
         ];
 
-        $oldFile = $this->editingId ? OverlayAnimation::find($this->editingId)?->file : null;
-
         if ($this->file) {
+            $oldFile = $this->editingId ? OverlayAnimation::find($this->editingId)?->file : null;
+
             $data['file'] = $this->file->store('overlay-animations', 'public');
-        }
 
-        if ($validated['durationMode'] === 'manual') {
-            $data['duration_ms'] = $validated['durationMs'];
-        } else {
-            // Mode "Otomatis" - hitung dari file yang BARU diupload kalau ada, atau dari
-            // file yang SUDAH tersimpan kalau admin cuma ganti mode tanpa upload ulang.
-            $pathToInspect = isset($data['file'])
-                ? Storage::disk('public')->path($data['file'])
-                : ($oldFile ? Storage::disk('public')->path($oldFile) : null);
-
-            $detected = $pathToInspect ? WebpAnimation::totalDurationMs($pathToInspect) : null;
-
-            if ($detected === null) {
-                $this->addError('file', 'File ini tidak terdeteksi sebagai WebP beranimasi (tidak ada frame animasi) - pilih mode Manual, atau upload file WebP yang benar-benar beranimasi.');
-
-                // File yang BARU diupload (kalau ada) sudah kepalang tersimpan sebelum
-                // deteksi gagal - hapus lagi biar tidak nyampah, oldFile TETAP milik
-                // record lama (tidak disentuh sama sekali kalau gagal).
-                if (isset($data['file'])) {
-                    Storage::disk('public')->delete($data['file']);
-                }
-
-                return;
+            if ($oldFile) {
+                Storage::disk('public')->delete($oldFile);
             }
-
-            $data['duration_ms'] = $detected;
-        }
-
-        if (isset($data['file']) && $oldFile) {
-            Storage::disk('public')->delete($oldFile);
         }
 
         if ($this->editingId) {

@@ -7,11 +7,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * Katalog MASTER animasi overlay (WebP animasi) - GLOBAL, dipakai bareng semua
+ * Katalog MASTER animasi overlay (video WebM) - GLOBAL, dipakai bareng semua
  * project. Dipetakan ke gift asli lewat App\Models\TikTokGift::overlayAnimations()
  * (App\Livewire\ProjectLive\GiftMapping) atau ke Event Trigger lewat
  * App\Models\ProjectLiveEventTrigger::overlayAnimations() - keduanya lewat
  * App\Services\OverlayQueueService, diputar App\Livewire\ProjectLive\OverlayShow.
+ * duration_mode 'auto' (default) = Show nunggu event "ended" bawaan <video>, 'manual'
+ * = dipotong paksa di duration_ms.
  */
 class OverlayAnimation extends Model
 {

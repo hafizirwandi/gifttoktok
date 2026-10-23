@@ -13,11 +13,9 @@ class TikTokGiftSeeder extends Seeder
     public function run(): void
     {
         // Reset total katalog lama sebelum diisi ulang dari file JSON — termasuk
-        // pemetaan gift->gift (mapped_to_gift_id) dan aturan opt-in tiap project
-        // (project_live_gift_rules, cascade otomatis lewat FK) yang menempel ke gift
-        // lama. mapped_to_gift_id diputus dulu secara eksplisit (bukan cuma andalkan
-        // ON DELETE SET NULL) supaya urutan delete-nya aman buat FK self-reference ini.
-        \App\Models\TikTokGift::query()->update(['mapped_to_gift_id' => null]);
+        // pemetaan gift->gift (pivot tiktok_gift_mapped_targets) dan aturan opt-in
+        // tiap project (project_live_gift_rules) yang menempel ke gift lama - dua-duanya
+        // ikut terhapus otomatis lewat FK cascadeOnDelete.
         \App\Models\TikTokGift::query()->delete();
 
         $path = database_path('seeders/data/tiktok_gifts.json');

@@ -28,3 +28,6 @@ services/tiktok-gift-listener/queue-worker.pid
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+._*
+.DS_Store

@@ -1,7 +1,8 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -10,12 +11,15 @@ return new class extends Migration
      * 2026_08_17_000002_add_empty_state_columns_to_project_live_details_table.php) -
      * sekarang menyimpan PATH GAMBAR hasil upload (jauh lebih panjang dari 8 karakter,
      * mis. "project-live-details/1/empty-icons/xxxx.png") jadi harus dilebarkan ke
-     * default varchar(255) sama seperti kolom path lain (img, dst). Pakai raw SQL
-     * (bukan Blueprint::change()) krn doctrine/dbal tidak terpasang di project ini.
+     * default varchar(255) sama seperti kolom path lain (img, dst). Pakai
+     * Blueprint::change() (native sejak Laravel 11, tanpa doctrine/dbal) supaya jalan
+     * di MySQL maupun SQLite (versi installer desktop).
      */
     public function up(): void
     {
-        DB::statement('ALTER TABLE project_live_details MODIFY empty_icon VARCHAR(255) NULL');
+        Schema::table('project_live_details', function (Blueprint $table) {
+            $table->string('empty_icon', 255)->nullable()->change();
+        });
     }
 
     /**
@@ -23,6 +27,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement('ALTER TABLE project_live_details MODIFY empty_icon VARCHAR(8) NULL');
+        Schema::table('project_live_details', function (Blueprint $table) {
+            $table->string('empty_icon', 8)->nullable()->change();
+        });
     }
 };

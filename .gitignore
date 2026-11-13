@@ -31,3 +31,8 @@ Thumbs.db
 
 ._*
 .DS_Store
+
+# Installer build (installer/build.ps1)
+/installer/build
+/installer/cache
+/VERSION

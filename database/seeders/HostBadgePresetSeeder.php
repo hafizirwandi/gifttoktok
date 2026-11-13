@@ -4,20 +4,18 @@ namespace Database\Seeders;
 
 use App\Models\HostBadgePreset;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Carbon;
+use Illuminate\Support\Arr;
 
 /**
  * Preset warna/font tulisan badge "Host" - dibuat dari 4 contoh style di
  * assets/host/style1.png..style4.png (warna disamplr manual dari gambarnya,
- * urutan style1->style4 SENGAJA dipertahankan lewat sort_order). Upsert by
- * 'name' - aman dijalanin ulang (re-seed) tanpa bikin duplikat.
+ * urutan style1->style4 SENGAJA dipertahankan lewat sort_order). updateOrCreate
+ * by 'name' - aman dijalanin ulang (re-seed) tanpa bikin duplikat.
  */
 class HostBadgePresetSeeder extends Seeder
 {
     public function run(): void
     {
-        $now = Carbon::now();
-
         $presets = [
             // style1.png - badge peach/salmon lembut, teks/icon coklat tua.
             ['name' => 'Peach', 'bg_color' => '#FDBEA0', 'text_color' => '#5C3826', 'font' => null, 'sort_order' => 1],
@@ -29,13 +27,16 @@ class HostBadgePresetSeeder extends Seeder
             ['name' => 'Gelap', 'bg_color' => '#262626', 'text_color' => '#FFFFFF', 'font' => null, 'sort_order' => 4],
         ];
 
-        $rows = array_map(fn (array $preset) => $preset + ['created_at' => $now, 'updated_at' => $now], $presets);
-
-        HostBadgePreset::query()->upsert(
-            $rows,
-            ['name'],
-            ['bg_color', 'text_color', 'font', 'sort_order', 'updated_at']
-        );
+        // updateOrCreate (bukan upsert) - kolom 'name' TIDAK punya unique index, jadi
+        // upsert(['name']) di MySQL diam-diam insert duplikat tiap re-seed & di SQLite
+        // langsung error "ON CONFLICT clause does not match". Seeder ini dijalankan
+        // otomatis tiap update versi installer, jadi wajib idempotent.
+        foreach ($presets as $preset) {
+            HostBadgePreset::query()->updateOrCreate(
+                ['name' => $preset['name']],
+                Arr::except($preset, 'name')
+            );
+        }
 
         $this->command?->info(\count($presets).' host badge presets seeded.');
     }

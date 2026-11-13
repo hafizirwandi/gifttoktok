@@ -1,4 +1,6 @@
-require('dotenv').config();
+// LISTENER_ENV_FILE diset oleh launcher versi desktop (installer Windows) ke
+// %APPDATA%\GiftTokTok\listener.env - tanpa itu tetap baca .env di folder ini.
+require('dotenv').config(process.env.LISTENER_ENV_FILE ? { path: process.env.LISTENER_ENV_FILE } : undefined);
 const axios = require('axios');
 const { TikTokLiveConnection, WebcastEvent } = require('tiktok-live-connector');
 

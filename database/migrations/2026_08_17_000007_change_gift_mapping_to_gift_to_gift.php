@@ -12,6 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('tiktok_gifts', function (Blueprint $table) {
+            // dropUnique eksplisit dulu - SQLite tidak otomatis ikut menghapus index
+            // saat kolomnya di-drop (MySQL iya), jadi tanpa ini migrate gagal di SQLite.
+            $table->dropUnique(['mapped_icon']);
             $table->dropColumn('mapped_icon');
         });
 
@@ -45,6 +48,7 @@ return new class extends Migration
 
         Schema::table('tiktok_gifts', function (Blueprint $table) {
             $table->dropForeign(['mapped_to_gift_id']);
+            $table->dropUnique(['mapped_to_gift_id']);
             $table->dropColumn('mapped_to_gift_id');
         });
 

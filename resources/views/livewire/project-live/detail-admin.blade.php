@@ -421,7 +421,7 @@
                 @if ($projectLive->auto_gift_mode)
                     <div class="flex items-center gap-1.5 text-xs font-medium {{ $projectLive->isGiftListenerOnline() ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500' }}">
                         <span class="w-2 h-2 rounded-full {{ $projectLive->isGiftListenerOnline() ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600' }}"></span>
-                        {{ $projectLive->isGiftListenerOnline() ? 'Terhubung ke TikTok LIVE' : 'Belum terhubung — jalankan services/tiktok-gift-listener' }}
+                        {{ $projectLive->isGiftListenerOnline() ? 'Terhubung ke TikTok LIVE' : (config('desktop.enabled') ? 'Belum terhubung — buka shortcut "GiftTokTok Listener"' : 'Belum terhubung — jalankan services/tiktok-gift-listener') }}
                     </div>
 
                     <div class="border-t border-gray-100 dark:border-gray-700 pt-4 space-y-4">
@@ -434,6 +434,17 @@
                             <x-primary-button>Simpan</x-primary-button>
                         </form>
 
+                        @if (config('desktop.enabled'))
+                        <div class="bg-indigo-50 dark:bg-indigo-900/20 rounded-md p-3 flex items-center justify-between gap-3 text-xs">
+                            <p class="text-gray-600 dark:text-gray-300">
+                                Simpan konfigurasi listener untuk project ini, lalu buka shortcut <span class="font-semibold">GiftTokTok Listener</span> di Desktop/Start Menu.
+                            </p>
+                            <button type="button" wire:click="saveListenerConfig"
+                                class="flex-shrink-0 inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded hover:bg-indigo-700">
+                                Simpan ke Listener
+                            </button>
+                        </div>
+                        @else
                         <div class="bg-gray-50 dark:bg-gray-900/50 rounded-md p-3 space-y-2 text-xs" x-data="{ copied: false }">
                             <div class="flex items-center justify-between gap-2">
                                 <p class="text-gray-500 dark:text-gray-400">
@@ -450,6 +461,7 @@ PROJECT_LIVE_ID={{ $projectLive->id }}
 WEBHOOK_URL={{ url('/api/webhooks/tiktok-gift') }}
 WEBHOOK_SECRET="{{ $projectLive->webhook_secret }}"</pre>
                         </div>
+                        @endif
 
                         <!-- Katalog & aturan gift -->
                         <div class="space-y-3">

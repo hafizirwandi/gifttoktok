@@ -15,13 +15,15 @@ return new class extends Migration
      * ditambahkan, angka eksplisit (termasuk 0) = tetap posisi LOKAL kotak ini spt
      * sebelumnya. Row yang SUDAH ADA nilainya (biasanya 0 dari default lama) TIDAK
      * berubah jadi null otomatis - tetap perilaku LOKAL persis spt sebelum migrasi
-     * ini, cuma sekarang BISA di-reset ke null (ikut global) lewat UI. Pakai raw SQL
-     * (bukan ->nullable()->change()) krn project ini tidak punya doctrine/dbal.
+     * ini, cuma sekarang BISA di-reset ke null (ikut global) lewat UI. Pakai
+     * ->nullable()->change() (native sejak Laravel 11) supaya jalan di MySQL & SQLite.
      */
     public function up(): void
     {
-        DB::statement('ALTER TABLE project_live_backgrounds MODIFY host_badge_offset_x INT NULL');
-        DB::statement('ALTER TABLE project_live_backgrounds MODIFY host_badge_offset_y INT NULL');
+        Schema::table('project_live_backgrounds', function (Blueprint $table) {
+            $table->integer('host_badge_offset_x')->nullable()->default(null)->change();
+            $table->integer('host_badge_offset_y')->nullable()->default(null)->change();
+        });
 
         Schema::table('project_live_backgrounds', function (Blueprint $table) {
             $table->string('host_badge_text')->nullable()->after('host_name_visible');
@@ -40,7 +42,9 @@ return new class extends Migration
 
         DB::statement('UPDATE project_live_backgrounds SET host_badge_offset_x = 0 WHERE host_badge_offset_x IS NULL');
         DB::statement('UPDATE project_live_backgrounds SET host_badge_offset_y = 0 WHERE host_badge_offset_y IS NULL');
-        DB::statement('ALTER TABLE project_live_backgrounds MODIFY host_badge_offset_x INT NOT NULL DEFAULT 0');
-        DB::statement('ALTER TABLE project_live_backgrounds MODIFY host_badge_offset_y INT NOT NULL DEFAULT 0');
+        Schema::table('project_live_backgrounds', function (Blueprint $table) {
+            $table->integer('host_badge_offset_x')->default(0)->change();
+            $table->integer('host_badge_offset_y')->default(0)->change();
+        });
     }
 };

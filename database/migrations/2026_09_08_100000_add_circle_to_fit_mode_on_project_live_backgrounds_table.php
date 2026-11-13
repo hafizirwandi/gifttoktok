@@ -1,20 +1,24 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     /**
      * fit_mode adalah kolom ENUM asli (bukan string biasa, lihat migrasi
      * create_project_live_backgrounds_table) - nambah pilihan baru "circle" (media
-     * ditampilkan sbg lingkaran di tengah kotak, bukan penuh edge-to-edge) HARUS lewat
-     * MODIFY COLUMN mentah, Schema::table()->enum() tidak bisa mengubah definisi ENUM
-     * yang sudah ada. Lihat App\Enums\BackgroundFit & partials/seat-box.blade.php.
+     * ditampilkan sbg lingkaran di tengah kotak, bukan penuh edge-to-edge) lewat
+     * ->enum()->change() (native sejak Laravel 11) - jalan di MySQL (MODIFY ENUM)
+     * maupun SQLite (tabel dibangun ulang dgn CHECK constraint baru). Lihat App\Enums\BackgroundFit & partials/seat-box.blade.php.
      */
     public function up(): void
     {
-        DB::statement("ALTER TABLE project_live_backgrounds MODIFY fit_mode ENUM('cover', 'contain', 'stretch', 'circle') NOT NULL DEFAULT 'cover'");
+        Schema::table('project_live_backgrounds', function (Blueprint $table) {
+            $table->enum('fit_mode', ['cover', 'contain', 'stretch', 'circle'])->default('cover')->change();
+        });
     }
 
     /**
@@ -23,6 +27,8 @@ return new class extends Migration
     public function down(): void
     {
         DB::statement("UPDATE project_live_backgrounds SET fit_mode = 'cover' WHERE fit_mode = 'circle'");
-        DB::statement("ALTER TABLE project_live_backgrounds MODIFY fit_mode ENUM('cover', 'contain', 'stretch') NOT NULL DEFAULT 'cover'");
+        Schema::table('project_live_backgrounds', function (Blueprint $table) {
+            $table->enum('fit_mode', ['cover', 'contain', 'stretch'])->default('cover')->change();
+        });
     }
 };

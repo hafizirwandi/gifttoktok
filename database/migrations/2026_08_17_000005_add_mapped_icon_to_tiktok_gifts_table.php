@@ -25,6 +25,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('tiktok_gifts', function (Blueprint $table) {
+            $table->dropUnique(['mapped_icon']);
             $table->dropColumn('mapped_icon');
         });
     }

@@ -35,12 +35,20 @@ return [
         'sqlite' => [
             'driver' => 'sqlite',
             'url' => env('DB_URL'),
-            'database' => env('DB_DATABASE', database_path('database.sqlite')),
+            // Mode desktop: default ke %APPDATA%\GiftTokTok\database.sqlite (folder data
+            // per-user, lihat bootstrap/app.php) - sengaja TIDAK ditulis ke .env supaya
+            // tidak ada path absolut (& masalah escape backslash di .env).
+            'database' => env('DB_DATABASE', getenv('GIFTTOKTOK_DATA')
+                ? getenv('GIFTTOKTOK_DATA').DIRECTORY_SEPARATOR.'database.sqlite'
+                : database_path('database.sqlite')),
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
-            'busy_timeout' => null,
-            'journal_mode' => null,
-            'synchronous' => null,
+            // Diisi lewat .env di mode desktop (lihat installer/launcher/env.template):
+            // web server + queue worker + webhook listener menulis bersamaan, tanpa
+            // busy_timeout/WAL SQLite gampang error "database is locked".
+            'busy_timeout' => env('DB_BUSY_TIMEOUT'),
+            'journal_mode' => env('DB_JOURNAL_MODE'),
+            'synchronous' => env('DB_SYNCHRONOUS'),
             'transaction_mode' => 'DEFERRED',
         ],
 

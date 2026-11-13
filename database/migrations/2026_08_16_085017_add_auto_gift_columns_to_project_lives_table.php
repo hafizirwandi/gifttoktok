@@ -24,6 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('project_lives', function (Blueprint $table) {
+            $table->dropUnique(['tiktok_username']);
             $table->dropColumn(['auto_gift_mode', 'tiktok_username', 'webhook_secret']);
         });
     }

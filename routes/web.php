@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Desktop\UpdateController;
 use App\Livewire\GiftSenders\Index as GiftSendersIndex;
 use App\Livewire\OverlayAnimation\Index as OverlayAnimationIndex;
 use App\Livewire\ProjectLive\Background;
@@ -40,6 +41,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/users', UserIndex::class)->name('users.index');
         Route::get('/gift-senders', GiftSendersIndex::class)->name('gift-senders.index');
         Route::get('/overlay-animations', OverlayAnimationIndex::class)->name('overlay-animations.index');
+
+        // Mode desktop (installer Windows) - lihat installer/README.md.
+        Route::get('/desktop/update', [UpdateController::class, 'status'])->name('desktop.update.status');
+        Route::post('/desktop/update', [UpdateController::class, 'install'])->name('desktop.update.install');
     });
 
     // Superadmin (project apa pun) atau akun live (project miliknya sendiri) — dicek via Policy di mount().

@@ -9,6 +9,7 @@ use App\Enums\SeatFont;
 use App\Models\ProjectLive;
 use App\Models\TikTokGift;
 use App\Services\GiftLeaderboardService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -467,6 +468,44 @@ class DetailAdmin extends Component
         $this->dispatch('notify', message: 'Username TikTok berhasil disimpan.');
     }
 
+    /**
+     * Mode desktop saja: tulis konfigurasi listener project ini ke
+     * %APPDATA%\GiftTokTok\listener.env (dibaca oleh launcher saat shortcut
+     * "GiftTokTok Listener" dibuka) - user tidak perlu copy-paste ke folder tersembunyi.
+     * Listener cuma connect ke 1 room, jadi project yang terakhir disimpan yang dipakai.
+     */
+    public function saveListenerConfig(): void
+    {
+        $this->authorize('viewLive', $this->projectLive);
+        abort_unless(config('desktop.enabled'), 404);
+
+        $this->projectLive->refresh();
+
+        if (! $this->projectLive->tiktok_username || ! $this->projectLive->webhook_secret) {
+            $this->dispatch('notify', message: 'Isi & simpan username TikTok dulu.');
+
+            return;
+        }
+
+        $path = config('desktop.data_path').DIRECTORY_SEPARATOR.'listener.env';
+
+        // Pertahankan TIKTOK_SIGN_API_KEY yang mungkin sudah diisi manual sebelumnya.
+        $signKey = '';
+        if (is_file($path) && preg_match('/^TIKTOK_SIGN_API_KEY=(.*)$/m', (string) file_get_contents($path), $m)) {
+            $signKey = trim($m[1]);
+        }
+
+        file_put_contents($path, implode(PHP_EOL, [
+            'TIKTOK_USERNAME='.$this->projectLive->tiktok_username,
+            'PROJECT_LIVE_ID='.$this->projectLive->id,
+            'WEBHOOK_URL='.url('/api/webhooks/tiktok-gift'),
+            'WEBHOOK_SECRET="'.$this->projectLive->webhook_secret.'"',
+            'TIKTOK_SIGN_API_KEY='.$signKey,
+        ]).PHP_EOL);
+
+        $this->dispatch('notify', message: 'Konfigurasi listener disimpan. Buka shortcut "GiftTokTok Listener" untuk mulai.');
+    }
+
     public function resetLeaderboard(): void
     {
         $this->authorize('viewLive', $this->projectLive);
@@ -691,7 +730,7 @@ class DetailAdmin extends Component
             'giftCatalogCount' => TikTokGift::count(),
             // ::max() adalah agregat mentah (bukan hasil hydrate model), jadi TIDAK melalui
             // cast atribut model — hasilnya string, bukan Carbon, harus di-parse manual.
-            'giftCatalogUpdatedAt' => ($max = TikTokGift::max('updated_at')) ? \Carbon\Carbon::parse($max) : null,
+            'giftCatalogUpdatedAt' => ($max = TikTokGift::max('updated_at')) ? Carbon::parse($max) : null,
         ]);
     }
 }
